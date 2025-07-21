@@ -1,0 +1,6 @@
+[*.cs]
+# Temporarily suppress unused parameter warnings for Phase 3.4 implementation
+dotnet_diagnostic.IDE0060.severity = none
+
+# Temporarily suppress naming violations for static fields
+dotnet_diagnostic.IDE1006.severity = none
