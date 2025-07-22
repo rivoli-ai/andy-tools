@@ -73,6 +73,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -99,6 +102,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -122,6 +128,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -145,6 +154,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -168,6 +180,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -195,6 +210,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -218,6 +236,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -241,6 +262,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -264,6 +288,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -291,6 +318,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -320,6 +350,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -343,6 +376,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -371,6 +407,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -398,6 +437,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -427,6 +469,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -465,6 +510,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -488,6 +536,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -515,6 +566,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -539,6 +593,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -562,6 +619,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -585,6 +645,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -612,6 +675,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -637,6 +703,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -660,6 +729,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -690,6 +762,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -720,6 +795,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -749,6 +827,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -782,6 +863,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -812,6 +896,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -850,6 +937,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -879,6 +969,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -907,6 +1000,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -928,6 +1024,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -949,6 +1048,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -970,6 +1072,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -991,6 +1096,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -1012,6 +1120,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -1037,6 +1148,9 @@ public class FormatTextToolTests : IDisposable
         cts.Cancel();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -1062,6 +1176,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -1086,6 +1203,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -1111,6 +1231,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -1141,6 +1264,9 @@ public class FormatTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert

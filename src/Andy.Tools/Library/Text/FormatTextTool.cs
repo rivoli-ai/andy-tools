@@ -97,6 +97,10 @@ public partial class FormatTextTool : ToolBase
                 metadata
             );
         }
+        catch (ArgumentException ex) when (ex.Message.StartsWith("Unknown operation"))
+        {
+            return ToolResults.Failure(ex.Message, "UNKNOWN_OPERATION");
+        }
         catch (ArgumentException ex)
         {
             return ToolResults.InvalidParameter("operation", operation, ex.Message);
@@ -403,21 +407,35 @@ public partial class FormatTextTool : ToolBase
 
     private static string FormatJson(string input, Dictionary<string, object?> options)
     {
-        var indented = GetOption<bool>(options, "indented", true);
-
-        var jsonDoc = JsonDocument.Parse(input);
-        var options_json = new JsonSerializerOptions
+        try
         {
-            WriteIndented = indented
-        };
+            var indented = GetOption<bool>(options, "indented", true);
 
-        return JsonSerializer.Serialize(jsonDoc, options_json);
+            var jsonDoc = JsonDocument.Parse(input);
+            var options_json = new JsonSerializerOptions
+            {
+                WriteIndented = indented
+            };
+
+            return JsonSerializer.Serialize(jsonDoc, options_json);
+        }
+        catch (JsonException ex)
+        {
+            throw new JsonException($"JSON parsing error: {ex.Message}", ex);
+        }
     }
 
     private static string MinifyJson(string input)
     {
-        var jsonDoc = JsonDocument.Parse(input);
-        return JsonSerializer.Serialize(jsonDoc);
+        try
+        {
+            var jsonDoc = JsonDocument.Parse(input);
+            return JsonSerializer.Serialize(jsonDoc);
+        }
+        catch (JsonException ex)
+        {
+            throw new JsonException($"JSON parsing error: {ex.Message}", ex);
+        }
     }
 
     private static string FormatXml(string input)

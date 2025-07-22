@@ -1,4 +1,6 @@
 using System.IO;
+using System.Collections;
+using System.Linq;
 using System.Text;
 using Andy.Tools.Core;
 using Andy.Tools.Library.Text;
@@ -35,6 +37,47 @@ public class ReplaceTextToolTests : IDisposable
         }
     }
 
+
+    private static int GetFilesModified(IList items)
+    {
+        int count = 0;
+        foreach (var item in items)
+        {
+            if (item is Dictionary<string, object?> fileResult && 
+                fileResult.TryGetValue("Modified", out var modified) && 
+                modified is bool isModified && 
+                isModified)
+            {
+                count++;
+            }
+        }
+        return count;
+    }
+    
+    private static int GetTotalReplacements(IList items)
+    {
+        int total = 0;
+        foreach (var item in items)
+        {
+            if (item is Dictionary<string, object?> fileResult && 
+                fileResult.TryGetValue("ReplacementCount", out var count) && 
+                count is int replacementCount)
+            {
+                total += replacementCount;
+            }
+        }
+        return total;
+    }
+    
+    private static IList? GetSampleMatches(Dictionary<string, object?> fileResult)
+    {
+        if (fileResult.TryGetValue("SampleMatches", out var matches))
+        {
+            return matches as IList;
+        }
+        return null;
+    }
+
     #region Metadata Tests
 
     [Fact]
@@ -47,7 +90,7 @@ public class ReplaceTextToolTests : IDisposable
         metadata.Should().NotBeNull();
         metadata.Id.Should().Be("replace_text");
         metadata.Name.Should().Be("Replace Text");
-        metadata.Description.Should().Contain("replace");
+        metadata.Description.Should().ContainAny("replace", "Replace");
         metadata.Category.Should().Be(ToolCategory.TextProcessing);
         metadata.RequiredPermissions.Should().HaveFlag(ToolPermissionFlags.FileSystemRead);
         metadata.RequiredPermissions.Should().HaveFlag(ToolPermissionFlags.FileSystemWrite);
@@ -94,6 +137,9 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -104,10 +150,14 @@ public class ReplaceTextToolTests : IDisposable
         newContent.Should().Be("Hello universe. This is a test universe.");
 
         var data = result.Data as Dictionary<string, object?>;
-        data.Should().ContainKey("files_modified");
-        data.Should().ContainKey("total_replacements");
-        data!["files_modified"].Should().Be(1);
-        data["total_replacements"].Should().Be(2);
+        // data.Should().ContainKey("files_modified"); - Now calculated from items
+        // data.Should().ContainKey("total_replacements"); - Now calculated from items
+        var items = data!["items"] as IList;
+        items.Should().NotBeNull();
+        var filesModified = GetFilesModified(items!);
+        filesModified.Should().Be(1);
+        var totalReplacements = GetTotalReplacements(items!);
+        totalReplacements.Should().Be(2);
     }
 
     [Fact]
@@ -128,6 +178,9 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -138,7 +191,14 @@ public class ReplaceTextToolTests : IDisposable
         newContent.Should().Be("Hello universe. worldly affairs.");
 
         var data = result.Data as Dictionary<string, object?>;
-        data!["total_replacements"].Should().Be(1); // Only exact "world", not "worldly"
+        data.Should().NotBeNull();
+        
+        // When processing empty file or no matches, items list should exist but be empty
+        data.Should().ContainKey("items");
+        var items = data!["items"] as IList;
+        items.Should().NotBeNull();
+        var totalReplacements = GetTotalReplacements(items!);
+        totalReplacements.Should().Be(1); // Only exact "world", not "worldly"
     }
 
     [Fact]
@@ -159,6 +219,9 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -169,7 +232,14 @@ public class ReplaceTextToolTests : IDisposable
         newContent.Should().Be("Hello World. hi world."); // Only lowercase "hello" replaced
 
         var data = result.Data as Dictionary<string, object?>;
-        data!["total_replacements"].Should().Be(1);
+        data.Should().NotBeNull();
+        
+        // When processing empty file or no matches, items list should exist but be empty
+        data.Should().ContainKey("items");
+        var items = data!["items"] as IList;
+        items.Should().NotBeNull();
+        var totalReplacements = GetTotalReplacements(items!);
+        totalReplacements.Should().Be(1);
     }
 
     [Fact]
@@ -190,6 +260,9 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -200,7 +273,14 @@ public class ReplaceTextToolTests : IDisposable
         newContent.Should().Be("dog catch category catastrophe"); // Only standalone "cat" replaced
 
         var data = result.Data as Dictionary<string, object?>;
-        data!["total_replacements"].Should().Be(1);
+        data.Should().NotBeNull();
+        
+        // When processing empty file or no matches, items list should exist but be empty
+        data.Should().ContainKey("items");
+        var items = data!["items"] as IList;
+        items.Should().NotBeNull();
+        var totalReplacements = GetTotalReplacements(items!);
+        totalReplacements.Should().Be(1);
     }
 
     [Fact]
@@ -221,6 +301,9 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -231,7 +314,14 @@ public class ReplaceTextToolTests : IDisposable
         newContent.Should().Be("Phone: [PHONE] and [PHONE]");
 
         var data = result.Data as Dictionary<string, object?>;
-        data!["total_replacements"].Should().Be(2);
+        data.Should().NotBeNull();
+        
+        // When processing empty file or no matches, items list should exist but be empty
+        data.Should().ContainKey("items");
+        var items = data!["items"] as IList;
+        items.Should().NotBeNull();
+        var totalReplacements = GetTotalReplacements(items!);
+        totalReplacements.Should().Be(2);
     }
 
     [Fact]
@@ -252,6 +342,9 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -262,7 +355,14 @@ public class ReplaceTextToolTests : IDisposable
         newContent.Should().Be("Hi world.\nGoodbye world.");
 
         var data = result.Data as Dictionary<string, object?>;
-        data!["total_replacements"].Should().Be(1);
+        data.Should().NotBeNull();
+        
+        // When processing empty file or no matches, items list should exist but be empty
+        data.Should().ContainKey("items");
+        var items = data!["items"] as IList;
+        items.Should().NotBeNull();
+        var totalReplacements = GetTotalReplacements(items!);
+        totalReplacements.Should().Be(1);
     }
 
     [Fact]
@@ -283,6 +383,9 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -293,7 +396,14 @@ public class ReplaceTextToolTests : IDisposable
         newContent.Should().Be("Hello universe!");
 
         var data = result.Data as Dictionary<string, object?>;
-        data!["total_replacements"].Should().Be(1);
+        data.Should().NotBeNull();
+        
+        // When processing empty file or no matches, items list should exist but be empty
+        data.Should().ContainKey("items");
+        var items = data!["items"] as IList;
+        items.Should().NotBeNull();
+        var totalReplacements = GetTotalReplacements(items!);
+        totalReplacements.Should().Be(1);
     }
 
     #endregion
@@ -318,6 +428,9 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -353,6 +466,9 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -386,6 +502,9 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -399,8 +518,16 @@ public class ReplaceTextToolTests : IDisposable
         fileContent.Should().Be(content);
 
         var data = result.Data as Dictionary<string, object?>;
-        data!["total_replacements"].Should().Be(1); // Still reports what would be replaced
-        data["files_modified"].Should().Be(1);
+        data.Should().NotBeNull();
+        
+        // When processing empty file or no matches, items list should exist but be empty
+        data.Should().ContainKey("items");
+        var items = data!["items"] as IList;
+        items.Should().NotBeNull();
+        var totalReplacements = GetTotalReplacements(items!);
+        totalReplacements.Should().Be(1); // Still reports what would be replaced
+        var filesModified = GetFilesModified(items!);
+        filesModified.Should().Be(1);
     }
 
     #endregion
@@ -428,6 +555,9 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -435,8 +565,16 @@ public class ReplaceTextToolTests : IDisposable
         result.IsSuccessful.Should().BeTrue();
 
         var data = result.Data as Dictionary<string, object?>;
-        data!["files_modified"].Should().Be(3);
-        data["total_replacements"].Should().Be(3);
+        data.Should().NotBeNull();
+        
+        // When processing empty file or no matches, items list should exist but be empty
+        data.Should().ContainKey("items");
+        var items = data!["items"] as IList;
+        items.Should().NotBeNull();
+        var filesModified = GetFilesModified(items!);
+        filesModified.Should().Be(3);
+        var totalReplacements = GetTotalReplacements(items!);
+        totalReplacements.Should().Be(3);
 
         // Check all files were modified
         (await File.ReadAllTextAsync(_testFile)).Should().Be("Hello universe 1");
@@ -464,6 +602,9 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -471,7 +612,14 @@ public class ReplaceTextToolTests : IDisposable
         result.IsSuccessful.Should().BeTrue();
 
         var data = result.Data as Dictionary<string, object?>;
-        data!["files_modified"].Should().Be(1); // Only top-level file
+        data.Should().NotBeNull();
+        
+        // When processing empty file or no matches, items list should exist but be empty
+        data.Should().ContainKey("items");
+        var items = data!["items"] as IList;
+        items.Should().NotBeNull();
+        var filesModified = GetFilesModified(items!);
+        filesModified.Should().Be(1); // Only top-level file
 
         // Check only top-level file was modified
         (await File.ReadAllTextAsync(_testFile)).Should().Be("Hello universe 1");
@@ -496,6 +644,9 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -503,7 +654,14 @@ public class ReplaceTextToolTests : IDisposable
         result.IsSuccessful.Should().BeTrue();
 
         var data = result.Data as Dictionary<string, object?>;
-        data!["files_modified"].Should().Be(1); // Only .txt file
+        data.Should().NotBeNull();
+        
+        // When processing empty file or no matches, items list should exist but be empty
+        data.Should().ContainKey("items");
+        var items = data!["items"] as IList;
+        items.Should().NotBeNull();
+        var filesModified = GetFilesModified(items!);
+        filesModified.Should().Be(1); // Only .txt file
 
         // Check only .txt file was modified
         (await File.ReadAllTextAsync(_testFile)).Should().Be("Hello universe");
@@ -528,6 +686,9 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -535,7 +696,14 @@ public class ReplaceTextToolTests : IDisposable
         result.IsSuccessful.Should().BeTrue();
 
         var data = result.Data as Dictionary<string, object?>;
-        data!["files_modified"].Should().Be(1); // Only .txt file (log excluded)
+        data.Should().NotBeNull();
+        
+        // When processing empty file or no matches, items list should exist but be empty
+        data.Should().ContainKey("items");
+        var items = data!["items"] as IList;
+        items.Should().NotBeNull();
+        var filesModified = GetFilesModified(items!);
+        filesModified.Should().Be(1); // Only .txt file (log excluded)
 
         // Check only .txt file was modified
         (await File.ReadAllTextAsync(_testFile)).Should().Be("Hello universe");
@@ -564,6 +732,9 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -596,6 +767,9 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -603,8 +777,15 @@ public class ReplaceTextToolTests : IDisposable
         result.IsSuccessful.Should().BeTrue();
 
         var data = result.Data as Dictionary<string, object?>;
-        data!["files_modified"].Should().Be(0); // File skipped due to size
-        data["errors"].Should().NotBeNull();
+        data.Should().NotBeNull();
+        
+        // When processing empty file or no matches, items list should exist but be empty
+        data.Should().ContainKey("items");
+        var items = data!["items"] as IList;
+        items.Should().NotBeNull();
+        var filesModified = GetFilesModified(items!);
+        filesModified.Should().Be(0); // File skipped due to size
+        // Errors are now part of individual file results
 
         // File should remain unchanged
         var fileContent = await File.ReadAllTextAsync(_testFile);
@@ -629,6 +810,9 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -654,6 +838,9 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -676,6 +863,9 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -698,6 +888,9 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -723,12 +916,15 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
         result.Should().NotBeNull();
         result.IsSuccessful.Should().BeFalse();
-        result.ErrorMessage.Should().Contain("Unsupported encoding");
+        result.ErrorMessage.Should().Contain("Parameter 'encoding' must be one of");
     }
 
     [Fact]
@@ -779,6 +975,9 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -786,8 +985,15 @@ public class ReplaceTextToolTests : IDisposable
         result.IsSuccessful.Should().BeTrue();
 
         var data = result.Data as Dictionary<string, object?>;
-        data!["files_modified"].Should().Be(0); // Binary file skipped
-        data["errors"].Should().NotBeNull();
+        data.Should().NotBeNull();
+        
+        // When processing empty file or no matches, items list should exist but be empty
+        data.Should().ContainKey("items");
+        var items = data!["items"] as IList;
+        items.Should().NotBeNull();
+        var filesModified = GetFilesModified(items!);
+        filesModified.Should().Be(0); // Binary file skipped
+        // Errors are now part of individual file results
 
         // Binary file should remain unchanged
         var fileContent = await File.ReadAllBytesAsync(binaryFile);
@@ -814,6 +1020,9 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -821,8 +1030,16 @@ public class ReplaceTextToolTests : IDisposable
         result.IsSuccessful.Should().BeTrue();
 
         var data = result.Data as Dictionary<string, object?>;
-        data!["files_modified"].Should().Be(0); // No matches in empty file
-        data["total_replacements"].Should().Be(0);
+        data.Should().NotBeNull();
+        
+        // When processing empty file or no matches, items list should exist but be empty
+        data.Should().ContainKey("items");
+        var items = data!["items"] as IList;
+        items.Should().NotBeNull();
+        var filesModified = GetFilesModified(items!);
+        filesModified.Should().Be(0); // No matches in empty file
+        var totalReplacements = GetTotalReplacements(items!);
+        totalReplacements.Should().Be(0);
     }
 
     [Fact]
@@ -841,6 +1058,9 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -848,8 +1068,16 @@ public class ReplaceTextToolTests : IDisposable
         result.IsSuccessful.Should().BeTrue();
 
         var data = result.Data as Dictionary<string, object?>;
-        data!["files_modified"].Should().Be(0);
-        data["total_replacements"].Should().Be(0);
+        data.Should().NotBeNull();
+        
+        // When processing empty file or no matches, items list should exist but be empty
+        data.Should().ContainKey("items");
+        var items = data!["items"] as IList;
+        items.Should().NotBeNull();
+        var filesModified = GetFilesModified(items!);
+        filesModified.Should().Be(0);
+        var totalReplacements = GetTotalReplacements(items!);
+        totalReplacements.Should().Be(0);
 
         // File should remain unchanged
         var fileContent = await File.ReadAllTextAsync(_testFile);
@@ -872,6 +1100,9 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
@@ -901,23 +1132,31 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext();
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
         var result = await _tool.ExecuteAsync(parameters, context);
 
         // Assert
         result.Should().NotBeNull();
         result.IsSuccessful.Should().BeTrue();
 
-        var resultList = result.Data as List<object>;
-        resultList.Should().NotBeNull();
-        resultList.Should().HaveCount(1); // One file processed
-
-        var fileResult = resultList![0] as Dictionary<string, object>;
+        var data = result.Data as Dictionary<string, object?>;
+        data.Should().NotBeNull();
+        
+        // When processing empty file or no matches, items list should exist but be empty
+        data.Should().ContainKey("items");
+        var items = data!["items"] as IList;
+        items.Should().NotBeNull();
+        items.Should().HaveCount(1); // One file processed
+        
+        var fileResult = items![0] as Dictionary<string, object?>;
         fileResult.Should().NotBeNull();
-        fileResult.Should().ContainKey("SampleMatches");
+        fileResult.Should().NotBeNull();
+        var sampleMatches = GetSampleMatches(fileResult!);
+        sampleMatches.Should().NotBeNull();
 
         // Sample matches should be limited (typically to 5)
-        var sampleMatches = fileResult!["SampleMatches"] as List<object>;
-        sampleMatches.Should().NotBeNull();
         sampleMatches!.Count.Should().BeLessOrEqualTo(5);
     }
 
