@@ -49,7 +49,7 @@ public partial class FormatTextTool : ToolBase
             new()
             {
                 Name = "options",
-                Description = "Additional options for the formatting operation (JSON object)",
+                Description = "Additional options for the formatting operation (JSON object or string)",
                 Type = "object",
                 Required = false
             }
@@ -131,7 +131,23 @@ public partial class FormatTextTool : ToolBase
         {
             try
             {
-                return JsonSerializer.Deserialize<Dictionary<string, object?>>(jsonString) ?? [];
+                using var doc = JsonDocument.Parse(jsonString);
+                var result = new Dictionary<string, object?>();
+                
+                foreach (var property in doc.RootElement.EnumerateObject())
+                {
+                    result[property.Name] = property.Value.ValueKind switch
+                    {
+                        JsonValueKind.True => true,
+                        JsonValueKind.False => false,
+                        JsonValueKind.Number => property.Value.TryGetInt32(out var intValue) ? intValue : property.Value.GetDouble(),
+                        JsonValueKind.String => property.Value.GetString(),
+                        JsonValueKind.Null => null,
+                        _ => property.Value.GetRawText()
+                    };
+                }
+                
+                return result;
             }
             catch
             {

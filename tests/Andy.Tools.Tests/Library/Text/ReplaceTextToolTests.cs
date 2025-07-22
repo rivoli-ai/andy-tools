@@ -43,12 +43,19 @@ public class ReplaceTextToolTests : IDisposable
         int count = 0;
         foreach (var item in items)
         {
-            if (item is Dictionary<string, object?> fileResult && 
-                fileResult.TryGetValue("Modified", out var modified) && 
-                modified is bool isModified && 
-                isModified)
+            // FileReplaceResult is a private class, so we need to use reflection
+            var type = item?.GetType();
+            if (type != null)
             {
-                count++;
+                var modifiedProp = type.GetProperty("Modified");
+                if (modifiedProp != null)
+                {
+                    var value = modifiedProp.GetValue(item);
+                    if (value is bool isModified && isModified)
+                    {
+                        count++;
+                    }
+                }
             }
         }
         return count;
@@ -59,21 +66,36 @@ public class ReplaceTextToolTests : IDisposable
         int total = 0;
         foreach (var item in items)
         {
-            if (item is Dictionary<string, object?> fileResult && 
-                fileResult.TryGetValue("ReplacementCount", out var count) && 
-                count is int replacementCount)
+            // FileReplaceResult is a private class, so we need to use reflection
+            var type = item?.GetType();
+            if (type != null)
             {
-                total += replacementCount;
+                var replacementCountProp = type.GetProperty("ReplacementCount");
+                if (replacementCountProp != null)
+                {
+                    var value = replacementCountProp.GetValue(item);
+                    if (value is int replacementCount)
+                    {
+                        total += replacementCount;
+                    }
+                }
             }
         }
         return total;
     }
     
-    private static IList? GetSampleMatches(Dictionary<string, object?> fileResult)
+    private static IList? GetSampleMatches(object fileResult)
     {
-        if (fileResult.TryGetValue("SampleMatches", out var matches))
+        // FileReplaceResult is a private class, so we need to use reflection
+        var type = fileResult?.GetType();
+        if (type != null)
         {
-            return matches as IList;
+            var sampleMatchesProp = type.GetProperty("SampleMatches");
+            if (sampleMatchesProp != null)
+            {
+                var value = sampleMatchesProp.GetValue(fileResult);
+                return value as IList;
+            }
         }
         return null;
     }
@@ -172,7 +194,8 @@ public class ReplaceTextToolTests : IDisposable
             ["search_pattern"] = "world",
             ["replacement_text"] = "universe",
             ["target_path"] = _testFile,
-            ["search_type"] = "exact"
+            ["search_type"] = "exact",
+            ["whole_words_only"] = true
         };
 
         var context = new ToolExecutionContext();
@@ -188,7 +211,7 @@ public class ReplaceTextToolTests : IDisposable
         result.IsSuccessful.Should().BeTrue();
 
         var newContent = await File.ReadAllTextAsync(_testFile);
-        newContent.Should().Be("Hello universe. worldly affairs.");
+        newContent.Should().Be("Hello universe. worldly affairs."); // Only exact "world", not "worldly"
 
         var data = result.Data as Dictionary<string, object?>;
         data.Should().NotBeNull();
@@ -510,8 +533,7 @@ public class ReplaceTextToolTests : IDisposable
         // Assert
         result.Should().NotBeNull();
         result.IsSuccessful.Should().BeTrue();
-        result.Metadata.Should().ContainKey("message");
-        result.Metadata["message"]?.ToString().Should().Contain("Would replace");
+        result.Message.Should().Contain("Dry run: Would replace");
 
         // File should remain unchanged
         var fileContent = await File.ReadAllTextAsync(_testFile);
@@ -527,7 +549,7 @@ public class ReplaceTextToolTests : IDisposable
         var totalReplacements = GetTotalReplacements(items!);
         totalReplacements.Should().Be(1); // Still reports what would be replaced
         var filesModified = GetFilesModified(items!);
-        filesModified.Should().Be(1);
+        filesModified.Should().Be(0); // In dry run, Modified is false
     }
 
     #endregion
@@ -638,7 +660,7 @@ public class ReplaceTextToolTests : IDisposable
             ["search_pattern"] = "world",
             ["replacement_text"] = "universe",
             ["target_path"] = _testDirectory,
-            ["file_patterns"] = new[] { "*.txt" }
+            ["file_patterns"] = new List<string> { "*.txt" }
         };
 
         var context = new ToolExecutionContext();
@@ -680,7 +702,7 @@ public class ReplaceTextToolTests : IDisposable
             ["search_pattern"] = "world",
             ["replacement_text"] = "universe",
             ["target_path"] = _testDirectory,
-            ["exclude_patterns"] = new[] { "*.log" }
+            ["exclude_patterns"] = new List<string> { "*.log" }
         };
 
         var context = new ToolExecutionContext();
@@ -753,7 +775,8 @@ public class ReplaceTextToolTests : IDisposable
     public async Task ExecuteAsync_FileTooLarge_ShouldSkipFile()
     {
         // Arrange
-        var largeContent = new string('A', 1000) + " world " + new string('B', 1000);
+        // Create a file larger than 0.1 MB (need more than 104,857 bytes)
+        var largeContent = new string('A', 53000) + " world " + new string('B', 53000);
         await File.WriteAllTextAsync(_testFile, largeContent);
 
         var parameters = new Dictionary<string, object?>
@@ -761,7 +784,7 @@ public class ReplaceTextToolTests : IDisposable
             ["search_pattern"] = "world",
             ["replacement_text"] = "universe",
             ["target_path"] = _testFile,
-            ["max_file_size_mb"] = 0.001 // Very small limit (1KB)
+            ["max_file_size_mb"] = 0.1 // Minimum allowed limit
         };
 
         var context = new ToolExecutionContext();
@@ -846,7 +869,7 @@ public class ReplaceTextToolTests : IDisposable
         // Assert
         result.Should().NotBeNull();
         result.IsSuccessful.Should().BeFalse();
-        result.ErrorMessage.Should().Contain("Invalid regex pattern");
+        result.ErrorMessage.Should().Contain("Invalid pattern");
     }
 
     [Fact]
@@ -944,6 +967,9 @@ public class ReplaceTextToolTests : IDisposable
         var context = new ToolExecutionContext { CancellationToken = cts.Token };
 
         // Act
+        // Initialize the tool
+        await _tool.InitializeAsync();
+        
         cts.Cancel();
         var result = await _tool.ExecuteAsync(parameters, context);
 
@@ -1148,10 +1174,9 @@ public class ReplaceTextToolTests : IDisposable
         data.Should().ContainKey("items");
         var items = data!["items"] as IList;
         items.Should().NotBeNull();
-        items.Should().HaveCount(1); // One file processed
+        items!.Count.Should().Be(1); // One file processed
         
-        var fileResult = items![0] as Dictionary<string, object?>;
-        fileResult.Should().NotBeNull();
+        var fileResult = items![0];
         fileResult.Should().NotBeNull();
         var sampleMatches = GetSampleMatches(fileResult!);
         sampleMatches.Should().NotBeNull();

@@ -153,6 +153,12 @@ public class ReplaceTextTool : ToolBase
         var dryRun = GetParameter(parameters, "dry_run", false);
         var maxFileSizeMb = GetParameter<double>(parameters, "max_file_size_mb", 10);
         var encodingName = GetParameter<string>(parameters, "encoding");
+        
+        // Validate search pattern is not empty
+        if (string.IsNullOrWhiteSpace(searchPattern))
+        {
+            return ToolResults.InvalidParameter("search_pattern", searchPattern, "Search pattern cannot be empty");
+        }
 
         try
         {

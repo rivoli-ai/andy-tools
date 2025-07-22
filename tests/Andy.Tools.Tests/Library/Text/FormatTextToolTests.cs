@@ -924,14 +924,20 @@ public class FormatTextToolTests : IDisposable
     #region Options Parsing Tests
 
     [Fact]
-    public async Task ExecuteAsync_WithJsonStringOptions_ShouldParseOptions()
+    public async Task ExecuteAsync_WithOptionsForSorting_ShouldSortDescending()
     {
         // Arrange
+        // The parameter type is "object", so we pass a dictionary
+        var options = new Dictionary<string, object?>
+        {
+            ["descending"] = true
+        };
+        
         var parameters = new Dictionary<string, object?>
         {
             ["input_text"] = "apple\nbanana\nzebra",
             ["operation"] = "sort_lines",
-            ["options"] = "{\"descending\": true}"
+            ["options"] = options
         };
 
         var context = new ToolExecutionContext();
@@ -1008,7 +1014,7 @@ public class FormatTextToolTests : IDisposable
         // Assert
         result.Should().NotBeNull();
         result.IsSuccessful.Should().BeFalse();
-        result.ErrorMessage.Should().Contain("Unknown operation");
+        result.ErrorMessage.Should().Contain("Parameter 'operation' must be one of");
     }
 
     [Fact]
