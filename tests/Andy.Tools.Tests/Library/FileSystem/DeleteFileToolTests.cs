@@ -76,10 +76,11 @@ public class DeleteFileToolTests : IDisposable
 
         var parameters = new Dictionary<string, object?>
         {
-            ["target_path"] = _testFile
+            ["target_path"] = _testFile,
+            ["confirm_delete"] = false
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -89,13 +90,21 @@ public class DeleteFileToolTests : IDisposable
 
         // Assert
         result.Should().NotBeNull();
+        if (!result.IsSuccessful)
+        {
+            Console.WriteLine($"DeleteValidFile test failed - Error: {result.ErrorMessage}");
+            if (result.Data is Dictionary<string, object?> data && data.ContainsKey("validation_errors"))
+            {
+                Console.WriteLine($"Validation errors: {string.Join(", ", data["validation_errors"])}");
+            }
+        }
         result.IsSuccessful.Should().BeTrue();
         File.Exists(_testFile).Should().BeFalse();
 
-        var data = result.Data as Dictionary<string, object?>;
-        data.Should().NotBeNull();
-        data.Should().ContainKey("deleted_items");
-        data!["deleted_items"].Should().Be(1);
+        var resultData = result.Data as Dictionary<string, object?>;
+        resultData.Should().NotBeNull();
+        resultData.Should().ContainKey("deleted_items");
+        resultData!["deleted_items"].Should().Be(1);
     }
 
     [Fact]
@@ -109,10 +118,11 @@ public class DeleteFileToolTests : IDisposable
         {
             ["target_path"] = _testFile,
             ["create_backup"] = true,
-            ["backup_location"] = _backupDirectory
+            ["backup_location"] = _backupDirectory,
+            ["confirm_delete"] = false
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -142,10 +152,11 @@ public class DeleteFileToolTests : IDisposable
         var parameters = new Dictionary<string, object?>
         {
             ["target_path"] = _testFile,
-            ["force"] = true
+            ["force"] = true,
+            ["confirm_delete"] = false
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -169,10 +180,11 @@ public class DeleteFileToolTests : IDisposable
         var parameters = new Dictionary<string, object?>
         {
             ["target_path"] = _testFile,
-            ["force"] = false
+            ["force"] = false,
+            ["confirm_delete"] = false
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -199,10 +211,11 @@ public class DeleteFileToolTests : IDisposable
 
         var parameters = new Dictionary<string, object?>
         {
-            ["target_path"] = _testDirectory2
+            ["target_path"] = _testDirectory2,
+            ["confirm_delete"] = false
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -230,10 +243,11 @@ public class DeleteFileToolTests : IDisposable
         var parameters = new Dictionary<string, object?>
         {
             ["target_path"] = _testDirectory2,
-            ["recursive"] = true
+            ["recursive"] = true,
+            ["confirm_delete"] = false
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -262,10 +276,11 @@ public class DeleteFileToolTests : IDisposable
         var parameters = new Dictionary<string, object?>
         {
             ["target_path"] = _testDirectory2,
-            ["recursive"] = false
+            ["recursive"] = false,
+            ["confirm_delete"] = false
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -294,10 +309,11 @@ public class DeleteFileToolTests : IDisposable
         var parameters = new Dictionary<string, object?>
         {
             ["target_path"] = _testFile,
-            ["max_size_mb"] = 0.5 // 500KB limit
+            ["max_size_mb"] = 0.5, // 500KB limit
+            ["confirm_delete"] = false
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -323,10 +339,11 @@ public class DeleteFileToolTests : IDisposable
         var parameters = new Dictionary<string, object?>
         {
             ["target_path"] = Path.Combine(_testDirectory2, "important.txt"),
-            ["exclude_patterns"] = new[] { "*.txt" }
+            ["exclude_patterns"] = new[] { "*.txt" },
+            ["confirm_delete"] = false
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -351,10 +368,11 @@ public class DeleteFileToolTests : IDisposable
         // Arrange
         var parameters = new Dictionary<string, object?>
         {
-            ["target_path"] = Path.Combine(_testDirectory, "nonexistent.txt")
+            ["target_path"] = Path.Combine(_testDirectory, "nonexistent.txt"),
+            ["confirm_delete"] = false
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -374,10 +392,11 @@ public class DeleteFileToolTests : IDisposable
         // Arrange
         var parameters = new Dictionary<string, object?>
         {
-            ["target_path"] = ""
+            ["target_path"] = "",
+            ["confirm_delete"] = false
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -400,7 +419,7 @@ public class DeleteFileToolTests : IDisposable
             // Missing path parameter
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -428,7 +447,8 @@ public class DeleteFileToolTests : IDisposable
         var parameters = new Dictionary<string, object?>
         {
             ["target_path"] = _testDirectory2,
-            ["recursive"] = true
+            ["recursive"] = true,
+            ["confirm_delete"] = false
         };
 
         var context = new ToolExecutionContext { CancellationToken = cts.Token };
@@ -463,10 +483,11 @@ public class DeleteFileToolTests : IDisposable
 
         var parameters = new Dictionary<string, object?>
         {
-            ["target_path"] = _testFile
+            ["target_path"] = _testFile,
+            ["confirm_delete"] = false
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -502,11 +523,12 @@ public class DeleteFileToolTests : IDisposable
         var parameters = new Dictionary<string, object?>
         {
             ["target_path"] = _testFile,
-            ["create_backup"] = true
+            ["create_backup"] = true,
             // No backup_directory specified - should use default
+            ["confirm_delete"] = false
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();

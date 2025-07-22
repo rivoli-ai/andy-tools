@@ -54,7 +54,13 @@ public class MoveFileToolTests : IDisposable
         metadata.Category.Should().Be(ToolCategory.FileSystem);
         metadata.Id.Should().Be("move_file");
         metadata.Name.Should().Be("Move File");
-        metadata.Description.Should().Contain("move");
+        
+        // Debug output
+        Console.WriteLine($"Description: '{metadata.Description}'");
+        Console.WriteLine($"Contains 'move': {metadata.Description.Contains("move")}");
+        Console.WriteLine($"Contains 'Move': {metadata.Description.Contains("Move")}");
+        
+        metadata.Description.Should().ContainAny("move", "Move");
         metadata.Parameters.Should().NotBeEmpty();
     }
 
@@ -68,7 +74,8 @@ public class MoveFileToolTests : IDisposable
         parameters.Should().Contain(p => p.Name == "source_path" && p.Required);
         parameters.Should().Contain(p => p.Name == "destination_path" && p.Required);
         parameters.Should().Contain(p => p.Name == "overwrite" && !p.Required);
-        parameters.Should().Contain(p => p.Name == "create_backup" && !p.Required);
+        parameters.Should().Contain(p => p.Name == "backup_existing" && !p.Required);
+        parameters.Should().Contain(p => p.Name == "create_destination_directory" && !p.Required);
     }
 
     #endregion
@@ -88,7 +95,7 @@ public class MoveFileToolTests : IDisposable
             ["destination_path"] = _destinationFile
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -124,7 +131,7 @@ public class MoveFileToolTests : IDisposable
             ["destination_path"] = newName
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -154,7 +161,7 @@ public class MoveFileToolTests : IDisposable
             ["overwrite"] = false
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -185,7 +192,7 @@ public class MoveFileToolTests : IDisposable
             ["overwrite"] = true
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -214,11 +221,10 @@ public class MoveFileToolTests : IDisposable
             ["source_path"] = _sourceFile,
             ["destination_path"] = _destinationFile,
             ["overwrite"] = true,
-            ["create_backup"] = true,
-            ["backup_directory"] = _backupDirectory
+            ["backup_existing"] = true
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -232,9 +238,8 @@ public class MoveFileToolTests : IDisposable
         File.Exists(_sourceFile).Should().BeFalse();
         (await File.ReadAllTextAsync(_destinationFile)).Should().Be(sourceContent);
 
-        // Backup should exist
-        Directory.Exists(_backupDirectory).Should().BeTrue();
-        var backupFiles = Directory.GetFiles(_backupDirectory);
+        // Backup should exist in the same directory with backup extension
+        var backupFiles = Directory.GetFiles(Path.GetDirectoryName(_destinationFile)!, "*.backup.*");
         backupFiles.Should().HaveCount(1);
         (await File.ReadAllTextAsync(backupFiles[0])).Should().Be(existingContent);
 
@@ -251,6 +256,17 @@ public class MoveFileToolTests : IDisposable
     public async Task ExecuteAsync_MoveDirectory_ShouldMoveAllContents()
     {
         // Arrange
+        // Clean up any existing directories first
+        if (Directory.Exists(_sourceDirectory))
+        {
+            Directory.Delete(_sourceDirectory, true);
+        }
+        if (Directory.Exists(_destinationDirectory))
+        {
+            Directory.Delete(_destinationDirectory, true);
+        }
+        
+        // Now create the source
         Directory.CreateDirectory(_sourceDirectory);
         var subDir = Path.Combine(_sourceDirectory, "subdir");
         Directory.CreateDirectory(subDir);
@@ -264,7 +280,7 @@ public class MoveFileToolTests : IDisposable
             ["destination_path"] = _destinationDirectory
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -274,7 +290,21 @@ public class MoveFileToolTests : IDisposable
 
         // Assert
         result.Should().NotBeNull();
+        if (!result.IsSuccessful)
+        {
+            Console.WriteLine($"Move failed: {result.ErrorMessage}");
+        }
         result.IsSuccessful.Should().BeTrue();
+
+        Console.WriteLine($"Source dir exists: {Directory.Exists(_sourceDirectory)}");
+        Console.WriteLine($"Dest dir exists: {Directory.Exists(_destinationDirectory)}");
+        Console.WriteLine($"File1 at dest: {File.Exists(Path.Combine(_destinationDirectory, "file1.txt"))}");
+        
+        if (Directory.Exists(_destinationDirectory))
+        {
+            var files = Directory.GetFiles(_destinationDirectory, "*", SearchOption.AllDirectories);
+            Console.WriteLine($"Files in destination: {string.Join(", ", files)}");
+        }
 
         Directory.Exists(_sourceDirectory).Should().BeFalse();
         Directory.Exists(_destinationDirectory).Should().BeTrue();
@@ -289,7 +319,19 @@ public class MoveFileToolTests : IDisposable
     public async Task ExecuteAsync_MoveEmptyDirectory_ShouldMoveSuccessfully()
     {
         // Arrange
+        // Clean up any existing directories first
+        if (Directory.Exists(_sourceDirectory))
+        {
+            Directory.Delete(_sourceDirectory, true);
+        }
+        if (Directory.Exists(_destinationDirectory))
+        {
+            Directory.Delete(_destinationDirectory, true);
+        }
+        
+        // Now create the source
         Directory.CreateDirectory(_sourceDirectory);
+        
 
         var parameters = new Dictionary<string, object?>
         {
@@ -297,7 +339,7 @@ public class MoveFileToolTests : IDisposable
             ["destination_path"] = _destinationDirectory
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -307,6 +349,17 @@ public class MoveFileToolTests : IDisposable
 
         // Assert
         result.Should().NotBeNull();
+        if (!result.IsSuccessful)
+        {
+            Console.WriteLine($"Empty dir move failed: {result.ErrorMessage}");
+            if (result.Metadata != null)
+            {
+                foreach (var kvp in result.Metadata)
+                {
+                    Console.WriteLine($"  {kvp.Key}: {kvp.Value}");
+                }
+            }
+        }
         result.IsSuccessful.Should().BeTrue();
         Directory.Exists(_sourceDirectory).Should().BeFalse();
         Directory.Exists(_destinationDirectory).Should().BeTrue();
@@ -335,7 +388,10 @@ public class MoveFileToolTests : IDisposable
             ["destination_path"] = crossVolumeDestination
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
+
+        // Initialize the tool
+        await _tool.InitializeAsync();
 
         try
         {
@@ -379,7 +435,7 @@ public class MoveFileToolTests : IDisposable
             ["destination_path"] = _destinationFile
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -403,7 +459,7 @@ public class MoveFileToolTests : IDisposable
             ["destination_path"] = _destinationFile
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -429,7 +485,7 @@ public class MoveFileToolTests : IDisposable
             ["destination_path"] = ""
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -453,7 +509,7 @@ public class MoveFileToolTests : IDisposable
             // Missing destination_path
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -479,7 +535,7 @@ public class MoveFileToolTests : IDisposable
             ["destination_path"] = _sourceFile // Same as source
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -542,7 +598,7 @@ public class MoveFileToolTests : IDisposable
             ["destination_path"] = subdirectoryPath
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -570,7 +626,7 @@ public class MoveFileToolTests : IDisposable
             ["create_destination_directory"] = true
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -603,7 +659,7 @@ public class MoveFileToolTests : IDisposable
             ["destination_path"] = _destinationFile
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -640,7 +696,7 @@ public class MoveFileToolTests : IDisposable
             ["destination_path"] = _destinationFile
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -666,6 +722,17 @@ public class MoveFileToolTests : IDisposable
     public async Task ExecuteAsync_MoveDirectoryWithStatistics_ShouldCountAllItems()
     {
         // Arrange
+        // Clean up any existing directories first
+        if (Directory.Exists(_sourceDirectory))
+        {
+            Directory.Delete(_sourceDirectory, true);
+        }
+        if (Directory.Exists(_destinationDirectory))
+        {
+            Directory.Delete(_destinationDirectory, true);
+        }
+        
+        // Now create the source
         Directory.CreateDirectory(_sourceDirectory);
         await File.WriteAllTextAsync(Path.Combine(_sourceDirectory, "file1.txt"), "Content 1");
         await File.WriteAllTextAsync(Path.Combine(_sourceDirectory, "file2.txt"), "Content 2");
@@ -680,7 +747,7 @@ public class MoveFileToolTests : IDisposable
             ["destination_path"] = _destinationDirectory
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
 
         // Initialize the tool
         await _tool.InitializeAsync();

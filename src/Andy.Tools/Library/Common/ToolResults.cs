@@ -17,6 +17,7 @@ public static class ToolResults
     public static ToolResult Success(object? data = null, string? message = null, Dictionary<string, object?>? metadata = null)
     {
         var result = ToolResult.Success(data, metadata ?? []);
+        result.Message = message;
         if (!string.IsNullOrEmpty(message))
         {
             result.Metadata["message"] = message;

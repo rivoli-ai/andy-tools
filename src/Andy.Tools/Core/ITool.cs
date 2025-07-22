@@ -33,6 +33,11 @@ public class ToolResult
     public double? DurationMs { get; set; }
 
     /// <summary>
+    /// Gets or sets the result message.
+    /// </summary>
+    public string? Message { get; set; }
+
+    /// <summary>
     /// Gets the result output (alias for Data for compatibility).
     /// </summary>
     public object? Output => Data;

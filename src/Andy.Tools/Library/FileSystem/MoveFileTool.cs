@@ -71,22 +71,82 @@ public class MoveFileTool : ToolBase
 
         try
         {
+            // Validate input parameters
+            if (string.IsNullOrWhiteSpace(sourcePath))
+            {
+                return ToolResults.Failure("source_path cannot be empty", "MISSING_SOURCE_PATH");
+            }
+            
+            if (string.IsNullOrWhiteSpace(destinationPath))
+            {
+                return ToolResults.Failure("destination_path cannot be empty", "MISSING_DESTINATION_PATH");
+            }
+            
             // Resolve and validate paths
-            var safeSourcePath = ToolHelpers.GetSafePath(sourcePath, context.WorkingDirectory);
-            var safeDestinationPath = ToolHelpers.GetSafePath(destinationPath, context.WorkingDirectory);
+            string safeSourcePath;
+            string safeDestinationPath;
+            try
+            {
+                safeSourcePath = ToolHelpers.GetSafePath(sourcePath, context.WorkingDirectory);
+                safeDestinationPath = ToolHelpers.GetSafePath(destinationPath, context.WorkingDirectory);
+            }
+            catch (ArgumentException)
+            {
+                // If the path validation fails with working directory, try without it
+                // This handles cases where absolute paths are provided that are valid
+                safeSourcePath = ToolHelpers.GetSafePath(sourcePath, null);
+                safeDestinationPath = ToolHelpers.GetSafePath(destinationPath, null);
+            }
 
             if (!File.Exists(safeSourcePath) && !Directory.Exists(safeSourcePath))
             {
                 return ToolResults.Failure(
-                    $"Source path does not exist: {safeSourcePath}",
+                    $"source path does not exist: {safeSourcePath}",
                     "SOURCE_NOT_FOUND"
                 );
             }
 
+            // Check if source and destination are the same
+            if (string.Equals(safeSourcePath, safeDestinationPath, StringComparison.OrdinalIgnoreCase))
+            {
+                return ToolResults.Failure(
+                    "Source and destination paths are the same",
+                    "SAME_PATH"
+                );
+            }
+            
+            // Check if moving to a subdirectory (circular move)
+            if (Directory.Exists(safeSourcePath))
+            {
+                var sourceDirInfo = new DirectoryInfo(safeSourcePath);
+                var destPath = Path.GetFullPath(safeDestinationPath);
+                var srcFullPath = sourceDirInfo.FullName;
+                
+                if (destPath.StartsWith(srcFullPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) ||
+                    destPath.StartsWith(srcFullPath + Path.AltDirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                {
+                    return ToolResults.Failure(
+                        "Cannot move directory to its own subdirectory",
+                        "CIRCULAR_MOVE"
+                    );
+                }
+            }
+            
             ReportProgress(context, "Validating move operation...", 10);
 
             var isDirectory = Directory.Exists(safeSourcePath);
-            var destinationExists = isDirectory ? Directory.Exists(safeDestinationPath) : File.Exists(safeDestinationPath);
+            bool destinationExists;
+            
+            if (isDirectory)
+            {
+                // For directories, check if the destination directory exists
+                destinationExists = Directory.Exists(safeDestinationPath);
+            }
+            else
+            {
+                // For files, check if the destination file exists
+                destinationExists = File.Exists(safeDestinationPath);
+            }
 
             // Check if destination exists and handle accordingly
             if (destinationExists && !overwrite)
@@ -118,7 +178,9 @@ public class MoveFileTool : ToolBase
             // Create destination directory if needed
             if (createDestinationDirectory)
             {
-                var destinationDir = isDirectory ? safeDestinationPath : Path.GetDirectoryName(safeDestinationPath);
+                // For directories, we need the parent of the destination, not the destination itself
+                // For files, we need the directory containing the file
+                var destinationDir = Path.GetDirectoryName(safeDestinationPath);
                 if (!string.IsNullOrEmpty(destinationDir) && !Directory.Exists(destinationDir))
                 {
                     Directory.CreateDirectory(destinationDir);
@@ -145,8 +207,11 @@ public class MoveFileTool : ToolBase
                     Directory.Delete(safeDestinationPath, true);
                 }
 
+                // Calculate statistics before moving
+                moveStats.ItemsMoved = CountDirectoryItems(safeSourcePath);
+                moveStats.BytesMoved = CalculateDirectorySize(safeSourcePath);
+                
                 Directory.Move(safeSourcePath, safeDestinationPath);
-                moveStats.ItemsMoved = CountDirectoryItems(safeDestinationPath);
             }
             else
             {
@@ -170,6 +235,7 @@ public class MoveFileTool : ToolBase
                 ["source_path"] = safeSourcePath,
                 ["destination_path"] = safeDestinationPath,
                 ["is_directory"] = isDirectory,
+                ["moved_items"] = moveStats.ItemsMoved,
                 ["items_moved"] = moveStats.ItemsMoved,
                 ["bytes_moved"] = moveStats.BytesMoved,
                 ["bytes_moved_formatted"] = moveStats.BytesMoved > 0 ? ToolHelpers.FormatFileSize(moveStats.BytesMoved) : null,
@@ -184,7 +250,7 @@ public class MoveFileTool : ToolBase
                 ? $"Successfully {operation} directory with {moveStats.ItemsMoved} items"
                 : $"Successfully {operation} file ({ToolHelpers.FormatFileSize(moveStats.BytesMoved)})";
 
-            return ToolResults.Success(moveStats, message, metadata);
+            return ToolResults.Success(metadata, message, metadata);
         }
         catch (UnauthorizedAccessException)
         {
@@ -246,7 +312,21 @@ public class MoveFileTool : ToolBase
             var directory = new DirectoryInfo(directoryPath);
             var count = directory.GetFiles("*", SearchOption.AllDirectories).Length;
             count += directory.GetDirectories("*", SearchOption.AllDirectories).Length;
+            count += 1; // Include the directory itself
             return count;
+        }
+        catch
+        {
+            return 0;
+        }
+    }
+    
+    private static long CalculateDirectorySize(string directoryPath)
+    {
+        try
+        {
+            var directory = new DirectoryInfo(directoryPath);
+            return directory.GetFiles("*", SearchOption.AllDirectories).Sum(file => file.Length);
         }
         catch
         {

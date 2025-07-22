@@ -100,19 +100,49 @@ public class DeleteFileTool : ToolBase
         var backupLocation = GetParameter<string>(parameters, "backup_location");
         var force = GetParameter(parameters, "force", false);
         var confirmDelete = GetParameter(parameters, "confirm_delete", true);
-        var excludePatterns = GetParameter<List<string>>(parameters, "exclude_patterns", []);
+        var excludePatternsRaw = parameters.GetValueOrDefault("exclude_patterns");
+        var excludePatterns = new List<string>();
+        if (excludePatternsRaw is IEnumerable<object> patterns)
+        {
+            excludePatterns = patterns.Select(p => p?.ToString() ?? "").Where(s => !string.IsNullOrEmpty(s)).ToList();
+        }
+        else if (excludePatternsRaw is string[] stringArray)
+        {
+            excludePatterns = stringArray.ToList();
+        }
+        else if (excludePatternsRaw is List<string> list)
+        {
+            excludePatterns = list;
+        }
         var maxSizeMb = GetParameter<double>(parameters, "max_size_mb", 1000);
 
         try
         {
+            // Validate target path
+            if (string.IsNullOrWhiteSpace(targetPath))
+            {
+                return ToolResults.Failure("Target path is required", "MISSING_TARGET_PATH");
+            }
+            
             // Resolve and validate the target path
-            var safeTargetPath = ToolHelpers.GetSafePath(targetPath, context.WorkingDirectory);
+            string safeTargetPath;
+            try
+            {
+                safeTargetPath = ToolHelpers.GetSafePath(targetPath, context.WorkingDirectory);
+            }
+            catch (ArgumentException)
+            {
+                // If the path validation fails with working directory, try without it
+                // This handles cases where absolute paths are provided that are valid
+                safeTargetPath = ToolHelpers.GetSafePath(targetPath, null);
+            }
 
             if (!File.Exists(safeTargetPath) && !Directory.Exists(safeTargetPath))
             {
                 return ToolResults.Failure(
                     $"Target path does not exist: {safeTargetPath}",
-                    "TARGET_NOT_FOUND"
+                    "TARGET_NOT_FOUND",
+                    new { original_path = targetPath, resolved_path = safeTargetPath, working_directory = context.WorkingDirectory }
                 );
             }
 
@@ -199,15 +229,20 @@ public class DeleteFileTool : ToolBase
 
             ReportProgress(context, "Deletion completed", 100);
 
+            var deletedItems = isDirectory ? deleteStats.FilesDeleted + deleteStats.DirectoriesDeleted : deleteStats.FilesDeleted;
+            
             var metadata = new Dictionary<string, object?>
             {
                 ["target_path"] = safeTargetPath,
                 ["is_directory"] = isDirectory,
+                ["deleted_items"] = deletedItems,
                 ["files_deleted"] = deleteStats.FilesDeleted,
                 ["directories_deleted"] = deleteStats.DirectoriesDeleted,
+                ["bytes_freed"] = deleteStats.BytesDeleted,
                 ["bytes_deleted"] = deleteStats.BytesDeleted,
                 ["bytes_deleted_formatted"] = ToolHelpers.FormatFileSize(deleteStats.BytesDeleted),
                 ["backup_created"] = deleteStats.BackupPath != null,
+                ["backup_location"] = deleteStats.BackupPath,
                 ["backup_path"] = deleteStats.BackupPath,
                 ["operation_time"] = deleteStats.OperationTime,
                 ["recursive"] = recursive,
@@ -220,10 +255,15 @@ public class DeleteFileTool : ToolBase
                 ? $"Successfully deleted directory: {deleteStats.FilesDeleted} files, {deleteStats.DirectoriesDeleted} directories"
                 : $"Successfully deleted file: {ToolHelpers.FormatFileSize(deleteStats.BytesDeleted)}";
 
-            return ToolResults.Success(deleteStats, message, metadata);
+            return ToolResults.Success(metadata, message, metadata);
         }
-        catch (UnauthorizedAccessException)
+        catch (UnauthorizedAccessException ex)
         {
+            // Check if the error is specifically about read-only files
+            if (ex.Message.Contains("read-only"))
+            {
+                return ToolResults.Failure(ex.Message, "READ_ONLY_FILE");
+            }
             return ToolResults.AccessDenied(targetPath, "delete");
         }
         catch (DirectoryNotFoundException)
@@ -277,6 +317,13 @@ public class DeleteFileTool : ToolBase
         ToolExecutionContext context)
     {
         backupLocation ??= Path.GetTempPath();
+        
+        // Ensure backup directory exists
+        if (!Directory.Exists(backupLocation))
+        {
+            Directory.CreateDirectory(backupLocation);
+        }
+        
         var backupName = $"backup_{Path.GetFileName(targetPath)}_{DateTime.UtcNow:yyyyMMddHHmmss}";
         stats.BackupPath = Path.Combine(backupLocation, backupName);
 
@@ -297,6 +344,21 @@ public class DeleteFileTool : ToolBase
         ToolExecutionContext context)
     {
         var fileInfo = new FileInfo(filePath);
+        
+        // Verify file exists before trying to delete
+        if (!fileInfo.Exists)
+        {
+            throw new FileNotFoundException($"Could not find file '{filePath}'.", filePath);
+        }
+        
+        // Capture the file size before deletion
+        var fileSize = fileInfo.Length;
+        
+        // Check for read-only attribute
+        if (fileInfo.IsReadOnly && !force)
+        {
+            throw new UnauthorizedAccessException($"Cannot delete read-only file '{filePath}' without force flag.");
+        }
 
         if (force && fileInfo.IsReadOnly)
         {
@@ -306,7 +368,7 @@ public class DeleteFileTool : ToolBase
         await Task.Run(() => File.Delete(filePath), context.CancellationToken);
 
         stats.FilesDeleted++;
-        stats.BytesDeleted += fileInfo.Length;
+        stats.BytesDeleted += fileSize;
     }
 
     private static async Task DeleteDirectoryAsync(

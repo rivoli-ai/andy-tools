@@ -4,6 +4,25 @@ using Andy.Tools.Library.Common;
 namespace Andy.Tools.Library.FileSystem;
 
 /// <summary>
+/// Represents a file system entry returned by ListDirectoryTool.
+/// </summary>
+public class FileSystemEntry
+{
+    public string Name { get; set; } = "";
+    public string? FullPath { get; set; }
+    public string Type { get; set; } = "";
+    public long? Size { get; set; }
+    public string? SizeFormatted { get; set; }
+    public string? Extension { get; set; }
+    public DateTime? Created { get; set; }
+    public DateTime? Modified { get; set; }
+    public string? Attributes { get; set; }
+    public bool? IsHidden { get; set; }
+    public bool? IsReadonly { get; set; }
+    public int? Depth { get; set; }
+}
+
+/// <summary>
 /// Tool for listing directory contents.
 /// </summary>
 public class ListDirectoryTool : ToolBase
@@ -147,11 +166,19 @@ public class ListDirectoryTool : ToolBase
                 metadata["max_depth"] = maxDepth.Value;
             }
 
-            return ToolResults.ListSuccess(
+            var result = ToolResults.ListSuccess(
                 items,
                 $"Listed {entries.Count} items in directory: {dirInfo.Name}",
                 entries.Count
             );
+            
+            // Add the metadata to the result
+            foreach (var kvp in metadata)
+            {
+                result.Metadata[kvp.Key] = kvp.Value;
+            }
+            
+            return result;
         }
         catch (UnauthorizedAccessException)
         {
@@ -263,33 +290,29 @@ public class ListDirectoryTool : ToolBase
         return [.. sorted];
     }
 
-    private static object FormatEntry(FileSystemEntryInfo entry, bool includeDetails)
+    private static FileSystemEntry FormatEntry(FileSystemEntryInfo entry, bool includeDetails)
     {
-        if (!includeDetails)
+        var result = new FileSystemEntry
         {
-            return new
-            {
-                name = entry.Name,
-                type = entry.IsFile ? "file" : "directory",
-                size = entry.IsFile ? entry.Size : (long?)null
-            };
+            Name = entry.Name,
+            Type = entry.IsFile ? "file" : "directory",
+            Size = entry.IsFile ? entry.Size : null
+        };
+
+        if (includeDetails)
+        {
+            result.FullPath = entry.FullPath;
+            result.SizeFormatted = entry.IsFile ? ToolHelpers.FormatFileSize(entry.Size) : null;
+            result.Extension = entry.IsFile ? entry.Extension : null;
+            result.Created = entry.CreatedTime;
+            result.Modified = entry.ModifiedTime;
+            result.Attributes = entry.Attributes.ToString();
+            result.IsHidden = entry.Attributes.HasFlag(FileAttributes.Hidden);
+            result.IsReadonly = entry.Attributes.HasFlag(FileAttributes.ReadOnly);
+            result.Depth = entry.Depth;
         }
 
-        return new
-        {
-            name = entry.Name,
-            full_path = entry.FullPath,
-            type = entry.IsFile ? "file" : "directory",
-            size = entry.IsFile ? entry.Size : (long?)null,
-            size_formatted = entry.IsFile ? ToolHelpers.FormatFileSize(entry.Size) : null,
-            extension = entry.IsFile ? entry.Extension : null,
-            created = entry.CreatedTime,
-            modified = entry.ModifiedTime,
-            attributes = entry.Attributes.ToString(),
-            is_hidden = entry.Attributes.HasFlag(FileAttributes.Hidden),
-            is_readonly = entry.Attributes.HasFlag(FileAttributes.ReadOnly),
-            depth = entry.Depth
-        };
+        return result;
     }
 
     private class FileSystemEntryInfo
