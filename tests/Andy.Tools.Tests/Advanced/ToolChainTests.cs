@@ -597,7 +597,8 @@ public class ToolChainBuilderTests
         _mockLoggerFactory = new Mock<ILoggerFactory>();
         _mockLogger = new Mock<ILogger<ToolChain>>();
 
-        _mockLoggerFactory.Setup(x => x.CreateLogger<ToolChain>()).Returns(_mockLogger.Object);
+        // Use the non-generic CreateLogger method which is not an extension method
+        _mockLoggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(_mockLogger.Object);
 
         _builder = new ToolChainBuilder(_mockToolExecutor.Object, _mockLoggerFactory.Object);
     }

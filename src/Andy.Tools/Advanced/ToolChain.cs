@@ -13,8 +13,8 @@ namespace Andy.Tools.Advanced;
 public class ToolChain(string id, string name, string description, IToolExecutor toolExecutor, ILogger<ToolChain> logger) : IToolChain
 {
     private readonly List<IToolChainStep> _steps = [];
-    private readonly IToolExecutor _toolExecutor = toolExecutor;
-    private readonly ILogger<ToolChain> _logger = logger;
+    private readonly IToolExecutor _toolExecutor = toolExecutor ?? throw new ArgumentNullException(nameof(toolExecutor));
+    private readonly ILogger<ToolChain> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc />
     public string Id { get; } = id;
@@ -183,14 +183,44 @@ public class ToolChain(string id, string name, string description, IToolExecutor
             // Execute steps in dependency order
             var executedSteps = new HashSet<string>();
             var stepQueue = GetExecutionOrder();
-
-            foreach (var step in stepQueue)
+            var deferredSteps = new List<IToolChainStep>();
+            
+            // Process all steps, including deferred ones
+            var remainingSteps = new Queue<IToolChainStep>(stepQueue);
+            
+            while (remainingSteps.Count > 0 || deferredSteps.Count > 0)
             {
+                // If no more steps in queue, process deferred steps
+                if (remainingSteps.Count == 0 && deferredSteps.Count > 0)
+                {
+                    _logger.LogDebug("Moving {Count} deferred steps back to queue", deferredSteps.Count);
+                    
+                    // Check if we can make progress - if no steps were executed since last defer, we're stuck
+                    var previousExecutedCount = executedSteps.Count;
+                    
+                    // Move deferred steps back to queue
+                    foreach (var deferredStep in deferredSteps)
+                    {
+                        remainingSteps.Enqueue(deferredStep);
+                    }
+                    deferredSteps.Clear();
+                }
+                
+                if (remainingSteps.Count == 0)
+                {
+                    // No progress can be made - break to avoid infinite loop
+                    break;
+                }
+                
+                var step = remainingSteps.Dequeue();
                 cancellationToken.ThrowIfCancellationRequested();
 
                 // Check if dependencies are satisfied
                 if (!AreDependenciesSatisfied(step, executedSteps))
                 {
+                    _logger.LogDebug("Deferring step {StepId} as dependencies not satisfied. Dependencies: {Deps}, Executed: {Executed}", 
+                        step.Id, string.Join(", ", step.Dependencies), string.Join(", ", executedSteps));
+                    deferredSteps.Add(step);
                     continue;
                 }
 
@@ -223,6 +253,7 @@ public class ToolChain(string id, string name, string description, IToolExecutor
                     }
 
                     executedSteps.Add(step.Id);
+                    _logger.LogDebug("Step {StepId} executed successfully. Total executed: {Count}", step.Id, executedSteps.Count);
                 }
                 catch (Exception ex)
                 {
@@ -375,6 +406,10 @@ public class ToolChain(string id, string name, string description, IToolExecutor
         }
 
         sorted.Reverse();
+        
+        // Debug logging
+        _logger.LogDebug("Execution order: {Steps}", string.Join(" -> ", sorted.Select(s => s.Id)));
+        
         return sorted;
     }
 
@@ -455,8 +490,8 @@ public class ToolChain(string id, string name, string description, IToolExecutor
 /// </remarks>
 public class ToolChainBuilder(IToolExecutor toolExecutor, ILoggerFactory loggerFactory)
 {
-    private readonly IToolExecutor _toolExecutor = toolExecutor;
-    private readonly ILoggerFactory _loggerFactory = loggerFactory;
+    private readonly IToolExecutor _toolExecutor = toolExecutor ?? throw new ArgumentNullException(nameof(toolExecutor));
+    private readonly ILoggerFactory _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
     private string _id = Guid.NewGuid().ToString();
     private string _name = "Unnamed Chain";
     private string _description = "";
