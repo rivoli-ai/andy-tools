@@ -8,13 +8,9 @@ namespace Andy.Tools.Execution;
 /// <summary>
 /// Default implementation of the security manager.
 /// </summary>
-/// <remarks>
-/// Initializes a new instance of the <see cref="SecurityManager"/> class.
-/// </remarks>
-/// <param name="logger">The logger.</param>
-public class SecurityManager(ILogger<SecurityManager> logger) : ISecurityManager
+public class SecurityManager : ISecurityManager
 {
-    private readonly ILogger<SecurityManager> _logger = logger;
+    private readonly ILogger<SecurityManager> _logger;
     private readonly ConcurrentBag<SecurityViolation> _violations = [];
     private readonly HashSet<string> _blockedHosts = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -32,6 +28,15 @@ public class SecurityManager(ILogger<SecurityManager> logger) : ISecurityManager
         "node.exe",
         "ruby.exe"
     };
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SecurityManager"/> class.
+    /// </summary>
+    /// <param name="logger">The logger.</param>
+    public SecurityManager(ILogger<SecurityManager> logger)
+    {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
 
     /// <inheritdoc />
     public IList<string> ValidateExecution(ToolMetadata toolMetadata, ToolPermissions permissions)
@@ -85,6 +90,13 @@ public class SecurityManager(ILogger<SecurityManager> logger) : ISecurityManager
     public bool IsFileAccessAllowed(string filePath, ToolPermissions permissions, FileAccessType accessType)
     {
         if (!permissions.FileSystemAccess)
+        {
+            return false;
+        }
+
+        // Check for invalid path characters or common invalid patterns
+        if (filePath.IndexOfAny(Path.GetInvalidPathChars()) >= 0 || 
+            filePath.Contains('<') || filePath.Contains('>'))
         {
             return false;
         }
@@ -280,13 +292,15 @@ public class SecurityManager(ILogger<SecurityManager> logger) : ISecurityManager
     public int ClearOldViolations(TimeSpan maxAge)
     {
         var cutoff = DateTimeOffset.UtcNow - maxAge;
-        var oldViolations = _violations.Where(v => v.Timestamp < cutoff).ToList();
-
-        // Create a new bag without the old violations
-        var newViolations = _violations.Where(v => v.Timestamp >= cutoff);
+        
+        // ConcurrentBag doesn't support removal, so we need to recreate it
+        var allViolations = _violations.ToList();
+        var recentViolations = allViolations.Where(v => v.Timestamp >= cutoff).ToList();
+        var oldViolations = allViolations.Where(v => v.Timestamp < cutoff).ToList();
+        
+        // Clear and repopulate with recent violations only
         _violations.Clear();
-
-        foreach (var violation in newViolations)
+        foreach (var violation in recentViolations)
         {
             _violations.Add(violation);
         }

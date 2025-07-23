@@ -92,13 +92,15 @@ public class ToolExecutor : IToolExecutor, IDisposable
         {
             ToolId = request.ToolId,
             CorrelationId = correlationId,
-            StartTime = DateTimeOffset.UtcNow
+            StartTime = DateTimeOffset.UtcNow,
+            Metadata = new Dictionary<string, object?>()
         };
 
         IResourceMonitoringSession? monitoringSession = null;
         ITool? tool = null;
         Activity? activity = null;
         CancellationTokenSource? executionCts = null;
+        CancellationTokenSource? combinedCts = null;
 
         try
         {
@@ -151,7 +153,7 @@ public class ToolExecutor : IToolExecutor, IDisposable
             }
 
             // Start resource monitoring
-            if (request.EnforceResourceLimits)
+            if (request.EnforceResourceLimits && request.Context.ResourceLimits != null)
             {
                 monitoringSession = _resourceMonitor.StartMonitoring(correlationId, request.Context.ResourceLimits);
             }
@@ -162,13 +164,13 @@ public class ToolExecutor : IToolExecutor, IDisposable
             {
                 executionCts.CancelAfter(request.TimeoutMs.Value);
             }
-            else if (request.Context.ResourceLimits.MaxExecutionTimeMs > 0)
+            else if (request.Context.ResourceLimits != null && request.Context.ResourceLimits.MaxExecutionTimeMs > 0)
             {
                 executionCts.CancelAfter(request.Context.ResourceLimits.MaxExecutionTimeMs);
             }
 
             // Combine with context cancellation token
-            var combinedCts = CancellationTokenSource.CreateLinkedTokenSource(
+            combinedCts = CancellationTokenSource.CreateLinkedTokenSource(
                 executionCts.Token,
                 request.Context.CancellationToken);
             request.Context.CancellationToken = combinedCts.Token;
@@ -208,7 +210,7 @@ public class ToolExecutor : IToolExecutor, IDisposable
                 {
                     var limitContext = new OutputLimitContext
                     {
-                        MaxCharacters = request.Context.ResourceLimits.MaxOutputSizeBytes > 0
+                        MaxCharacters = request.Context.ResourceLimits?.MaxOutputSizeBytes > 0
                             ? (int)(request.Context.ResourceLimits.MaxOutputSizeBytes / 2) // Approximate chars from bytes
                             : null,
                         IncludeSummary = true,
@@ -315,30 +317,37 @@ public class ToolExecutor : IToolExecutor, IDisposable
             {
                 result.ResourceUsage = _resourceMonitor.StopMonitoring(correlationId);
                 result.HitResourceLimits = monitoringSession.HasExceededLimits;
-                if (monitoringSession.HasExceededLimits)
+                if (monitoringSession.HasExceededLimits && result.Metadata != null)
                 {
-                    result.Metadata["exceeded_limits"] = monitoringSession.ExceededLimits.ToList();
+                    result.Metadata["exceeded_limits"] = monitoringSession.ExceededLimits?.ToList() ?? new List<string>();
                 }
             }
 
             // Remove from running executions
-            _runningExecutions.TryRemove(correlationId, out _);
+            if (!string.IsNullOrEmpty(correlationId))
+            {
+                _runningExecutions.TryRemove(correlationId, out _);
+            }
+            combinedCts?.Dispose();
             executionCts?.Dispose();
 
             // Get security violations
             var violations = _securityManager.GetViolations(correlationId);
-            if (violations.Count > 0)
+            if (violations != null && violations.Count > 0)
             {
-                result.SecurityViolations = [.. violations.Select(v => v.Description)];
+                result.SecurityViolations = [.. violations.Where(v => v != null).Select(v => v.Description)];
             }
 
             // Complete observability tracking
-            _observabilityService?.CompleteToolExecution(activity, result);
+            if (activity != null && result != null)
+            {
+                _observabilityService?.CompleteToolExecution(activity, result);
+            }
 
             // Record any security events
-            if (violations.Count > 0)
+            if (violations != null && violations.Count > 0)
             {
-                foreach (var violation in violations)
+                foreach (var violation in violations.Where(v => v != null))
                 {
                     _observabilityService?.RecordSecurityEvent(
                         request.ToolId,
@@ -354,7 +363,10 @@ public class ToolExecutor : IToolExecutor, IDisposable
             }
 
             // Raise execution completed event
-            ExecutionCompleted?.Invoke(this, new ToolExecutionCompletedEventArgs(result));
+            if (result != null)
+            {
+                ExecutionCompleted?.Invoke(this, new ToolExecutionCompletedEventArgs(result));
+            }
         }
 
         return result;

@@ -44,10 +44,24 @@ public class ToolExecutorTests : IDisposable
         // Setup service provider to return observability service
         _mockServiceProvider.Setup(x => x.GetService(typeof(IToolObservabilityService)))
             .Returns(_mockObservabilityService.Object);
+        
+        // Setup observability service methods to handle null parameters
+        _mockObservabilityService.Setup(x => x.CompleteToolExecution(It.IsAny<Activity?>(), It.IsAny<ToolExecutionResult>()))
+            .Callback(() => { }); // Do nothing, just prevent null reference
+        
+        _mockObservabilityService.Setup(x => x.RecordSecurityEvent(
+            It.IsAny<string>(), 
+            It.IsAny<string>(), 
+            It.IsAny<Dictionary<string, object?>>()))
+            .Callback(() => { }); // Do nothing
 
         // Setup default behavior for security manager
         _mockSecurityManager.Setup(x => x.GetViolations(It.IsAny<string>()))
             .Returns(new List<SecurityViolation>());
+        
+        // Setup resource monitor to handle stop monitoring
+        _mockResourceMonitor.Setup(x => x.StopMonitoring(It.IsAny<string>()))
+            .Returns((ToolResourceUsage?)null);
 
         _executor = new ToolExecutor(
             _mockRegistry.Object,
@@ -310,6 +324,10 @@ public class ToolExecutorTests : IDisposable
         var securityViolations = new List<string> { "Permission denied", "Insufficient privileges" };
         _mockSecurityManager.Setup(x => x.ValidateExecution(It.IsAny<ToolMetadata>(), It.IsAny<ToolPermissions>()))
             .Returns(securityViolations);
+        
+        // Set up the RecordViolation method to avoid null reference
+        _mockSecurityManager.Setup(x => x.RecordViolation(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<SecurityViolationSeverity>()))
+            .Callback(() => { }); // Do nothing
 
         var request = new ToolExecutionRequest
         {
@@ -760,6 +778,13 @@ public class ToolExecutorTests : IDisposable
         // Arrange
         var cts1 = new CancellationTokenSource();
         var cts2 = new CancellationTokenSource();
+        var token1Cancelled = false;
+        var token2Cancelled = false;
+        
+        // Register callbacks to check cancellation before disposal
+        cts1.Token.Register(() => token1Cancelled = true);
+        cts2.Token.Register(() => token2Cancelled = true);
+        
         var runningExecutions = new ConcurrentDictionary<string, CancellationTokenSource>();
         runningExecutions.TryAdd("execution1", cts1);
         runningExecutions.TryAdd("execution2", cts2);
@@ -773,8 +798,8 @@ public class ToolExecutorTests : IDisposable
         _executor.Dispose();
 
         // Assert
-        cts1.Token.IsCancellationRequested.Should().BeTrue();
-        cts2.Token.IsCancellationRequested.Should().BeTrue();
+        token1Cancelled.Should().BeTrue();
+        token2Cancelled.Should().BeTrue();
     }
 
     #endregion
