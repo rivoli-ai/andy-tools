@@ -1,0 +1,60 @@
+{
+  "name": "andy-tools-examples",
+  "version": "1.0.0",
+  "description": "Andy Tools Examples Container - ALPHA SOFTWARE",
+  "image": {
+    "name": "andy-tools:latest",
+    "type": "docker"
+  },
+  "runtime": {
+    "user": "andytools",
+    "workingDirectory": "/app",
+    "environment": {
+      "DOTNET_SYSTEM_GLOBALIZATION_INVARIANT": "false",
+      "LC_ALL": "en_US.UTF-8", 
+      "LANG": "en_US.UTF-8",
+      "ANDY_TOOLS_SAFE_MODE": "true"
+    }
+  },
+  "resources": {
+    "memory": {
+      "limit": "1Gi",
+      "request": "256Mi"
+    },
+    "cpu": {
+      "limit": "2",
+      "request": "0.5"
+    }
+  },
+  "security": {
+    "privileged": false,
+    "readOnlyRootFilesystem": false,
+    "allowPrivilegeEscalation": false,
+    "runAsNonRoot": true,
+    "capabilities": {
+      "drop": ["ALL"]
+    }
+  },
+  "mounts": [
+    {
+      "name": "workspace",
+      "type": "tmpfs", 
+      "path": "/tmp/andy-tools-examples",
+      "size": "100Mi"
+    }
+  ],
+  "network": {
+    "mode": "bridge",
+    "allowOutbound": true,
+    "allowInbound": false
+  },
+  "command": ["dotnet", "Andy.Tools.Examples.dll"],
+  "arguments": ["all"],
+  "healthCheck": {
+    "command": ["test", "-f", "/app/Andy.Tools.Examples.dll"],
+    "interval": 30,
+    "timeout": 10,
+    "retries": 3,
+    "startPeriod": 10
+  }
+}
