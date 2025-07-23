@@ -6,7 +6,7 @@ namespace Andy.Tools.Library.FileSystem;
 /// <summary>
 /// Tool for moving/renaming files and directories.
 /// </summary>
-public class MoveFileTool : ToolBase
+public partial class MoveFileTool : ToolBase
 {
     /// <inheritdoc />
     public override ToolMetadata Metadata { get; } = new()
@@ -332,17 +332,5 @@ public class MoveFileTool : ToolBase
         {
             return 0;
         }
-    }
-
-    private class MoveStatistics
-    {
-        public string SourcePath { get; set; } = "";
-        public string DestinationPath { get; set; } = "";
-        public bool IsDirectory { get; set; }
-        public int ItemsMoved { get; set; }
-        public long BytesMoved { get; set; }
-        public string? BackupPath { get; set; }
-        public DateTime StartTime { get; set; } = DateTime.UtcNow;
-        public TimeSpan OperationTime => DateTime.UtcNow - StartTime;
     }
 }

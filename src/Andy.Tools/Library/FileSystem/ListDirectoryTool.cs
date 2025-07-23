@@ -4,28 +4,9 @@ using Andy.Tools.Library.Common;
 namespace Andy.Tools.Library.FileSystem;
 
 /// <summary>
-/// Represents a file system entry returned by ListDirectoryTool.
-/// </summary>
-public class FileSystemEntry
-{
-    public string Name { get; set; } = "";
-    public string? FullPath { get; set; }
-    public string Type { get; set; } = "";
-    public long? Size { get; set; }
-    public string? SizeFormatted { get; set; }
-    public string? Extension { get; set; }
-    public DateTime? Created { get; set; }
-    public DateTime? Modified { get; set; }
-    public string? Attributes { get; set; }
-    public bool? IsHidden { get; set; }
-    public bool? IsReadonly { get; set; }
-    public int? Depth { get; set; }
-}
-
-/// <summary>
 /// Tool for listing directory contents.
 /// </summary>
-public class ListDirectoryTool : ToolBase
+public partial class ListDirectoryTool : ToolBase
 {
     /// <inheritdoc />
     public override ToolMetadata Metadata { get; } = new()
@@ -313,18 +294,5 @@ public class ListDirectoryTool : ToolBase
         }
 
         return result;
-    }
-
-    private class FileSystemEntryInfo
-    {
-        public string Name { get; set; } = "";
-        public string FullPath { get; set; } = "";
-        public bool IsFile { get; set; }
-        public long Size { get; set; }
-        public DateTime CreatedTime { get; set; }
-        public DateTime ModifiedTime { get; set; }
-        public FileAttributes Attributes { get; set; }
-        public string Extension { get; set; } = "";
-        public int Depth { get; set; }
     }
 }

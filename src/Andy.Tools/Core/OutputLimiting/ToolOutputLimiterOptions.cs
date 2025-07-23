@@ -55,24 +55,3 @@ public class ToolOutputLimiterOptions
     /// </summary>
     public TruncationStrategy DefaultStrategy { get; set; } = TruncationStrategy.Intelligent;
 }
-
-/// <summary>
-/// Truncation strategies.
-/// </summary>
-public enum TruncationStrategy
-{
-    /// <summary>
-    /// Simple truncation at limit.
-    /// </summary>
-    Simple,
-
-    /// <summary>
-    /// Intelligent truncation with summaries.
-    /// </summary>
-    Intelligent,
-
-    /// <summary>
-    /// Summarize without showing raw data.
-    /// </summary>
-    SummarizeOnly
-}
