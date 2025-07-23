@@ -576,10 +576,12 @@ public class SecurityManagerTests
     {
         // Arrange
         _securityManager.RecordViolation("tool1", "correlation-1", "Old Violation", SecurityViolationSeverity.High);
+        
+        // Ensure the violation is definitely old by waiting
+        Thread.Sleep(10);
 
-        // Act
-        var clearedCount = _securityManager.ClearOldViolations(TimeSpan.FromMilliseconds(1));
-        Thread.Sleep(10); // Ensure some time passes
+        // Act - Clear violations older than 5ms
+        var clearedCount = _securityManager.ClearOldViolations(TimeSpan.FromMilliseconds(5));
         var remainingViolations = _securityManager.GetAllViolations();
 
         // Assert

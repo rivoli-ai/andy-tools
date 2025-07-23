@@ -1,0 +1,2515 @@
+﻿<html xmlns:tp="http://schemas.datacontract.org/2004/07/Microsoft.VisualStudio.TestPlatform.Extensions.HtmlLogger.ObjectModel" xmlns:a="http://schemas.microsoft.com/2003/10/Serialization/Arrays" xmlns:msxsl="urn:schemas-microsoft-com:xslt">
+  <body>
+    <h1>Test run details</h1>
+    <div class="summary">
+      <div class="block"><span>Total tests</span><div class="total-tests">484</div><br></div>
+      <div class="block"><span>Passed  : </span><span class="passedTests">483</span><br><span>Failed  : </span><span class="failedTests">1</span><br><span>Skipped : </span><span class="skippedTests">0</span><br></div>
+      <div class="block"><span>Pass percentage</span><div class="pass-percentage">99 %</div><br></div>
+      <div class="block"><span>Run duration</span><div class="test-run-time">6s 421ms</div><br></div><br></div>
+    <h2>Failed Results</h2><details open=""><summary>/Users/sami/devel/rivoli-ai/andy-tools/tests/Andy.Tools.Tests/bin/Debug/net8.0/Andy.Tools.Tests.dll</summary><div class="inner-row" Id="1904260128-failedResult">
+        <div class="leaf-division">
+          <div><span class="fail">✘</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.ClearOldViolations_ShouldRemoveOldViolationsAndReturnCount​</span><div class="duration"><span>73ms</span><br></div>
+          </div>
+          <div class="error-info">
+    Error: <span class="error-message"><pre>Expected clearedCount to be greater than 0, but found 0.</pre></span><br>
+    Stack trace: <span class="error-stack-trace"><pre>   at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Numeric.NumericAssertions`2.BeGreaterThan(T expected, String because, Object[] becauseArgs)
+   at Andy.Tools.Tests.Execution.SecurityManagerTests.ClearOldViolations_ShouldRemoveOldViolationsAndReturnCount() in /Users/sami/devel/rivoli-ai/andy-tools/tests/Andy.Tools.Tests/Execution/SecurityManagerTests.cs:line 586
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</pre></span><br></div>
+        </div>
+      </div></details><h2>All Results</h2><details><summary>/Users/sami/devel/rivoli-ai/andy-tools/tests/Andy.Tools.Tests/bin/Debug/net8.0/Andy.Tools.Tests.dll</summary><div class="inner-row" Id="1904260128">
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.WriteFileToolDescriptionTests.WriteFileTool_Description_ClarifiesUsageIntent​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.UnitTest1.Test1​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.TodoExecutorTests.TaskAnalysis_IdentifiesFrameworkUpdate​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.TodoExecutorTests.TaskAnalysis_IdentifiesManualTasks​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.TodoExecutorTests.Tool_RequiresActionParameter​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.TodoManagementToolTests.Tool_HasAllRequiredActions​</span><div class="duration"><span>10ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.TodoExecutorTests.ExecuteSingle_RequiresTodoldParameter​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.TodoExecutorTests.TaskAnalysis_IdentifiesTestExecution​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.TodoExecutorTests.Tool_HasCorrectMetadata​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.TodoManagementToolTests.Tool_FailsGracefullyWhenTodoServiceNotAvailable​</span><div class="duration"><span>7ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.TodoManagementToolTests.Tool_ExamplesAreValid​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.TodoExecutorTests.Tool_ValidatesParameters​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.TodoManagementToolTests.Tool_ValidatesRequiredParameters​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.TodoManagementToolTests.Tool_HasCorrectMetadata​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.TodoExecutorTests.Tool_HasAllRequiredActions​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.TodoExecutorTests.Tool_HasProperExamples​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.TodoExecutorTests.Tool_RejectsInvalidAction​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.TodoExecutorTests.TaskAnalysis_IdentifiesPackageUpdate​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.System.SystemInfoToolTests.ExecuteAsync_BasicInfo_ReturnsSystemInformation​</span><div class="duration"><span>19ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.System.SystemInfoToolTests.Metadata_HasCorrectConfiguration​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_UnindentText_ShouldRemoveIndentation​</span><div class="duration"><span>14ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_InvalidOperation_ShouldReturnFailure​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.MoveFileToolTests.ExecuteAsync_RenameFileInSameDirectory_ShouldRenameSuccessfully​</span><div class="duration"><span>27ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.CopyFileToolTests.ExecuteAsync_WithCancellation_ShouldCancelGracefully​</span><div class="duration"><span>25ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ListDirectoryToolTests.ExecuteAsync_ListWithPattern_ShouldFilterByPattern​</span><div class="duration"><span>27ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.System.SystemInfoToolTests.ExecuteAsync_FilterSensitive_ExcludesSensitiveData​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.CopyFileToolTests.ExecuteAsync_InvalidSourcePath_ShouldReturnFailureResult​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_CountWords_ShouldCountWords​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ListDirectoryToolTests.ExecuteAsync_HiddenFiles_WithoutShowHidden_ShouldExcludeHiddenFiles​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_CamelCaseOperation_ShouldConvertToCamelCase​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.System.SystemInfoToolTests.ExecuteAsync_ProcessInfo_ReturnsProcessDetails​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.System.SystemInfoToolTests.ExecuteAsync_InvalidSection_ReturnsError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.MoveFileToolTests.ExecuteAsync_MoveFileWithOverwrite_ShouldOverwriteDestination​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_VeryLongText_ShouldHandleGracefully​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_ShouldProvideSampleMatches​</span><div class="duration"><span>33ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_FormatXml_ShouldFormatXml​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.System.SystemInfoToolTests.ExecuteAsync_AllSections_ReturnsComprehensiveInfo​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_UnsupportedEncoding_ShouldReturnFailure​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_ExtractUrls_ShouldExtractUrls​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Observability.ToolObservabilityServiceTests.RecordToolError_SetsActivityError​</span><div class="duration"><span>13ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.MoveFileToolTests.Metadata_ShouldHaveCorrectValues​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_RemoveDuplicateLines_ShouldRemoveDuplicates​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.CopyFileToolTests.ExecuteAsync_CopyDirectoryWithExcludePatterns_ShouldExcludeMatchingFiles​</span><div class="duration"><span>7ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_DecodeUrl_ShouldDecodeUrl​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_EmptySearchPattern_ShouldReturnFailure​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_WithDictionaryOptions_ShouldUseOptions​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ListDirectoryToolTests.ExecuteAsync_ListRecursively_ShouldIncludeSubdirectories​</span><div class="duration"><span>7ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_InvalidXml_ShouldReturnFailure​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ResourceMonitorTests.StartMonitoring_ValidInput_ShouldReturnSession​</span><div class="duration"><span>40ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_DecodeBase64_ShouldDecodeText​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.CopyFileToolTests.ExecuteAsync_CopyValidFile_ShouldCopySuccessfully​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.System.SystemInfoToolTests.ExecuteAsync_MemoryInfo_ReturnsMemoryStatistics​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_WordWrap_ShouldWrapText​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ResourceMonitorTests.GetActiveSessions_WithMultipleSessions_ShouldReturnAllSessions​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.CopyFileToolTests.ExecuteAsync_MissingRequiredParameters_ShouldReturnFailureResult​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ResourceMonitorTests.ResourceMonitoringSession_DuplicateFileAccess_ShouldNotDuplicateCount​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_DryRun_ShouldNotModifyFiles​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.MoveFileToolTests.ExecuteAsync_MoveDirectory_ShouldMoveAllContents​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ResourceMonitorTests.ResourceMonitoringSession_UpdateMemoryUsage_ShouldUpdatePeakAndAverage​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ResourceMonitorTests.GetCurrentUsage_ExistingSession_ShouldReturnUsage​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ListDirectoryToolTests.ExecuteAsync_ShouldProvideDetailedFileInformation​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_FileNotFound_ShouldReturnFailure​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ResourceMonitorTests.ResourceMonitoringSession_RecordProcessExecution_ShouldUpdateUsage​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ResourceMonitorTests.ResourceMonitoringSession_RecordNetworkAccess_ShouldUpdateUsage​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.MoveFileToolTests.Metadata_ShouldHaveRequiredParameters​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_InvalidJson_ShouldReturnFailure​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.System.SystemInfoToolTests.ExecuteAsync_EnvironmentInfo_IncludesVariables​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ListDirectoryToolTests.ExecuteAsync_MissingRequiredParameter_ShouldUseDefaultDirectory​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_MissingInputText_ShouldReturnFailure​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.CopyFileToolTests.ExecuteAsync_CopyFileWithOverwriteEnabled_ShouldOverwriteExistingFile​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ResourceMonitorTests.ResourceMonitoringSession_ExceedFileCountLimit_ShouldTriggerEvent​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ResourceMonitorTests.ResourceMonitoringSession_ExceedFileSizeLimit_ShouldTriggerEvent​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ResourceMonitorTests.ResourceMonitoringSession_ExceedMemoryLimit_ShouldTriggerEvent​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_InvalidRegex_ShouldReturnFailure​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ResourceMonitorTests.ResourceMonitoringSession_RecordFileAccess_ShouldUpdateUsage​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ResourceMonitorTests.ResourceMonitoringSession_Dispose_ShouldPreventFurtherUpdates​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_KebabCaseOperation_ShouldConvertToKebabCase​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ResourceMonitorTests.StopMonitoring_ExistingSession_ShouldReturnFinalUsage​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.CopyFileToolTests.Metadata_ShouldHaveRequiredParameters​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ResourceMonitorTests.StopMonitoring_NonExistentSession_ShouldReturnNull​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ResourceMonitorTests.GetCurrentUsage_NonExistentSession_ShouldReturnNull​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_SortLinesDescending_ShouldSortInDescendingOrder​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.MoveFileToolTests.ExecuteAsync_CrossVolumeMove_ShouldHandleCorrectly​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_RemoveEmptyLines_ShouldRemoveEmptyLines​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_NoMatches_ShouldReportZeroReplacements​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.MoveFileToolTests.ExecuteAsync_SourceNotFound_ShouldReturnFailureResult​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_SortLinesOperation_ShouldSortLinesAlphabetically​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_TrimOperation_ShouldRemoveWhitespace​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ListDirectoryToolTests.ExecuteAsync_SortByModifiedDate_ShouldSortByTimestamp​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_EncodeBase64_ShouldEncodeText​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Git.GitDiffFormatterTests.FormatStatsSummary_HandlesOnlyTotalLine​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.CopyFileToolTests.ExecuteAsync_CopyDirectory_ShouldCopyRecursively​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_EncodeUrl_ShouldEncodeUrl​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.MoveFileToolTests.ExecuteAsync_CreateDestinationDirectory_ShouldCreateParentDirectories​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Registry.ToolRegistryTests.SearchTools_WithSearchTerm_ShouldReturnMatchingTools​</span><div class="duration"><span>50ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.MoveFileToolTests.ExecuteAsync_InvalidSourcePath_ShouldReturnFailureResult​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_NormalizeWhitespace_ShouldNormalizeSpaces​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Git.GitDiffFormatterTests.FormatFileDiff_HandlesMultipleHunks​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.CopyFileToolTests.ExecuteAsync_CopyFileWithOverwriteDisabled_ShouldFailWhenDestinationExists​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Git.GitDiffFormatterTests.FormatFileDiff_ShowsOnlyAdditions_WhenNoRemovals​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Git.GitDiffFormatterTests.FormatFileDiff_FormatsSimpleDiff​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Git.GitDiffFormatterTests.FormatStatsSummary_HandlesEmptyStats​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.DeleteFileToolTests.ExecuteAsync_DeleteEmptyDirectory_ShouldDeleteSuccessfully​</span><div class="duration"><span>5ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Git.GitDiffFormatterTests.FormatFileDiff_ShowsOnlyDeletions_WhenNoAdditions​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_WithFilePatterns_ShouldFilterByPattern​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_PascalCaseOperation_ShouldConvertToPascalCase​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Git.GitDiffFormatterTests.FormatFileDiff_TruncatesLongDiffs​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.CopyFileToolTests.ExecuteAsync_SourceNotFound_ShouldReturnFailureResult​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Git.GitDiffFormatterTests.FormatFileDiff_HandlesEmptyHunks​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Git.GitDiffFormatterTests.FormatStatsSummary_HandlesSimpleStats​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ListDirectoryToolTests.ExecuteAsync_HiddenFiles_WithShowHidden_ShouldIncludeHiddenFiles​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Registry.ToolRegistryTests.GetTools_WithFilters_ShouldReturnFilteredResults​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.MoveFileToolTests.ExecuteAsync_MoveEmptyDirectory_ShouldMoveSuccessfully​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.CopyFileToolTests.ExecuteAsync_CopyEmptyDirectory_ShouldCreateEmptyDestination​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Registry.ToolRegistryTests.RegisterTool_WithValidType_ShouldRegisterSuccessfully​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_ExtractNumbers_ShouldExtractNumbers​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_WholeWordsOnly_ShouldReplaceWholeWords​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Registry.ToolRegistryTests.ToolUnregistered_Event_ShouldBeRaised​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.MoveFileToolTests.ExecuteAsync_MoveValidFile_ShouldMoveSuccessfully​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.GetViolations_WithNonExistentCorrelationId_ShouldReturnEmpty​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.DeleteFileToolTests.ExecuteAsync_DeleteFileWithBackup_ShouldCreateBackupBeforeDeletion​</span><div class="duration"><span>6ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsNetworkAccessAllowed_WithBlockedLocalhost_ShouldRequireExplicitPermission(host: "127.0.0.1")​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsNetworkAccessAllowed_WithBlockedLocalhost_ShouldRequireExplicitPermission(host: "localhost")​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsNetworkAccessAllowed_WithBlockedLocalhost_ShouldRequireExplicitPermission(host: "::1")​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.CopyFileToolTests.ExecuteAsync_CopyFileWithTimestampPreservation_ShouldPreserveTimestamps​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsFileAccessAllowed_WithBlockedExecutableExtensions_ShouldRequirePermission(extension: ".ps1")​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsFileAccessAllowed_WithBlockedExecutableExtensions_ShouldRequirePermission(extension: ".vbs")​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.MoveFileToolTests.ExecuteAsync_WithCancellation_ShouldCancelGracefully​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsFileAccessAllowed_WithBlockedExecutableExtensions_ShouldRequirePermission(extension: ".exe")​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsFileAccessAllowed_WithBlockedExecutableExtensions_ShouldRequirePermission(extension: ".py")​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_WithBackup_ShouldCreateBackupFile​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsFileAccessAllowed_WithBlockedExecutableExtensions_ShouldRequirePermission(extension: ".cmd")​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsFileAccessAllowed_WithBlockedExecutableExtensions_ShouldRequirePermission(extension: ".bat")​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.DeleteFileToolTests.ExecuteAsync_ShouldProvideStatistics​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsFileAccessAllowed_WithBlockedExecutableExtensions_ShouldRequirePermission(extension: ".js")​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsFileAccessAllowed_WithBlockedExecutableExtensions_ShouldRequirePermission(extension: ".sh")​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.ValidateExecution_WithAllPermissionsGranted_ShouldReturnNoViolations​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsFileAccessAllowed_WithNoFileSystemPermission_ShouldReturnFalse​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsProcessExecutionAllowed_WithDangerousProcesses_ShouldRequireExplicitPermission(processName: "sh")​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsProcessExecutionAllowed_WithDangerousProcesses_ShouldRequireExplicitPermission(processName: "ruby.exe")​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsProcessExecutionAllowed_WithDangerousProcesses_ShouldRequireExplicitPermission(processName: "bash")​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsProcessExecutionAllowed_WithDangerousProcesses_ShouldRequireExplicitPermission(processName: "python.exe")​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsProcessExecutionAllowed_WithDangerousProcesses_ShouldRequireExplicitPermission(processName: "powershell.exe")​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsProcessExecutionAllowed_WithDangerousProcesses_ShouldRequireExplicitPermission(processName: "cmd.exe")​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsProcessExecutionAllowed_WithDangerousProcesses_ShouldRequireExplicitPermission(processName: "node.exe")​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.MoveFileToolTests.ExecuteAsync_MoveToSubdirectory_ShouldReturnFailureResult​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Registry.ToolRegistryTests.CreateTool_ExistingEnabledTool_ShouldReturnInstance​</span><div class="duration"><span>6ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.CopyFileToolTests.ExecuteAsync_InvalidDestinationPath_ShouldReturnFailureResult​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Registry.ToolRegistryTests.ToolRegistered_Event_ShouldBeRaised​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.DeleteFileToolTests.ExecuteAsync_DeleteReadOnlyFile_WithForce_ShouldDeleteSuccessfully​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Registry.ToolRegistryTests.Clear_WithTools_ShouldRemoveAllTools​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_FormatJson_ShouldFormatJson​</span><div class="duration"><span>8ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_MinifyJson_ShouldMinifyJson​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Registry.ToolRegistryTests.UpdateToolConfiguration_ExistingTool_ShouldUpdateConfig​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_WithOptionsForSorting_ShouldSortDescending​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_SpecialCharacters_ShouldHandleCorrectly​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.MoveFileToolTests.ExecuteAsync_MoveFileWithBackup_ShouldCreateBackupOfDestination​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_UpperOperation_ShouldConvertToUppercase​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Registry.ToolRegistryTests.CreateTool_DisabledTool_ShouldReturnNull​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.MoveFileToolTests.ExecuteAsync_MissingRequiredParameters_ShouldReturnFailureResult​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_EndsWithPattern_ShouldReplaceAtEnd​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Registry.ToolRegistryTests.RegisterTool_WithDuplicateId_ShouldThrowException​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_CountCharacters_ShouldCountCharacters​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Registry.ToolRegistryTests.GetTool_NullOrEmptyId_ShouldReturnNull​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_LowerOperation_ShouldConvertToLowercase​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.DeleteFileToolTests.ExecuteAsync_DeleteDirectoryRecursively_ShouldDeleteAllContents​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.MoveFileToolTests.ExecuteAsync_ShouldProvideStatistics​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.Metadata_ShouldHaveRequiredParameters​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.CopyFileToolTests.ExecuteAsync_ShouldProvideStatistics​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_SnakeCaseOperation_ShouldConvertToSnakeCase​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_MissingOperation_ShouldReturnFailure​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.DeleteFileToolTests.ExecuteAsync_DeleteReadOnlyFile_WithoutForce_ShouldFail​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_ReverseOperation_ShouldReverseText​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Registry.ToolRegistryTests.RegisterTool_WithFactory_ShouldRegisterSuccessfully​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_IndentText_ShouldIndentLines​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.CopyFileToolTests.ExecuteAsync_PathTraversalAttempt_ShouldBeHandledSafely​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.CopyFileToolTests.Metadata_ShouldHaveCorrectValues​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_InvalidBase64_ShouldReturnFailure​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_ExactMatch_ShouldReplaceExactMatches​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.DeleteFileToolTests.ExecuteAsync_FileNotFound_ShouldReturnFailureResult​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Registry.ToolRegistryTests.UnregisterTool_ExistingTool_ShouldReturnTrue​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_EmptyString_ShouldHandleGracefully​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Registry.ToolRegistryTests.UnregisterTool_NullOrEmptyId_ShouldThrowException​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.MoveFileToolTests.ExecuteAsync_MoveReadOnlyFile_ShouldHandlePermissions​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Git.FileDiffTests.FileDiff_InitializesEmptyHunksList​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Git.FileDiffTests.FileDiff_CalculatesTotalModificationsCorrectly​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_ShouldIncludeOperationMetadata​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_WithCancellation_ShouldHandleCancellation​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.DeleteFileToolTests.ExecuteAsync_DeleteValidFile_ShouldDeleteSuccessfully​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_TitleOperation_ShouldConvertToTitleCase​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.DeleteFileToolTests.ExecuteAsync_InvalidPath_ShouldReturnFailureResult​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.ExecuteAsync_ExtractEmails_ShouldExtractEmails​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_StartsWithPattern_ShouldReplaceAtStart​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.FormatTextToolTests.Metadata_ShouldHaveCorrectValues​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.MoveFileToolTests.ExecuteAsync_MoveDirectoryWithStatistics_ShouldCountAllItems​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Registry.ToolRegistryTests.GetStatistics_WithTools_ShouldReturnCorrectStats​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.DeleteFileToolTests.ExecuteAsync_DeleteDirectoryNotEmpty_WithoutRecursive_ShouldFail​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Registry.ToolRegistryTests.RegisterTool_WithInvalidType_ShouldThrowException​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.DeleteFileToolTests.Metadata_ShouldHaveRequiredParameters​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Registry.ToolRegistryTests.GetTool_ExistingTool_ShouldReturnRegistration​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Registry.ToolRegistryTests.GetTool_NonExistentTool_ShouldReturnNull​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Registry.ToolRegistryTests.SetToolEnabled_ExistingTool_ShouldUpdateStatus​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Registry.ToolRegistryTests.UnregisterTool_NonExistentTool_ShouldReturnFalse​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.MoveFileToolTests.ExecuteAsync_MoveFileWithoutOverwrite_WhenDestinationExists_ShouldFail​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_NonRecursive_ShouldProcessOnlyTopLevel​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainBuilderTests.FluentInterface_ShouldAllowChaining​</span><div class="duration"><span>8ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainBuilderTests.Build_WithDefaultValues_ShouldCreateChainWithDefaults​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainBuilderTests.Constructor_WithNullToolExecutor_ShouldThrowArgumentNullException​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.DeleteFileToolTests.ExecuteAsync_DeleteWithExclusionPattern_ShouldExcludeMatchingFiles​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainBuilderTests.WithId_ShouldSetChainId​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainBuilderTests.WithDescription_ShouldSetChainDescription​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainBuilderTests.WithName_ShouldSetChainName​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.MoveFileToolTests.ExecuteAsync_SameSourceAndDestination_ShouldReturnFailureResult​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainBuilderTests.Constructor_WithNullLoggerFactory_ShouldThrowArgumentNullException​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainBuilderTests.Constructor_WithValidParameters_ShouldInitializeBuilder​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_CaseSensitive_ShouldRespectCase​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.SearchTextToolTests.ExecuteAsync_InvalidRegex_ReturnsError​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.SearchTextToolTests.ExecuteAsync_FileNotFound_ShouldReturnFailure​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_MissingReplacementText_ShouldReturnFailure​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.DeleteFileToolTests.ExecuteAsync_BackupToDefaultLocation_ShouldCreateBackup​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.MoveFileToolTests.ExecuteAsync_InvalidDestinationPath_ShouldReturnFailureResult​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.DeleteFileToolTests.ExecuteAsync_DeleteWithSizeLimit_ShouldRespectLimit​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.DeleteFileToolTests.ExecuteAsync_MissingRequiredParameter_ShouldReturnFailureResult​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ReadFileToolTests.ExecuteAsync_WithLineRange_ReturnsSpecificLines​</span><div class="duration"><span>6ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.SearchTextToolTests.ExecuteAsync_NonRecursiveDirectorySearch_ShouldSearchOnlyTopLevel​</span><div class="duration"><span>11ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Discovery.ToolDiscoveryServiceTests.DiscoverToolsAsync_ScanCurrentAssemblyFalse_DoesNotScanCurrent​</span><div class="duration"><span>9ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ReadFileToolTests.ExecuteAsync_ReadTextFile_Success​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ReadFileToolTests.ExecuteAsync_FileNotFound_ReturnsError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Integration.OutputLimitingIntegrationTests.ExecutorWithOutputLimiter_SmallOutput_NoTruncation​</span><div class="duration"><span>78ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.SearchTextToolTests.ExecuteAsync_CaseInsensitive_FindsMatches​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ReadFileToolTests.Metadata_HasCorrectConfiguration​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ReadFileToolTests.ExecuteAsync_ReadWithDifferentEncoding_Success​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.SearchTextToolTests.ExecuteAsync_SimpleTextSearch_FindsMatches​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ReadFileToolTests.ExecuteAsync_PathOutsideAllowed_ReturnsError​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ReadFileToolTests.ExecuteAsync_ReadBinaryFile_ReadsAsText​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.SearchTextToolTests.ExecuteAsync_DirectorySearch_ShouldSearchMultipleFiles​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ReadFileToolTests.ExecuteAsync_ReadWithMaxSize_RejectsTooLargeFile​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_BinaryFile_ShouldSkipBinaryFile​</span><div class="duration"><span>23ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateParameters_NumberTooLarge_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.GetRunningExecutions_ShouldReturnActiveExecutions​</span><div class="duration"><span>32ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateMetadata_InvalidVersion_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.SearchTextToolTests.ExecuteAsync_EndsWithPattern_ShouldMatchLineEnd​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidatePermissions_NetworkRequired_AccessDenied_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidatePermissions_ProcessRequired_AccessDenied_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateParameters_RequiredParameterNull_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateToolType_InterfaceType_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateExecutionRequest_MissingToolId_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidatePermissions_EnvironmentRequired_AccessDenied_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateMetadata_MissingRequiredFields_ShouldReturnErrors​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Integration.OutputLimitingIntegrationTests.ReadFileTool_LargeFile_TruncatesAtLineLimit​</span><div class="duration"><span>11ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateResourceLimits_ExceedsFileCount_ShouldReturnWarning​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateToolType_ValidType_ShouldReturnSuccess​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateMetadata_DuplicateParameterNames_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateExecutionRequest_ToolIdMismatch_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateMetadata_InvalidId_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidatePermissions_AllAccessGranted_ShouldReturnSuccess​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateMetadata_InvalidParameterType_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateExecutionRequest_ValidRequest_ShouldReturnSuccess​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateParameters_NotInteger_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateToolType_NotITool_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateToolType_AbstractType_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateParameters_StringTooLong_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateParameters_StringTooShort_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateExecutionRequest_InvalidTimeout_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateParameters_WrongType_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateParameters_RequiredParameterMissing_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateParameters_ValueNotAllowed_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateResourceLimits_ExceedsMemoryLimit_ShouldReturnWarning​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateParameters_UnknownParameter_ShouldReturnWarning​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.SearchTextToolTests.ExecuteAsync_SpecialCharacters_ShouldHandleCorrectly​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidatePermissions_FileSystemRequired_AccessDenied_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_ProcessDirectory_ShouldProcessAllFiles​</span><div class="duration"><span>6ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateParameters_NumberTooSmall_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Validation.ToolValidatorTests.ValidateMetadata_ValidMetadata_ShouldReturnSuccess​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.DeleteFileToolTests.ExecuteAsync_WithCancellation_ShouldCancelGracefully​</span><div class="duration"><span>27ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.DeleteFileToolTests.Metadata_ShouldHaveCorrectValues​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_MissingSearchPattern_ShouldReturnFailure​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Core.OutputLimiting.ToolOutputLimiterTests.LimitOutput_LargeText_TruncatesCorrectly​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.SearchTextToolTests.ExecuteAsync_WithContext_IncludesContext​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.AddParallelStep_WithValidSteps_ShouldCreateAndAddParallelStep​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_WithSpecificEncoding_ShouldUseEncoding​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.SearchTextToolTests.ExecuteAsync_WithFilePatterns_ShouldFilterByPattern​</span><div class="duration"><span>5ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_WithCancellation_ShouldHandleCancellation​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.SearchTextToolTests.ExecuteAsync_EmptyText_ReturnsNoMatches​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.SearchTextToolTests.Metadata_HasCorrectConfiguration​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.ExecuteAsync_WithObservabilityService_ShouldTrackExecution​</span><div class="duration"><span>17ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_ReplaceInSingleFile_ShouldReplaceText​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.SearchTextToolTests.ExecuteAsync_WholeWords_OnlyMatchesWholeWords​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.ExecuteAsync_WithFailedStep_ShouldReturnFailedResult​</span><div class="duration"><span>8ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.Constructor_WithNullToolExecutor_ShouldThrowArgumentNullException​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_FileTooLarge_ShouldSkipFile​</span><div class="duration"><span>6ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.ExecuteAsync_WithSuccessfulStep_ShouldReturnCompletedResult​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.AddToolStep_WithValidParameters_ShouldCreateAndAddToolStep​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.SearchTextToolTests.ExecuteAsync_StartsWithPattern_ShouldMatchLineStart​</span><div class="duration"><span>6ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.ExecuteAsync_WithCancellation_ShouldReturnCancelledResult​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.SearchTextToolTests.ExecuteAsync_WithCancellation_ShouldHandleCancellation​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.ExecuteAsync_WithValidationErrors_ShouldReturnFailedResult​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.AddTransformStep_WithoutName_ShouldUseDefaultName​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Core.OutputLimiting.ToolOutputLimiterTests.LimitOutput_FileList_CreatesSmartSummary​</span><div class="duration"><span>19ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Core.OutputLimiting.ToolOutputLimiterTests.LimitOutput_SmallText_ReturnsUnchanged​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.Constructor_WithValidParameters_ShouldInitializeCorrectly​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="fail">✘</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.ClearOldViolations_ShouldRemoveOldViolationsAndReturnCount​</span><div class="duration"><span>73ms</span><br></div>
+          </div>
+          <div class="error-info">
+    Error: <span class="error-message"><pre>Expected clearedCount to be greater than 0, but found 0.</pre></span><br>
+    Stack trace: <span class="error-stack-trace"><pre>   at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Numeric.NumericAssertions`2.BeGreaterThan(T expected, String because, Object[] becauseArgs)
+   at Andy.Tools.Tests.Execution.SecurityManagerTests.ClearOldViolations_ShouldRemoveOldViolationsAndReturnCount() in /Users/sami/devel/rivoli-ai/andy-tools/tests/Andy.Tools.Tests/Execution/SecurityManagerTests.cs:line 586
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</pre></span><br></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.ExecuteAsync_WithStepException_ShouldHandleException​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Core.OutputLimiting.ToolOutputLimiterTests.FileListSummaryFormatter_GeneratesReadableOutput​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.AddStep_WithNullStep_ShouldThrowArgumentNullException​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.AddStep_WithMultipleSteps_ShouldMaintainOrder​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsProcessExecutionAllowed_WithSafeProcess_ShouldReturnTrue​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.AddConditionalStep_WithoutElseStep_ShouldCreateConditionalStepWithNullElse​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsNetworkAccessAllowed_WithAllowedPublicHost_ShouldReturnTrue​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.Constructor_WithValidLogger_ShouldInitializeSuccessfully​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.ValidateExecution_WithNetworkCapabilityButNoPermission_ShouldReturnViolation​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsFileAccessAllowed_WithSystemDirectoryWrite_ShouldRequireExplicitPermission​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsNetworkAccessAllowed_WithPrivateIpAddresses_ShouldRequireExplicitPermission(ipAddress: "192.168.1.1")​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsNetworkAccessAllowed_WithPrivateIpAddresses_ShouldRequireExplicitPermission(ipAddress: "172.31.255.1")​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsNetworkAccessAllowed_WithPrivateIpAddresses_ShouldRequireExplicitPermission(ipAddress: "172.16.0.1")​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsNetworkAccessAllowed_WithPrivateIpAddresses_ShouldRequireExplicitPermission(ipAddress: "10.0.0.1")​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsFileAccessAllowed_WithExecutableFileExecution_ShouldRequireExplicitPermission​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_WithExcludePatterns_ShouldExcludeFiles​</span><div class="duration"><span>6ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsFileAccessAllowed_WithSystemDirectoryRead_ShouldBeAllowed​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Integration.OutputLimitingIntegrationTests.ListDirectoryTool_LargeDirectory_TruncatesOutput​</span><div class="duration"><span>29ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.ValidateExecution_WithDestructiveCapabilityAndExplicitPermission_ShouldReturnNoViolations​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsNetworkAccessAllowed_WithPublicIpAddresses_ShouldBeAllowed(ipAddress: "1.1.1.1")​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsNetworkAccessAllowed_WithPublicIpAddresses_ShouldBeAllowed(ipAddress: "8.8.8.8")​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsNetworkAccessAllowed_WithPublicIpAddresses_ShouldBeAllowed(ipAddress: "208.67.222.222")​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsNetworkAccessAllowed_WithAllowedHostsList_ShouldRespectAllowedHosts​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.SearchTextToolTests.ExecuteAsync_RegexSearch_FindsPatterns​</span><div class="duration"><span>5ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.ValidateExecution_WithProcessExecutionCapabilityButNoPermission_ShouldReturnViolation​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.ValidateExecution_WithElevatedCapabilityAndExplicitPermission_ShouldReturnNoViolations​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.ValidateExecution_WithFileSystemCapabilityButNoPermission_ShouldReturnViolation​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsFileAccessAllowed_WithAllowedPathList_ShouldRespectAllowedPaths​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.ValidateExecution_WithMultipleViolations_ShouldReturnAllViolations​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.GetAllViolations_ShouldReturnAllViolations​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Core.OutputLimiting.ToolOutputLimiterTests.LimitOutput_StructuredData_PreservesValidJson​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Core.OutputLimiting.ToolOutputLimiterTests.GetTruncationMessage_FormatsCorrectly​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.ValidateExecution_WithElevatedCapabilityButNoExplicitPermission_ShouldReturnViolation​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsFileAccessAllowed_WithValidPath_ShouldReturnTrue​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.RecordViolation_ShouldAddViolationToCollection​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsProcessExecutionAllowed_WithNoProcessExecutionPermission_ShouldReturnFalse​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Discovery.ToolDiscoveryServiceTests.DiscoverToolsAsync_WithExcludePatterns_ExcludesMatchingAssemblies​</span><div class="duration"><span>50ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.SearchTextToolTests.ExecuteAsync_WithExcludePatterns_ShouldExcludeFiles​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Core.OutputLimiting.ToolOutputLimiterTests.LimitOutput_ListSuccessDictionary_ShouldTruncateCorrectly​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Core.OutputLimiting.ToolOutputLimiterTests.LimitOutput_WithCustomContext_RespectsLimits​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.SearchTextToolTests.ExecuteAsync_MissingSearchPattern_ShouldReturnFailure​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Discovery.ToolDiscoveryServiceTests.DiscoverToolsFromAssembly_ValidAssembly_ReturnsDiscoveredTools​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Core.OutputLimiting.ToolOutputLimiterTests.NeedsLimiting_LargeFileList_ReturnsTrue​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Core.OutputLimiting.ToolOutputLimiterTests.NeedsLimiting_SmallText_ReturnsFalse​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_RegexPattern_ShouldUseRegex​</span><div class="duration"><span>5ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Core.OutputLimiting.ToolOutputLimiterTests.LimitOutput_Logs_ShowsHeadAndTail​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Core.OutputLimiting.ToolOutputLimiterTests.NeedsLimiting_LargeText_ReturnsTrue​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Observability.ToolObservabilityServiceTests.GetPerformanceStatisticsAsync_CalculatesCorrectStats​</span><div class="duration"><span>110ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Core.OutputLimiting.ToolOutputLimiterTests.NeedsLimiting_ListSuccessDictionary_ShouldDetectCorrectly​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Observability.ToolObservabilityServiceTests.GetPerformanceStatisticsAsync_ReturnsEmptyStatsForNoData​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.Metadata_ShouldHaveRequiredParameters​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Core.OutputLimiting.ToolOutputLimiterTests.LimitOutput_FileContent_TruncatesAtLineLimit​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.SearchTextToolTests.ExecuteAsync_BinaryFile_ShouldSkipBinaryFiles​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.Metadata_ShouldHaveCorrectValues​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Git.GitDiffToolTests.ExecuteAsync_ReturnsError_WhenNotInGitRepository​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Git.GitDiffToolTests.Constructor_AcceptsNullLogger​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Git.GitDiffToolTests.ExecuteAsync_HandlesExceptions_AndReturnsErrorResponse​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Git.GitDiffToolTests.ParameterlessConstructor_Works​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Git.GitDiffToolTests.Metadata_ReturnsCorrectValues​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Discovery.ToolDiscoveryServiceTests.DiscoverToolsAsync_WithCancellation_ThrowsOperationCanceledException​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Git.GitDiffToolTests.CanExecuteWithPermissions_RequiresProcessExecution​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.SearchTextToolTests.ExecuteAsync_InvertMatch_FindsNonMatchingLines​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Git.GitDiffToolTests.Metadata_Parameters_HaveCorrectConfiguration​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_EmptyFile_ShouldHandleGracefully​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Discovery.ToolDiscoveryServiceTests.DiscoverToolsAsync_UpdatesStatistics​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Git.DiffLineTests.DiffLine_PropertiesSetCorrectly(type: Added, content: "+", lineNumber: 42)​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.SearchTextToolTests.ExecuteAsync_WithoutLineNumbers_ShouldNotIncludeLineNumbers​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Discovery.ToolDiscoveryServiceTests.DiscoverToolsFromAssembly_ValidationDisabled_SkipsValidation​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Git.DiffLineTests.DiffLine_PropertiesSetCorrectly(type: Context, content: " ", lineNumber: 41)​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Git.DiffLineTests.DiffLine_PropertiesSetCorrectly(type: Removed, content: "-", lineNumber: 40)​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Discovery.ToolDiscoveryServiceTests.DiscoverToolsFromAssembly_HandlesReflectionTypeLoadException​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.ReplaceTextToolTests.ExecuteAsync_WithoutBackup_ShouldNotCreateBackupFile​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Git.DiffHunkTests.DiffHunk_PropertiesSetCorrectly​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Git.DiffHunkTests.DiffHunk_InitializesEmptyLinesList​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Discovery.ToolDiscoveryServiceTests.DiscoverToolsFromDirectoryAsync_RecursiveSearch_SearchesSubdirectoriesAsync​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.WriteFileToolTests.ExecuteAsync_PathOutsideAllowed_ReturnsError​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.Text.SearchTextToolTests.ExecuteAsync_MaxMatches_LimitsResults​</span><div class="duration"><span>5ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Core.PermissionProfileServiceTests.SaveProfileAsync_ShouldThrowForNullProfile​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Core.PermissionProfileServiceTests.GetCurrentPermissionsAsync_ShouldReturnDefaultPermissions​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.WriteFileToolTests.ExecuteAsync_CreateDirectories_CreatesPath​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Discovery.ToolDiscoveryServiceTests.DiscoverToolsAsync_WithDefaultOptions_DiscoverFromCurrentAssembly​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Discovery.ToolDiscoveryServiceTests.DiscoverToolsFromAssembly_ValidationFails_MarksAsInvalid​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Observability.ToolObservabilityServiceTests.ExportObservabilityDataAsync_ExportsToCsv​</span><div class="duration"><span>14ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Observability.ToolObservabilityServiceTests.ExportObservabilityDataAsync_UnsupportedFormat_ThrowsException​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Observability.ToolObservabilityServiceTests.StartToolExecution_CreatesActivity​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Integration.OutputLimitingIntegrationTests.ListDirectoryTool_RecursiveLargeTree_ProducesSummary​</span><div class="duration"><span>24ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Observability.ToolObservabilityServiceTests.RecordSecurityEvent_StoresEvent​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Observability.ToolObservabilityServiceTests.CompleteToolExecution_RecordsMetrics​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.WriteFileToolTests.ExecuteAsync_WriteNewFile_Success​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Discovery.ToolDiscoveryServiceTests.DiscoverToolsFromDirectoryAsync_NonExistentDirectory_LogsWarningAndReturnsEmpty​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.WriteFileToolTests.ExecuteAsync_OverwriteFalse_FailsForExistingFile​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Discovery.ToolDiscoveryServiceTests.DiscoverToolsFromDirectoryAsync_WithFilePatterns_UsesCustomPatterns​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.WriteFileToolTests.ExecuteAsync_OverwriteWithBackup_CreatesBackup​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.WriteFileToolTests.ExecuteAsync_InvalidEncoding_ReturnsError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.WriteFileToolTests.ExecuteAsync_AppendMode_AppendsContent​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.WriteFileToolTests.Metadata_HasCorrectConfiguration​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Core.PermissionProfileServiceTests.SaveAndLoadProfileAsync_ShouldPersistProfile​</span><div class="duration"><span>10ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Discovery.ToolDiscoveryServiceTests.DiscoverToolsAsync_ValidatorThrows_LogsWarningAndContinues​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.WriteFileToolTests.ExecuteAsync_DifferentEncoding_WritesCorrectly​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Discovery.ToolDiscoveryServiceTests.DiscoverToolsAsync_WithAdditionalAssemblies_ScansAdditionalAssemblies​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Core.PermissionProfileServiceTests.DeleteProfileAsync_ShouldRemoveProfile​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Discovery.ToolDiscoveryServiceTests.DiscoverToolsFromFileAsync_NonExistentFile_LogsWarningAndReturnsEmpty​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Discovery.ToolDiscoveryServiceTests.DiscoverToolsFromDirectoryAsync_EmptyDirectory_ReturnsEmpty​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Core.PermissionProfileServiceTests.SaveProfileAsync_ShouldThrowForEmptyProfileName​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Observability.ToolObservabilityServiceTests.ExportObservabilityDataAsync_ExportsToJson​</span><div class="duration"><span>10ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Observability.ToolObservabilityServiceTests.GetUsageAnalyticsAsync_TracksToolUsage​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Discovery.ToolDiscoveryServiceTests.DiscoverToolsAsync_LogsAppropriateMessages​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Core.PermissionProfileServiceTests.ListProfilesAsync_ShouldReturnSavedProfiles​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Discovery.ToolDiscoveryServiceTests.DiscoverToolsAsync_WithLoadedAssemblies_ScansAppDomainAssemblies​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Core.PermissionProfileServiceTests.LoadProfileAsync_ShouldThrowForNonExistentProfile​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Core.PermissionProfileServiceTests.SetCurrentPermissionsAsync_ShouldUpdateCurrentPermissions​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Discovery.ToolDiscoveryServiceTests.DiscoverToolsFromFileAsync_InvalidAssembly_LogsWarningAndReturnsEmpty​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Core.PermissionProfileServiceTests.ProfileExistsAsync_ShouldReturnCorrectStatus​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Core.PermissionProfileServiceTests.DeleteProfileAsync_ShouldThrowForDefaultProfile​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Discovery.ToolDiscoveryServiceTests.GetDiscoveryInfo_ReturnsValidInfo​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Discovery.ToolDiscoveryServiceTests.DiscoverToolsAsync_WithPluginDirectories_ScansDirectories​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ListDirectoryToolTests.ExecuteAsync_WithCancellation_ShouldCancelGracefully​</span><div class="duration"><span>152ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ListDirectoryToolTests.ExecuteAsync_DirectoryNotFound_ShouldReturnFailureResult​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ListDirectoryToolTests.ExecuteAsync_SortByName_ShouldSortAlphabetically​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ListDirectoryToolTests.ExecuteAsync_ListValidDirectory_ShouldReturnFileList​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ListDirectoryToolTests.ExecuteAsync_SortBySize_ShouldSortByFileSize​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ListDirectoryToolTests.ExecuteAsync_WithMaxDepth_ShouldRespectDepthLimit​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ListDirectoryToolTests.ExecuteAsync_ShouldProvideStatistics​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ListDirectoryToolTests.ExecuteAsync_InvalidPath_ShouldReturnFailureResult​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ListDirectoryToolTests.ExecuteAsync_AccessDenied_ShouldSkipInaccessibleDirectories​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ListDirectoryToolTests.Metadata_ShouldHaveRequiredParameters​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ListDirectoryToolTests.Metadata_ShouldHaveCorrectValues​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Library.FileSystem.ListDirectoryToolTests.ExecuteAsync_ListEmptyDirectory_ShouldReturnEmptyList​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.ExecuteAsync_WithTimeout_ShouldRespectTimeout​</span><div class="duration"><span>106ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.ExecuteAsync_WithToolNotFound_ShouldReturnFailureResult​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.ValidateExecutionRequestAsync_WithValidRequest_ShouldReturnNoErrors​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.ExecuteAsync_SimpleOverloadWithNullContext_ShouldCreateDefaultContext​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.ExecuteAsync_WithValidationFailure_ShouldReturnFailureResult​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.CancelExecutionsAsync_WithNoMatchingExecution_ShouldReturnZero​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.Constructor_WithNullLogger_ShouldThrowArgumentNullException​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.ExecuteAsync_AfterDispose_ShouldThrowObjectDisposedException​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.Constructor_WithNullResourceMonitor_ShouldThrowArgumentNullException​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.ExecuteAsync_WithDisabledTool_ShouldReturnFailureResult​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.ValidateExecutionRequestAsync_WithToolNotFound_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.CancelExecutionsAsync_WithExistingExecution_ShouldCancelAndReturnCount​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.ExecuteAsync_SimpleOverload_ShouldCreateRequestAndExecute​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.ExecuteAsync_WithToolCreationFailure_ShouldReturnFailureResult​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.ValidateExecutionRequestAsync_WithInvalidRequest_ShouldReturnErrors​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.CancelExecutionsAsync_WithEmptyCorrelationId_ShouldReturnZero​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.Constructor_WithNullServiceProvider_ShouldThrowArgumentNullException​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.Constructor_WithNullRegistry_ShouldThrowArgumentNullException​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.ExecuteAsync_ShouldRaiseExecutionStartedAndCompletedEvents​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.Constructor_WithAllValidDependencies_ShouldInitializeSuccessfully​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.GetStatistics_AfterSuccessfulExecution_ShouldUpdateStatistics​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.ExecuteAsync_WithSecurityViolation_ShouldReturnFailureResult​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.EstimateResourceUsageAsync_ShouldReturnNull​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.Constructor_WithNullValidator_ShouldThrowArgumentNullException​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.GetStatistics_ShouldReturnInitialStatistics​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.GetAllViolations_WithSinceFilter_ShouldReturnRecentViolations​</span><div class="duration"><span>101ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.ClearOldViolations_ShouldKeepRecentViolations​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.Dispose_ShouldCancelAllRunningExecutions​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.GetViolations_WithSpecificCorrelationId_ShouldReturnMatchingViolations​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.ValidateExecution_WithEnvironmentCapabilityButNoPermission_ShouldReturnViolation​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.Constructor_WithNullLogger_ShouldThrowArgumentNullException​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.ValidateExecution_WithDestructiveCapabilityButNoExplicitPermission_ShouldReturnViolation​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsNetworkAccessAllowed_WithNoNetworkPermission_ShouldReturnFalse​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.SecurityManagerTests.IsFileAccessAllowed_WithInvalidPath_ShouldReturnFalse​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.ExecuteAsync_WithException_ShouldReturnFailureResult​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.Constructor_WithNullSecurityManager_ShouldThrowArgumentNullException​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.ExecuteAsync_WithSuccessfulExecution_ShouldReturnSuccessResult​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.ExecuteAsync_WithCancellation_ShouldReturnCancelledResult​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.ExecuteAsync_WithResourceMonitoring_ShouldStartAndStopMonitoring​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Execution.ToolExecutorTests.Constructor_WithNullOutputLimiter_ShouldThrowArgumentNullException​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.ExecuteAsync_WithRetryableFailedStep_ShouldRetryStep​</span><div class="duration"><span>6s 4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.AddToolStep_WithoutName_ShouldUseDefaultName​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.ExecuteAsync_WithInitialParameters_ShouldPassParametersToContext​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.Validate_WithInvalidDependency_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.AddStep_WithValidStep_ShouldAddStepToChain​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.Validate_WithCircularDependency_ShouldReturnError​</span><div class="duration"><span>1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.Validate_WithEmptySteps_ShouldReturnError​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.AddTransformStep_WithValidTransform_ShouldCreateAndAddTransformStep​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.AddParallelStep_WithoutName_ShouldUseDefaultName​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.Validate_WithValidChain_ShouldReturnNoErrors​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.Constructor_WithNullLogger_ShouldThrowArgumentNullException​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.AddParallelStep_WithEmptySteps_ShouldThrowArgumentException​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.ExecuteAsync_ShouldRespectStepDependencies​</span><div class="duration"><span>7ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Andy.Tools.Tests.Advanced.ToolChainTests.AddConditionalStep_WithValidCondition_ShouldCreateAndAddConditionalStep​</span><div class="duration"><span>&lt; 1ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+      </div></details><div>
+      <h2>Informational messages</h2><span>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 8.0.17)</span><br><span>[xUnit.net 00:00:00.02]   Discovering: Andy.Tools.Tests</span><br><span>[xUnit.net 00:00:00.05]   Discovered:  Andy.Tools.Tests</span><br><span>[xUnit.net 00:00:00.05]   Starting:    Andy.Tools.Tests</span><br><span>Description: 'Moves or renames files and directories from source to destination'</span><br><span>Contains 'move': False</span><br><span>Contains 'Move': True</span><br><span>Source dir exists: False</span><br><span>Dest dir exists: True</span><br><span>File1 at dest: True</span><br><span>Files in destination: /var/folders/_r/9k3x08351lxdf0tz_cwnq_8m0000gn/T/MoveFileToolTests/298bc984-2b2a-44ca-9bf0-4a3a971ddd5e/dest_dir/file1.txt, /var/folders/_r/9k3x08351lxdf0tz_cwnq_8m0000gn/T/MoveFileToolTests/298bc984-2b2a-44ca-9bf0-4a3a971ddd5e/dest_dir/subdir/file2.txt</span><br><span>info: Andy.Tools.Registry.ToolRegistry[0]</span><br><span>      Registered tool 'List Directory' (ID: list_directory) from type Andy.Tools.Library.FileSystem.ListDirectoryTool</span><br><span>info: Andy.Tools.Execution.ToolExecutor[0]</span><br><span>      Executing tool 'List Directory' (ID: list_directory) with correlation ID 4f309588</span><br><span>info: Andy.Tools.Execution.ToolExecutor[0]</span><br><span>      Tool execution completed for 'List Directory' (ID: list_directory): Success=True, Duration=(null)ms</span><br><span>info: Andy.Tools.Registry.ToolRegistry[0]</span><br><span>      Registered tool 'List Directory' (ID: list_directory) from type Andy.Tools.Library.FileSystem.ListDirectoryTool</span><br><span>info: Andy.Tools.Registry.ToolRegistry[0]</span><br><span>      Registered tool 'Read File' (ID: read_file) from type Andy.Tools.Library.FileSystem.ReadFileTool</span><br><span>info: Andy.Tools.Execution.ToolExecutor[0]</span><br><span>      Executing tool 'Read File' (ID: read_file) with correlation ID 4cba3c04</span><br><span>info: Andy.Tools.Execution.ToolExecutor[0]</span><br><span>      Tool execution completed for 'Read File' (ID: read_file): Success=True, Duration=(null)ms</span><br><span>info: Andy.Tools.Registry.ToolRegistry[0]</span><br><span>      Registered tool 'List Directory' (ID: list_directory) from type Andy.Tools.Library.FileSystem.ListDirectoryTool</span><br><span>info: Andy.Tools.Execution.ToolExecutor[0]</span><br><span>      Executing tool 'List Directory' (ID: list_directory) with correlation ID f094f7e5</span><br><span>info: Andy.Tools.Execution.ToolExecutor[0]</span><br><span>      Tool output truncated for 'List Directory': 35482 -&gt; 3531 bytes</span><br><span>info: Andy.Tools.Execution.ToolExecutor[0]</span><br><span>      Tool execution completed for 'List Directory' (ID: list_directory): Success=True, Duration=(null)ms</span><br><span>[xUnit.net 00:00:00.20]       Expected clearedCount to be greater than 0, but found 0.</span><br><span>[xUnit.net 00:00:00.20]       Stack Trace:</span><br><span>[xUnit.net 00:00:00.20]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)</span><br><span>[xUnit.net 00:00:00.20]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)</span><br><span>[xUnit.net 00:00:00.20]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)</span><br><span>[xUnit.net 00:00:00.20]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)</span><br><span>[xUnit.net 00:00:00.20]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)</span><br><span>[xUnit.net 00:00:00.20]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)</span><br><span>[xUnit.net 00:00:00.20]            at FluentAssertions.Numeric.NumericAssertions`2.BeGreaterThan(T expected, String because, Object[] becauseArgs)</span><br><span>[xUnit.net 00:00:00.20]         /Users/sami/devel/rivoli-ai/andy-tools/tests/Andy.Tools.Tests/Execution/SecurityManagerTests.cs(586,0): at Andy.Tools.Tests.Execution.SecurityManagerTests.ClearOldViolations_ShouldRemoveOldViolationsAndReturnCount()</span><br><span>[xUnit.net 00:00:00.20]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)</span><br><span>[xUnit.net 00:00:00.20]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</span><br><span>info: Andy.Tools.Registry.ToolRegistry[0]</span><br><span>      Registered tool 'List Directory' (ID: list_directory) from type Andy.Tools.Library.FileSystem.ListDirectoryTool</span><br><span>info: Andy.Tools.Execution.ToolExecutor[0]</span><br><span>      Executing tool 'List Directory' (ID: list_directory) with correlation ID fa4c6893</span><br><span>info: Andy.Tools.Execution.ToolExecutor[0]</span><br><span>      Tool output truncated for 'List Directory': 37158 -&gt; 3498 bytes</span><br><span>info: Andy.Tools.Execution.ToolExecutor[0]</span><br><span>      Tool execution completed for 'List Directory' (ID: list_directory): Success=True, Duration=(null)ms</span><br><span>[TOOL] Executing: test-tool | Parameters: {"input":"test"}</span><br><span>[TOOL] Executing: test-tool | Parameters: {"input":"test"}</span><br><span>[xUnit.net 00:00:06.23]   Finished:    Andy.Tools.Tests</span><br></div>
+    <div>
+      <h2>Error and Warning messages</h2><span>[xUnit.net 00:00:00.20]     Andy.Tools.Tests.Execution.SecurityManagerTests.ClearOldViolations_ShouldRemoveOldViolationsAndReturnCount [FAIL]</span><br></div>
+  </body>
+  <style>
+        body { font-family: Calibri, Verdana, Arial, sans-serif; background-color: White; color: Black; }
+        h2 {
+        margin-top: 15px;
+        margin-bottom:10px;
+        }
+        pre {
+        white-space: pre-wrap;
+        }
+        .summary {font-family:monospace;
+        display: -webkit-flex; /* Safari */
+        -webkit-flex-wrap: wrap; /* Safari 6.1+ */
+        display: flex;
+        flex-wrap: wrap;
+        }
+        .row {
+        border: 2px solid #ffffff;
+        width:100%;
+        cursor:pointer;
+        background-color:#d7e9fa;
+        }
+        .list-row {
+        border: 2px solid #ffffff;
+        width:100%;
+        cursor:pointer;
+        background-color:#ffffff;
+        }
+        .inner-row{
+        border: 2px solid #ffffff;
+        padding-left:1%;
+        margin-left:1%;
+        background-color:#ffffff;
+        }
+        .block{
+        width : 150px;
+        }
+        .leaf-division{
+        border: 2px solid #ffffff;
+        background-color:#e6eff7;
+        }
+        .pass { color: #0c0; }
+        .fail { color: #c00; }
+        .error-message { color : brown; }
+        .error-stack-trace { color: brown; }
+        .duration {float:right;padding-right:1%;}
+        .total-tests { font-size : 30px}
+        .test-run-time { font-size : 30px}
+        .pass-percentage { font-size : 30px}
+        .error-info{
+        margin-left:16px;
+        }
+      </style>
+</html>
