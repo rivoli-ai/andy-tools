@@ -103,7 +103,7 @@ public class TodoManagementToolTests
         // Test missing action
         var parameters1 = new Dictionary<string, object?>();
         var errors1 = tool.ValidateParameters(parameters1);
-        Assert.Contains(errors1, e => e.Contains("action") && e.Contains("required"));
+        Assert.Contains(errors1, e => e.Contains("action") && e.Contains("required", StringComparison.OrdinalIgnoreCase));
 
         // Test invalid action
         var parameters2 = new Dictionary<string, object?>

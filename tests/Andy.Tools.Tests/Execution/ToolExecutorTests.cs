@@ -361,9 +361,10 @@ public class ToolExecutorTests : IDisposable
             }
         };
 
-        _mockRegistry.Setup(x => x.GetTool("test-tool")).Returns(_testRegistration);
-        _mockRegistry.Setup(x => x.CreateTool("test-tool", It.IsAny<IServiceProvider>())).Returns(_mockTool.Object);
-
+        // Use the working setup pattern but override the ExecuteAsync behavior
+        SetupSuccessfulExecution();
+        
+        // Override to throw OperationCanceledException
         _mockTool.Setup(x => x.ExecuteAsync(It.IsAny<Dictionary<string, object?>>(), It.IsAny<ToolExecutionContext>()))
             .ThrowsAsync(new OperationCanceledException());
 
@@ -383,9 +384,10 @@ public class ToolExecutorTests : IDisposable
     public async Task ExecuteAsync_WithException_ShouldReturnFailureResult()
     {
         // Arrange
-        _mockRegistry.Setup(x => x.GetTool("test-tool")).Returns(_testRegistration);
-        _mockRegistry.Setup(x => x.CreateTool("test-tool", It.IsAny<IServiceProvider>())).Returns(_mockTool.Object);
-
+        // Use the working setup pattern but override the ExecuteAsync behavior
+        SetupSuccessfulExecution();
+        
+        // Override to throw exception
         _mockTool.Setup(x => x.ExecuteAsync(It.IsAny<Dictionary<string, object?>>(), It.IsAny<ToolExecutionContext>()))
             .ThrowsAsync(new InvalidOperationException("Test exception"));
 
@@ -410,10 +412,10 @@ public class ToolExecutorTests : IDisposable
             TimeoutMs = 100
         };
 
-        _mockRegistry.Setup(x => x.GetTool("test-tool")).Returns(_testRegistration);
-        _mockRegistry.Setup(x => x.CreateTool("test-tool", It.IsAny<IServiceProvider>())).Returns(_mockTool.Object);
-
-        // Simulate a long-running operation
+        // Use the working setup pattern but override the ExecuteAsync behavior
+        SetupSuccessfulExecution();
+        
+        // Override with long-running operation that should be cancelled
         _mockTool.Setup(x => x.ExecuteAsync(It.IsAny<Dictionary<string, object?>>(), It.IsAny<ToolExecutionContext>()))
             .Returns(async (Dictionary<string, object?> parameters, ToolExecutionContext context) =>
             {
@@ -790,6 +792,12 @@ public class ToolExecutorTests : IDisposable
 
         _mockRegistry.Setup(x => x.GetTool("test-tool")).Returns(_testRegistration);
         _mockRegistry.Setup(x => x.CreateTool("test-tool", It.IsAny<IServiceProvider>())).Returns(_mockTool.Object);
+
+        // Setup InitializeAsync and DisposeAsync
+        _mockTool.Setup(x => x.InitializeAsync(It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _mockTool.Setup(x => x.DisposeAsync(It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
         _mockTool.Setup(x => x.ExecuteAsync(It.IsAny<Dictionary<string, object?>>(), It.IsAny<ToolExecutionContext>()))
             .ReturnsAsync(toolResult);
