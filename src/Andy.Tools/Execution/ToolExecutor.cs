@@ -170,10 +170,18 @@ public class ToolExecutor : IToolExecutor, IDisposable
             }
 
             // Combine with context cancellation token
-            combinedCts = CancellationTokenSource.CreateLinkedTokenSource(
-                executionCts.Token,
-                request.Context.CancellationToken);
-            request.Context.CancellationToken = combinedCts.Token;
+            try
+            {
+                combinedCts = CancellationTokenSource.CreateLinkedTokenSource(
+                    executionCts.Token,
+                    request.Context.CancellationToken);
+                request.Context.CancellationToken = combinedCts.Token;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create linked cancellation token source");
+                throw;
+            }
 
             // Track running execution
             _runningExecutions.TryAdd(correlationId, executionCts);
@@ -184,6 +192,7 @@ public class ToolExecutor : IToolExecutor, IDisposable
             {
                 result.IsSuccessful = false;
                 result.ErrorMessage = $"Failed to create instance of tool '{request.ToolId}'";
+                _logger.LogInformation("Tool creation failed, returning early with message: {ErrorMessage}", result.ErrorMessage);
                 return result;
             }
 
@@ -286,13 +295,32 @@ public class ToolExecutor : IToolExecutor, IDisposable
                 request.ToolId, correlationId);
 
             // Record error in observability
-            _observabilityService?.RecordToolError(activity, request.ToolId, ex);
+            if (_observabilityService != null && activity != null)
+            {
+                try
+                {
+                    _observabilityService.RecordToolError(activity, request.ToolId, ex);
+                }
+                catch (Exception recordEx)
+                {
+                    _logger.LogWarning(recordEx, "Failed to record tool error");
+                }
+            }
 
-            UpdateStatistics(request.ToolId, request.Context.UserId, false, false, stopwatch.Elapsed.TotalMilliseconds);
+            try
+            {
+                UpdateStatistics(request.ToolId, request.Context.UserId, false, false, stopwatch.Elapsed.TotalMilliseconds);
+            }
+            catch (Exception statsEx)
+            {
+                _logger.LogWarning(statsEx, "Failed to update statistics");
+            }
         }
         finally
         {
-            stopwatch.Stop();
+            try
+            {
+                stopwatch.Stop();
             result.EndTime = DateTimeOffset.UtcNow;
             if (!result.DurationMs.HasValue)
             {
@@ -315,11 +343,18 @@ public class ToolExecutor : IToolExecutor, IDisposable
             // Stop resource monitoring and get final usage
             if (monitoringSession != null)
             {
-                result.ResourceUsage = _resourceMonitor.StopMonitoring(correlationId);
-                result.HitResourceLimits = monitoringSession.HasExceededLimits;
-                if (monitoringSession.HasExceededLimits && result.Metadata != null)
+                try
                 {
-                    result.Metadata["exceeded_limits"] = monitoringSession.ExceededLimits?.ToList() ?? new List<string>();
+                    result.ResourceUsage = _resourceMonitor.StopMonitoring(correlationId);
+                    result.HitResourceLimits = monitoringSession.HasExceededLimits;
+                    if (monitoringSession.HasExceededLimits && result.Metadata != null)
+                    {
+                        result.Metadata["exceeded_limits"] = monitoringSession.ExceededLimits?.ToList() ?? new List<string>();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to stop resource monitoring for correlation {CorrelationId}", correlationId);
                 }
             }
 
@@ -332,10 +367,17 @@ public class ToolExecutor : IToolExecutor, IDisposable
             executionCts?.Dispose();
 
             // Get security violations
-            var violations = _securityManager.GetViolations(correlationId);
-            if (violations != null && violations.Count > 0)
+            try
             {
-                result.SecurityViolations = [.. violations.Where(v => v != null).Select(v => v.Description)];
+                var violations = _securityManager.GetViolations(correlationId);
+                if (violations != null && violations.Count > 0)
+                {
+                    result.SecurityViolations = [.. violations.Where(v => v != null && v.Description != null).Select(v => v.Description!)];
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to get security violations for correlation {CorrelationId}", correlationId);
             }
 
             // Complete observability tracking
@@ -345,27 +387,41 @@ public class ToolExecutor : IToolExecutor, IDisposable
             }
 
             // Record any security events
-            if (violations != null && violations.Count > 0)
+            try
             {
-                foreach (var violation in violations.Where(v => v != null))
+                var violations2 = _securityManager.GetViolations(correlationId);
+                if (violations2 != null && violations2.Count > 0)
                 {
-                    _observabilityService?.RecordSecurityEvent(
-                        request.ToolId,
-                        "SecurityViolation",
-                        new Dictionary<string, object?>
-                        {
-                            ["violation"] = violation.Description,
-                            ["severity"] = violation.Severity.ToString(),
-                            ["user"] = request.Context.UserId,
-                            ["correlation_id"] = correlationId
-                        });
+                    foreach (var violation in violations2.Where(v => v != null))
+                    {
+                        _observabilityService?.RecordSecurityEvent(
+                            request.ToolId,
+                            "SecurityViolation",
+                            new Dictionary<string, object?>
+                            {
+                                ["violation"] = violation.Description ?? string.Empty,
+                                ["severity"] = violation.Severity.ToString(),
+                                ["user"] = request.Context?.UserId,
+                                ["correlation_id"] = correlationId
+                            });
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to record security events for tool {ToolId}", request?.ToolId ?? "unknown");
             }
 
             // Raise execution completed event
             if (result != null)
             {
                 ExecutionCompleted?.Invoke(this, new ToolExecutionCompletedEventArgs(result));
+            }
+            }
+            catch (Exception finallyEx)
+            {
+                _logger.LogError(finallyEx, "Exception in finally block during tool execution cleanup");
+                // Don't rethrow - we want to preserve the original result/exception
             }
         }
 
