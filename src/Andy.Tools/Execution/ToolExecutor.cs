@@ -235,10 +235,10 @@ public class ToolExecutor : IToolExecutor, IDisposable
 
                     // Update the result with limited output
                     result.Data = limitedOutput.Content;
-                    result.Metadata["output_truncated"] = limitedOutput.WasTruncated;
-
+                    
                     if (limitedOutput.WasTruncated)
                     {
+                        result.Metadata["output_truncated"] = true;
                         result.Metadata["truncation_info"] = new
                         {
                             original_size = limitedOutput.OriginalSize,
@@ -266,7 +266,14 @@ public class ToolExecutor : IToolExecutor, IDisposable
             // Update result
             result.IsSuccessful = toolResult.IsSuccessful;
             result.ErrorMessage = toolResult.ErrorMessage;
-            result.Metadata = new Dictionary<string, object?>(toolResult.Metadata);
+            // Copy tool metadata first, but preserve any metadata added during output limiting
+            foreach (var kvp in toolResult.Metadata)
+            {
+                if (!result.Metadata.ContainsKey(kvp.Key))
+                {
+                    result.Metadata[kvp.Key] = kvp.Value;
+                }
+            }
             result.DurationMs = toolResult.DurationMs;
 
             _logger.LogInformation("Tool execution completed for '{ToolName}' (ID: {ToolId}): Success={Success}, Duration={Duration}ms",

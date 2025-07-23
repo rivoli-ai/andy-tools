@@ -78,17 +78,14 @@ public class WriteFileToolTests : IDisposable
         Assert.True(result.IsSuccessful);
         Assert.Equal(newContent, await File.ReadAllTextAsync(filePath));
 
-        // Check backup creation - the metadata might be in a different location
-        var hasBackup = result.Metadata.ContainsKey("created_backup") && result.Metadata["created_backup"] is bool backup && backup;
-        if (!hasBackup)
-        {
-            // Check if backup info is in the data instead
-            var data = result.Data as Dictionary<string, object?>;
-            hasBackup = data?.ContainsKey("created_backup") == true && data["created_backup"] is bool dataBackup && dataBackup;
-        }
-
-        Assert.True(hasBackup, $"Backup was not created. Metadata keys: {string.Join(", ", result.Metadata.Keys)}");
-        var backupPath = result.Metadata["backup_path"] as string;
+        // Check backup creation - FileSuccess puts everything in Data
+        var data = result.Data as Dictionary<string, object?>;
+        Assert.NotNull(data);
+        
+        var hasBackup = data.ContainsKey("created_backup") && data["created_backup"] is bool backup && backup;
+        Assert.True(hasBackup, $"Backup was not created. Data keys: {string.Join(", ", data.Keys)}");
+        
+        var backupPath = data["backup_path"] as string;
         Assert.NotNull(backupPath);
         Assert.True(File.Exists(backupPath));
         Assert.Equal(originalContent, await File.ReadAllTextAsync(backupPath));
@@ -165,8 +162,12 @@ public class WriteFileToolTests : IDisposable
         Assert.True(result.IsSuccessful);
         var readContent = await File.ReadAllTextAsync(filePath, Encoding.Unicode);
         Assert.Equal(content, readContent);
-        Assert.Contains("encoding", result.Metadata.Keys);
-        Assert.Equal(Encoding.Unicode.EncodingName, result.Metadata["encoding"]);
+        
+        // FileSuccess puts everything in Data
+        var data = result.Data as Dictionary<string, object?>;
+        Assert.NotNull(data);
+        Assert.Contains("encoding", data.Keys);
+        Assert.Equal(Encoding.Unicode.EncodingName, data["encoding"]);
     }
 
     [Fact]

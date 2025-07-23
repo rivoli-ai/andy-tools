@@ -131,8 +131,8 @@ public class SearchTextTool : ToolBase
         var searchType = GetParameter(parameters, "search_type", "contains");
         var caseSensitive = GetParameter(parameters, "case_sensitive", false);
         var wholeWordsOnly = GetParameter(parameters, "whole_words_only", false);
-        var filePatterns = GetParameter<List<string>>(parameters, "file_patterns", []);
-        var excludePatterns = GetParameter<List<string>>(parameters, "exclude_patterns", []);
+        var filePatterns = GetParameterAsStringList(parameters, "file_patterns") ?? [];
+        var excludePatterns = GetParameterAsStringList(parameters, "exclude_patterns") ?? [];
         var recursive = GetParameter(parameters, "recursive", true);
         var maxResults = GetParameter(parameters, "max_results", 100);
         var contextLines = GetParameter(parameters, "context_lines", 2);
@@ -474,5 +474,21 @@ public class SearchTextTool : ToolBase
         public List<string> Errors { get; set; } = [];
         public DateTime StartTime { get; set; } = DateTime.UtcNow;
         public TimeSpan SearchDuration => DateTime.UtcNow - StartTime;
+    }
+
+    private static List<string>? GetParameterAsStringList(Dictionary<string, object?> parameters, string name)
+    {
+        if (!parameters.TryGetValue(name, out var value) || value == null)
+        {
+            return null;
+        }
+
+        return value switch
+        {
+            List<string> list => list,
+            string[] array => array.ToList(),
+            IEnumerable<string> enumerable => enumerable.ToList(),
+            _ => null
+        };
     }
 }

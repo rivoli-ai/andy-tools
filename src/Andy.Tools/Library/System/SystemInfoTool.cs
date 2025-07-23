@@ -57,17 +57,7 @@ public class SystemInfoTool : Andy.Tools.Library.ToolBase
     /// <inheritdoc />
     protected override async Task<ToolResult> ExecuteInternalAsync(Dictionary<string, object?> parameters, ToolExecutionContext context)
     {
-        var categoriesParam = GetParameter<List<string>>(parameters, "categories", []);
-
-        // Handle the case where categories might be passed as an array instead of List<string>
-        if (categoriesParam.Count == 0 && parameters.TryGetValue("categories", out var categoriesValue) && categoriesValue != null)
-        {
-            if (categoriesValue is IEnumerable<string> categoriesArray)
-            {
-                categoriesParam = categoriesArray.ToList();
-            }
-        }
-
+        var categoriesParam = GetParameterAsStringList(parameters, "categories") ?? [];
         var includeSensitive = GetParameter(parameters, "include_sensitive", false);
         var detailed = GetParameter(parameters, "detailed", false);
 
@@ -76,8 +66,19 @@ public class SystemInfoTool : Andy.Tools.Library.ToolBase
             ReportProgress(context, "Gathering system information...", 10);
 
             var systemInfo = new Dictionary<string, object?>();
-            var categories = categoriesParam.Count > 0 ? categoriesParam :
-                ["os", "hardware", "runtime", "environment", "network", "storage", "memory", "cpu"];
+            var validCategories = new List<string> { "os", "hardware", "runtime", "environment", "network", "storage", "memory", "cpu" };
+            var categories = categoriesParam.Count > 0 ? categoriesParam : validCategories;
+
+            // Validate categories
+            var invalidCategories = categories.Where(c => !validCategories.Contains(c.ToLowerInvariant())).ToList();
+            if (invalidCategories.Count > 0)
+            {
+                return ToolResults.InvalidParameter(
+                    "categories", 
+                    string.Join(", ", invalidCategories),
+                    $"Parameter 'categories' must be one of: {string.Join(", ", validCategories)}"
+                );
+            }
 
             var totalCategories = categories.Count;
             var processedCategories = 0;
@@ -536,5 +537,21 @@ public class SystemInfoTool : Andy.Tools.Library.ToolBase
 
         return sensitivePatterns.Any(pattern =>
             name.Contains(pattern, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static List<string>? GetParameterAsStringList(Dictionary<string, object?> parameters, string name)
+    {
+        if (!parameters.TryGetValue(name, out var value) || value == null)
+        {
+            return null;
+        }
+
+        return value switch
+        {
+            List<string> list => list,
+            string[] array => array.ToList(),
+            IEnumerable<string> enumerable => enumerable.ToList(),
+            _ => null
+        };
     }
 }

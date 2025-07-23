@@ -277,4 +277,63 @@ public class ToolOutputLimiterTests
         Assert.Contains(".cs: 200", formatted);
         Assert.Contains("Showing 100 of 500 items", formatted);
     }
+
+    [Fact]
+    public void NeedsLimiting_ListSuccessDictionary_ShouldDetectCorrectly()
+    {
+        // Arrange
+        // This mimics what ListSuccess returns
+        var items = new List<object>();
+        for (int i = 0; i < 100; i++)
+        {
+            items.Add(new { Name = $"file{i}.txt", Type = "file", Size = 1024L });
+        }
+        
+        var data = new Dictionary<string, object?>
+        {
+            ["items"] = items,
+            ["count"] = items.Count,
+            ["total_count"] = items.Count
+        };
+        
+        // Act
+        var result = _limiter.NeedsLimiting(data, OutputType.FileList);
+        
+        // Assert
+        Assert.True(result, "Should detect that 100 items exceeds the limit of 10");
+    }
+
+    [Fact]
+    public void LimitOutput_ListSuccessDictionary_ShouldTruncateCorrectly()
+    {
+        // Arrange
+        var items = new List<object>();
+        for (int i = 0; i < 100; i++)
+        {
+            items.Add(new { Name = $"file{i}.txt", Type = "file", Size = 1024L });
+        }
+        
+        var data = new Dictionary<string, object?>
+        {
+            ["items"] = items,
+            ["count"] = items.Count,
+            ["total_count"] = items.Count
+        };
+        
+        // Act
+        var result = _limiter.LimitOutput(data, OutputType.FileList);
+        
+        // Assert
+        Assert.True(result.WasTruncated);
+        Assert.NotNull(result.Content);
+        
+        if (result.Content is Dictionary<string, object?> resultDict)
+        {
+            Assert.True(resultDict.ContainsKey("items"));
+            if (resultDict["items"] is IList<object> resultItems)
+            {
+                Assert.True(resultItems.Count <= 10, $"Expected 10 or fewer items, got {resultItems.Count}");
+            }
+        }
+    }
 }

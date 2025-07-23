@@ -55,9 +55,16 @@ public class ToolOutputLimiter : IToolOutputLimiter
         var size = EstimateSize(output);
         var maxSize = GetMaxSize(outputType);
 
+        // Check if output is a list
         if (output is IList<object> list)
         {
             return list.Count > GetMaxItems(outputType) || size > maxSize;
+        }
+
+        // Check if output is a dictionary with "items" key (from ListSuccess)
+        if (output is Dictionary<string, object?> dict && dict.TryGetValue("items", out var itemsValue) && itemsValue is System.Collections.IList itemsList)
+        {
+            return itemsList.Count > GetMaxItems(outputType) || size > maxSize;
         }
 
         return size > maxSize;
@@ -153,7 +160,30 @@ public class ToolOutputLimiter : IToolOutputLimiter
 
     private LimitedOutput LimitFileList(object output, OutputLimitContext context)
     {
-        if (output is not IList<object> fileList)
+        IList<object>? fileList = null;
+        bool isDictionary = false;
+
+        // Check if output is a direct list
+        if (output is IList<object> directList)
+        {
+            fileList = directList;
+        }
+        // Check if output is a dictionary with "items" key (from ListSuccess)
+        else if (output is Dictionary<string, object?> outputDict && outputDict.TryGetValue("items", out var itemsValue))
+        {
+            isDictionary = true;
+            // Convert any IList to IList<object>
+            if (itemsValue is System.Collections.IList items)
+            {
+                fileList = new List<object>();
+                foreach (var item in items)
+                {
+                    fileList.Add(item);
+                }
+            }
+        }
+
+        if (fileList == null)
         {
             return LimitGenericText(output, context);
         }
@@ -192,7 +222,33 @@ public class ToolOutputLimiter : IToolOutputLimiter
             currentSize += itemSize;
         }
 
-        result.Content = limitedList;
+        // Return in the same format as the input
+        if (isDictionary && output is Dictionary<string, object?> dict)
+        {
+            // Create a new dictionary with the limited items
+            var limitedDict = new Dictionary<string, object?>
+            {
+                ["items"] = limitedList,
+                ["count"] = limitedList.Count,
+                ["total_count"] = fileList.Count
+            };
+            
+            // Preserve other keys from the original dictionary
+            foreach (var kvp in dict)
+            {
+                if (kvp.Key != "items" && kvp.Key != "count" && kvp.Key != "total_count")
+                {
+                    limitedDict[kvp.Key] = kvp.Value;
+                }
+            }
+            
+            result.Content = limitedDict;
+        }
+        else
+        {
+            result.Content = limitedList;
+        }
+        
         result.TruncatedSize = currentSize;
 
         // Add suggestions
