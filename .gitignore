@@ -41,6 +41,11 @@ ScaffoldingReadMe.txt
 *~
 CodeCoverage/
 
+# Test coverage and results
+coverage/
+coveragereport/
+test-results/
+
 # macOS
 .DS_Store
 **/.DS_Store
