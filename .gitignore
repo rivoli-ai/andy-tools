@@ -44,6 +44,7 @@ CodeCoverage/
 # Test coverage and results
 coverage/
 coveragereport/
+coverage-results/
 test-results/
 
 # macOS
@@ -54,6 +55,7 @@ test-results/
 *.binlog
 
 # MSTest test Results
+[Tt]est-[Rr]esult*/
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
 
