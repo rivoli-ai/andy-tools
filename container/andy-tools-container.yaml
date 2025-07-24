@@ -7,7 +7,7 @@ metadata:
     app: andy-tools
     version: alpha
 spec:
-  # Use the Docker image
+  # Use the container image
   image: andy-tools:latest
   
   # Container settings

@@ -4,7 +4,7 @@
   "description": "Andy Tools Examples Container - ALPHA SOFTWARE",
   "image": {
     "name": "andy-tools:latest",
-    "type": "docker"
+    "type": "oci"
   },
   "runtime": {
     "user": "andytools",

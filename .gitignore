@@ -51,6 +51,12 @@ test-results/
 .DS_Store
 **/.DS_Store
 
+# Container build artifacts
+container/bin-safe/
+container/bin-isolated/
+container/rootfs/
+container/rootfs-safe/
+
 # MSBuild Binary and Structured Log
 *.binlog
 

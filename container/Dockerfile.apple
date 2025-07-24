@@ -1,0 +1,28 @@
+# Use the .NET 8 runtime image directly since we'll copy pre-built binaries
+FROM mcr.microsoft.com/dotnet/runtime:8.0-alpine
+WORKDIR /app
+
+# Install required dependencies including ICU for globalization
+RUN apk add --no-cache curl jq icu-libs icu-data-full
+
+# Create a non-root user
+RUN adduser -D -s /bin/sh andytools && \
+    chown -R andytools:andytools /app
+
+# Copy pre-built binaries from host
+# We expect these to be built beforehand
+COPY examples/Andy.Tools.Examples/bin/Debug/net8.0/* ./
+
+# Switch to non-root user
+USER andytools
+
+# Set environment variables
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false \
+    LC_ALL=en_US.UTF-8 \
+    LANG=en_US.UTF-8 \
+    HOME=/app \
+    TMPDIR=/tmp
+
+# Default command runs all examples
+ENTRYPOINT ["dotnet", "Andy.Tools.Examples.dll"]
+CMD ["all"]

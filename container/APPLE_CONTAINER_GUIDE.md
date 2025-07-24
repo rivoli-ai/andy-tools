@@ -15,31 +15,81 @@ This guide provides detailed instructions for running Andy Tools Examples using 
    make && sudo make install
    ```
 
-2. **Docker**: Required for building the image
+2. **Rosetta 2** (for Apple Silicon Macs): Required for x86_64 emulation
    ```bash
-   # Verify Docker is installed
-   docker --version
+   # Install Rosetta if not already installed
+   softwareupdate --install-rosetta --agree-to-license
+   ```
+
+3. **Configure Kernel**: Set up the container kernel for your architecture
+   ```bash
+   # For Apple Silicon (arm64)
+   container system kernel set --recommended --arch arm64
+   
+   # For Intel Macs (x86_64)
+   container system kernel set --recommended --arch amd64
    ```
 
 ## Building the Container Image
 
-First, build the Docker image that will be used by Apple Container:
+Apple Container can build images directly without Docker. There are two approaches:
+
+### Option 1: Self-Contained Image (Recommended)
+
+Build a self-contained image with the Andy Tools binary included:
+
+```bash
+# First, ensure the project is built
+cd /path/to/andy-tools
+dotnet build examples/Andy.Tools.Examples/Andy.Tools.Examples.csproj
+
+# Build the container image
+container build -t andy-tools:self-contained -f container/Dockerfile.apple .
+```
+
+This creates a completely self-contained image that doesn't require access to your local filesystem.
+
+### Option 2: Using the Original Dockerfile (Alternative)
+
+If you prefer to use an existing Dockerfile from another tool or have specific requirements:
 
 ```bash
 cd /path/to/andy-tools
-docker build -t andy-tools:latest .
+container build -t andy-tools:latest .
 ```
+
+Note: The original Dockerfile may have been designed for Docker, but Apple Container can often build from Docker-compatible Dockerfiles.
 
 ## Running with Apple Container
 
-### Method 1: Using the Spec File
+### Method 1: Self-Contained Image (Recommended)
+
+Use the provided script to run the self-contained image:
+
+```bash
+cd container
+./run-apple-container-self-contained.sh
+
+# Run specific examples
+./run-apple-container-self-contained.sh basic
+./run-apple-container-self-contained.sh file
+./run-apple-container-self-contained.sh security
+```
+
+This approach:
+- Uses a pre-built container image with the binary inside
+- No local filesystem access is needed or granted
+- All operations occur within the container's filesystem
+- Temporary files are stored in memory (tmpfs)
+
+### Method 2: Using the Spec File
 
 ```bash
 cd container
 container run --spec andy-tools.acspec
 ```
 
-### Method 2: Using Command Line
+### Method 3: Using Command Line
 
 ```bash
 container run \
@@ -147,9 +197,9 @@ container run --spec andy-tools.acspec --network-mode none
    container version
    ```
 
-2. Verify the Docker image exists:
+2. Verify the container image exists:
    ```bash
-   docker images | grep andy-tools
+   container images list | grep andy-tools
    ```
 
 3. Check container logs:
@@ -218,8 +268,8 @@ Remove all Andy Tools containers and images:
 container stop andy-tools-examples
 container rm andy-tools-examples
 
-# Remove Docker image
-docker rmi andy-tools:latest
+# Remove container image
+container images rm andy-tools:latest
 ```
 
 ## Additional Resources
