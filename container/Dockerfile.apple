@@ -15,9 +15,9 @@ RUN dotnet restore
 COPY src/ ./src/
 COPY examples/ ./examples/
 
-# Build with UseContainerEntryPoint to use ProgramContainer.cs
+# Build the examples project
 WORKDIR /src/examples/Andy.Tools.Examples
-RUN dotnet publish -c Release -p:UseContainerEntryPoint=true -o /app/publish
+RUN dotnet publish -c Release -o /app/publish
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/runtime:8.0-alpine

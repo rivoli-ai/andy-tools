@@ -37,9 +37,9 @@ container build -t andy-tools:self-contained -f container/Dockerfile.apple .
 ```
 
 This builds a multi-stage image that:
-- Compiles the code with the container-specific entry point
+- Compiles the code using the standard Program.cs entry point
 - Creates a minimal runtime image with just the necessary binaries
-- Configures everything for non-interactive execution
+- Configures everything for command-line argument support
 
 ### Step 4: Run the Self-Contained Container
 

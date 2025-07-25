@@ -46,9 +46,9 @@ container build -t andy-tools:self-contained -f container/Dockerfile.apple .
 ```
 
 This creates a completely self-contained image that:
-- Builds the project with the container-specific entry point (ProgramContainer.cs)
+- Builds the project using the standard Program.cs entry point
 - Includes all dependencies in the image
-- Runs non-interactively without requiring keyboard input
+- Supports command-line arguments for running specific examples
 - Doesn't require access to your local filesystem
 
 ### Option 2: Using the Original Dockerfile (Alternative)
