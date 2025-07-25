@@ -1,4 +1,25 @@
-# Use the .NET 8 runtime image directly since we'll copy pre-built binaries
+# Build stage - compile with container entry point
+FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
+WORKDIR /src
+
+# Copy project files
+COPY andy-tools.sln ./
+COPY Directory.Build.props ./
+COPY src/Andy.Tools/Andy.Tools.csproj ./src/Andy.Tools/
+COPY examples/Andy.Tools.Examples/Andy.Tools.Examples.csproj ./examples/Andy.Tools.Examples/
+
+# Restore dependencies
+RUN dotnet restore
+
+# Copy source code
+COPY src/ ./src/
+COPY examples/ ./examples/
+
+# Build with UseContainerEntryPoint to use ProgramContainer.cs
+WORKDIR /src/examples/Andy.Tools.Examples
+RUN dotnet publish -c Release -p:UseContainerEntryPoint=true -o /app/publish
+
+# Runtime stage
 FROM mcr.microsoft.com/dotnet/runtime:8.0-alpine
 WORKDIR /app
 
@@ -9,9 +30,8 @@ RUN apk add --no-cache curl jq icu-libs icu-data-full
 RUN adduser -D -s /bin/sh andytools && \
     chown -R andytools:andytools /app
 
-# Copy pre-built binaries from host
-# We expect these to be built beforehand
-COPY examples/Andy.Tools.Examples/bin/Debug/net8.0/* ./
+# Copy published binaries from build stage
+COPY --from=build /app/publish ./
 
 # Switch to non-root user
 USER andytools

@@ -36,7 +36,7 @@ public static class BasicUsageExamples
             ["format"] = "yyyy-MM-dd HH:mm:ss"
         };
 
-        var result = await toolExecutor.ExecuteAsync("datetime", parameters);
+        var result = await toolExecutor.ExecuteAsync("datetime_tool", parameters);
 
         if (result.IsSuccessful)
         {
@@ -52,12 +52,11 @@ public static class BasicUsageExamples
     {
         var parameters = new Dictionary<string, object?>
         {
-            ["operation"] = "encode",
-            ["encoding_type"] = "base64",
-            ["text"] = "Hello, Andy Tools!"
+            ["operation"] = "base64_encode",
+            ["input_text"] = "Hello, Andy Tools!"
         };
 
-        var result = await toolExecutor.ExecuteAsync("encoding", parameters);
+        var result = await toolExecutor.ExecuteAsync("encoding_tool", parameters);
 
         if (result.IsSuccessful)
         {
@@ -67,13 +66,16 @@ public static class BasicUsageExamples
             // Decode it back
             var decodeParams = new Dictionary<string, object?>
             {
-                ["operation"] = "decode",
-                ["encoding_type"] = "base64",
-                ["text"] = result.Data
+                ["operation"] = "base64_decode",
+                ["input_text"] = result.Data
             };
             
-            var decodeResult = await toolExecutor.ExecuteAsync("encoding", decodeParams);
+            var decodeResult = await toolExecutor.ExecuteAsync("encoding_tool", decodeParams);
             Console.WriteLine($"Decoded: {decodeResult.Data}");
+        }
+        else
+        {
+            Console.WriteLine($"Encoding failed: {result.ErrorMessage}");
         }
     }
 

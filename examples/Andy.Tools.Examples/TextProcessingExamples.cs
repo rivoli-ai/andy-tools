@@ -6,6 +6,37 @@ namespace Andy.Tools.Examples;
 
 public static class TextProcessingExamples
 {
+    private static string ExtractFormattedText(object? data)
+    {
+        if (data == null) return "null";
+        
+        // If it's a dictionary, extract the content field
+        if (data is Dictionary<string, object?> dict)
+        {
+            string? text = null;
+            
+            if (dict.TryGetValue("content", out var content))
+                text = content?.ToString();
+            else if (dict.TryGetValue("formatted_text", out var formatted))
+                text = formatted?.ToString();
+            else if (dict.TryGetValue("result", out var result))
+                text = result?.ToString();
+            else if (dict.TryGetValue("output", out var output))
+                text = output?.ToString();
+            
+            if (text != null)
+            {
+                // Unescape JSON unicode sequences
+                return System.Text.RegularExpressions.Regex.Unescape(text);
+            }
+            
+            // Debug: show what keys are available
+            return $"Dictionary with keys: {string.Join(", ", dict.Keys)}";
+        }
+        
+        // Otherwise just convert to string
+        return data.ToString() ?? "null";
+    }
     public static async Task RunAsync(IServiceProvider serviceProvider)
     {
         Console.WriteLine("=== Text Processing Examples ===\n");
@@ -35,9 +66,8 @@ public static class TextProcessingExamples
 
         var formatParams = new Dictionary<string, object?>
         {
-            ["text"] = uglyJson,
-            ["format"] = "json",
-            ["indent_size"] = 2
+            ["input_text"] = uglyJson,
+            ["operation"] = "format_json"
         };
 
         var result = await toolExecutor.ExecuteAsync("format_text", formatParams);
@@ -45,58 +75,80 @@ public static class TextProcessingExamples
         if (result.IsSuccessful)
         {
             Console.WriteLine("Formatted JSON:");
-            Console.WriteLine(result.Data);
+            Console.WriteLine(ExtractFormattedText(result.Data));
+        }
+        else
+        {
+            Console.WriteLine($"Error: {result.ErrorMessage}");
         }
     }
 
     private static async Task SearchAndReplace(IToolExecutor toolExecutor)
     {
+        // First, create a sample file
+        var tempFile = Path.Combine(Path.GetTempPath(), "sample_text.txt");
         var sampleText = """
             The quick brown fox jumps over the lazy dog.
             The lazy dog was sleeping under the tree.
             The quick brown fox ran away quickly.
             """;
+        
+        await File.WriteAllTextAsync(tempFile, sampleText);
 
-        // Simple replacement
+        // Simple replacement in file
         var simpleParams = new Dictionary<string, object?>
         {
-            ["text"] = sampleText,
             ["search_pattern"] = "quick",
-            ["replacement"] = "swift",
-            ["case_sensitive"] = true
+            ["replacement_text"] = "swift",
+            ["target_path"] = tempFile,
+            ["search_type"] = "contains"
         };
 
         var simpleResult = await toolExecutor.ExecuteAsync("replace_text", simpleParams);
         
-        if (simpleResult.IsSuccessful && simpleResult.Data is Dictionary<string, object?> simpleData)
+        if (simpleResult.IsSuccessful)
         {
-            Console.WriteLine("Simple replacement:");
-            Console.WriteLine($"Replacements made: {simpleData.GetValueOrDefault("replacement_count")}");
+            Console.WriteLine("Simple replacement completed");
+            if (simpleResult.Data is Dictionary<string, object?> resultData)
+            {
+                var filesProcessed = resultData.GetValueOrDefault("count");
+                var totalReplacements = resultData.GetValueOrDefault("total_count");
+                
+                Console.WriteLine($"Files processed: {filesProcessed}");
+                Console.WriteLine($"Total replacements: {totalReplacements}");
+                
+                // Check if there are detailed results
+                if (resultData.TryGetValue("items", out var items) && items is List<object> itemList && itemList.Count > 0)
+                {
+                    if (itemList[0] is Dictionary<string, object?> firstItem)
+                    {
+                        var replacements = firstItem.GetValueOrDefault("replacement_count") ?? firstItem.GetValueOrDefault("replacements");
+                        if (replacements != null)
+                        {
+                            Console.WriteLine($"Replacements in this file: {replacements}");
+                        }
+                    }
+                }
+            }
+            
+            // Read the modified content
+            var modifiedContent = await File.ReadAllTextAsync(tempFile);
             Console.WriteLine("Result preview:");
-            var resultText = simpleData.GetValueOrDefault("result")?.ToString() ?? "";
-            Console.WriteLine(resultText.Split('\n')[0]); // First line
+            Console.WriteLine(modifiedContent.Split('\n')[0]); // First line
+        }
+        else
+        {
+            Console.WriteLine($"Replace text failed: {simpleResult.ErrorMessage}");
         }
 
-        // Regex replacement
-        var regexParams = new Dictionary<string, object?>
-        {
-            ["text"] = sampleText,
-            ["search_pattern"] = @"\b(\w+)\s+\1\b", // Find repeated words
-            ["replacement"] = "$1", // Keep only one instance
-            ["use_regex"] = true
-        };
-
-        var regexResult = await toolExecutor.ExecuteAsync("replace_text", regexParams);
-        
-        if (regexResult.IsSuccessful && regexResult.Data is Dictionary<string, object?> regexData)
-        {
-            Console.WriteLine("\nRegex replacement (remove repeated words):");
-            Console.WriteLine($"Replacements made: {regexData.GetValueOrDefault("replacement_count")}");
-        }
+        // Clean up
+        try { File.Delete(tempFile); } catch { }
     }
 
     private static async Task SearchWithRegex(IToolExecutor toolExecutor)
     {
+        // Create a sample code file
+        var tempFile = Path.Combine(Path.GetTempPath(), "sample_code.cs");
         var codeSnippet = """
             public class UserService
             {
@@ -116,33 +168,70 @@ public static class TextProcessingExamples
                 }
             }
             """;
+        
+        await File.WriteAllTextAsync(tempFile, codeSnippet);
 
-        // Search for method definitions
+        // Search for async method definitions
         var searchParams = new Dictionary<string, object?>
         {
-            ["text"] = codeSnippet,
-            ["patterns"] = new[] { @"public\s+async\s+Task<.*?>\s+(\w+)" },
-            ["use_regex"] = true,
+            ["search_pattern"] = @"public\s+async\s+Task<.*?>\s+(\w+)",
+            ["target_path"] = tempFile,
+            ["search_type"] = "regex",
             ["include_line_numbers"] = true,
             ["context_lines"] = 1
         };
 
         var result = await toolExecutor.ExecuteAsync("search_text", searchParams);
         
-        if (result.IsSuccessful && result.Data is Dictionary<string, object?> searchData)
+        if (result.IsSuccessful)
         {
-            if (searchData.TryGetValue("results", out var results) && results is List<object> resultList)
+            Console.WriteLine("Search results:");
+            if (result.Data is Dictionary<string, object?> searchData)
             {
-                Console.WriteLine($"Found {resultList.Count} async methods:");
-                foreach (var item in resultList)
+                Console.WriteLine($"Total files: {searchData.GetValueOrDefault("count")}");
+                Console.WriteLine($"Total matches: {searchData.GetValueOrDefault("total_count")}");
+                
+                if (searchData.TryGetValue("items", out var results) && results is List<object> resultList)
                 {
-                    if (item is Dictionary<string, object?> match)
+                    Console.WriteLine($"\nFound {resultList.Count} matches:");
+                    foreach (var item in resultList)
                     {
-                        Console.WriteLine($"- Line {match.GetValueOrDefault("line_number")}: {match.GetValueOrDefault("matched_text")}");
+                        if (item is Dictionary<string, object?> match)
+                        {
+                            var lineNumber = match.GetValueOrDefault("line_number");
+                            var lineContent = match.GetValueOrDefault("line_content") ?? match.GetValueOrDefault("line");
+                            var matchText = match.GetValueOrDefault("match") ?? match.GetValueOrDefault("text");
+                            
+                            if (lineContent != null)
+                            {
+                                Console.WriteLine($"- Line {lineNumber}: {lineContent}");
+                            }
+                            else if (matchText != null)
+                            {
+                                Console.WriteLine($"- Match: {matchText}");
+                            }
+                            else
+                            {
+                                // Debug: show available keys
+                                Console.WriteLine($"  Match keys: {string.Join(", ", match.Keys)}");
+                            }
+                        }
                     }
+                }
+                else
+                {
+                    // Debug: show what keys are available
+                    Console.WriteLine($"Available keys in searchData: {string.Join(", ", searchData.Keys)}");
                 }
             }
         }
+        else
+        {
+            Console.WriteLine($"Search failed: {result.ErrorMessage}");
+        }
+        
+        // Clean up
+        try { File.Delete(tempFile); } catch { }
     }
 
     private static async Task FormatDifferentTypes(IToolExecutor toolExecutor)
@@ -152,9 +241,8 @@ public static class TextProcessingExamples
         
         var xmlParams = new Dictionary<string, object?>
         {
-            ["text"] = uglyXml,
-            ["format"] = "xml",
-            ["indent_size"] = 4
+            ["input_text"] = uglyXml,
+            ["operation"] = "format_xml"
         };
 
         var xmlResult = await toolExecutor.ExecuteAsync("format_text", xmlParams);
@@ -162,7 +250,7 @@ public static class TextProcessingExamples
         if (xmlResult.IsSuccessful)
         {
             Console.WriteLine("Formatted XML:");
-            Console.WriteLine(xmlResult.Data);
+            Console.WriteLine(ExtractFormattedText(xmlResult.Data));
         }
 
         // Format with custom options
@@ -178,14 +266,8 @@ public static class TextProcessingExamples
 
         var customParams = new Dictionary<string, object?>
         {
-            ["text"] = JsonSerializer.Serialize(customJson),
-            ["format"] = "json",
-            ["options"] = new Dictionary<string, object?>
-            {
-                ["sort_keys"] = true,
-                ["ensure_ascii"] = false,
-                ["indent"] = 2
-            }
+            ["input_text"] = JsonSerializer.Serialize(customJson),
+            ["operation"] = "format_json"
         };
 
         var customResult = await toolExecutor.ExecuteAsync("format_text", customParams);
@@ -193,7 +275,7 @@ public static class TextProcessingExamples
         if (customResult.IsSuccessful)
         {
             Console.WriteLine("\nFormatted JSON with custom options:");
-            Console.WriteLine(customResult.Data);
+            Console.WriteLine(ExtractFormattedText(customResult.Data));
         }
     }
 }

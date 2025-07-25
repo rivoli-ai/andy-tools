@@ -2,6 +2,9 @@ using Andy.Tools.Advanced.CachingSystem;
 using Andy.Tools.Advanced.MetricsCollection;
 using Andy.Tools.Advanced.ToolChains;
 using Andy.Tools.Core;
+using Andy.Tools.Core.OutputLimiting;
+using Andy.Tools.Execution;
+using Andy.Tools.Validation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -57,6 +60,38 @@ public static class ServiceCollectionExtensions
             var builder = sp.GetRequiredService<ToolChainBuilder>();
             return builder.Build();
         });
+
+        // Replace IToolExecutor with caching version if enabled
+        if (options.EnableCaching)
+        {
+            // Remove the existing registration
+            var existingDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(IToolExecutor));
+            if (existingDescriptor != null)
+            {
+                services.Remove(existingDescriptor);
+            }
+
+            // Add the caching decorator
+            services.AddSingleton<IToolExecutor>(sp =>
+            {
+                // Create the original executor
+                var registry = sp.GetRequiredService<IToolRegistry>();
+                var validator = sp.GetRequiredService<IToolValidator>();
+                var securityManager = sp.GetRequiredService<ISecurityManager>();
+                var resourceMonitor = sp.GetRequiredService<IResourceMonitor>();
+                var outputLimiter = sp.GetRequiredService<IToolOutputLimiter>();
+                var executorLogger = sp.GetRequiredService<ILogger<Execution.ToolExecutor>>();
+                
+                var innerExecutor = new Execution.ToolExecutor(
+                    registry, validator, securityManager, resourceMonitor, 
+                    outputLimiter, sp, executorLogger);
+
+                // Wrap with caching
+                var cache = sp.GetRequiredService<IToolExecutionCache>();
+                var cachingLogger = sp.GetRequiredService<ILogger<CachingToolExecutor>>();
+                return new CachingToolExecutor(innerExecutor, cache, cachingLogger);
+            });
+        }
 
         return services;
     }

@@ -39,72 +39,121 @@ services.AddAdvancedToolFeatures(options =>
 
 // Add example-specific tools
 services.AddTool<RandomNumberTool>();
+services.AddTool<WordCountTool>();
+services.AddTool<CsvProcessorTool>();
+services.AddTool<PasswordGeneratorTool>();
 
 var serviceProvider = services.BuildServiceProvider();
 
-// Main menu
-while (true)
+// Initialize the tool framework (needed for console apps)
+var lifecycleManager = serviceProvider.GetRequiredService<IToolLifecycleManager>();
+await lifecycleManager.InitializeAsync();
+
+// Check command line arguments
+var cmdArgs = Environment.GetCommandLineArgs();
+var exampleToRun = cmdArgs.Length > 1 ? cmdArgs[1] : "all";
+
+Console.WriteLine($"Running example: {exampleToRun}\n");
+
+try
 {
-    Console.WriteLine("\nSelect an example to run:");
-    Console.WriteLine("1. Basic Tool Usage");
-    Console.WriteLine("2. File Operations");
-    Console.WriteLine("3. Text Processing");
-    Console.WriteLine("4. Tool Chains");
-    Console.WriteLine("5. Custom Tools");
-    Console.WriteLine("6. Security and Permissions");
-    Console.WriteLine("7. Caching Examples");
-    Console.WriteLine("8. Web Operations");
-    Console.WriteLine("9. System Information");
-    Console.WriteLine("0. Exit");
-    Console.Write("\nEnter your choice: ");
-
-    var choice = Console.ReadLine();
-    Console.WriteLine();
-
-    try
+    switch (exampleToRun.ToLowerInvariant())
     {
-        switch (choice)
-        {
-            case "1":
-                await BasicUsageExamples.RunAsync(serviceProvider);
-                break;
-            case "2":
-                await FileOperationsExamples.RunAsync(serviceProvider);
-                break;
-            case "3":
-                await TextProcessingExamples.RunAsync(serviceProvider);
-                break;
-            case "4":
-                await ToolChainExamples.RunAsync(serviceProvider);
-                break;
-            case "5":
-                await CustomToolExamples.RunAsync(serviceProvider);
-                break;
-            case "6":
-                await SecurityExamples.RunAsync(serviceProvider);
-                break;
-            case "7":
-                await CachingExamples.RunAsync(serviceProvider);
-                break;
-            case "8":
-                await WebOperationsExamples.RunAsync(serviceProvider);
-                break;
-            case "9":
-                await SystemInfoExamples.RunAsync(serviceProvider);
-                break;
-            case "0":
-                Console.WriteLine("Exiting...");
-                return;
-            default:
-                Console.WriteLine("Invalid choice. Please try again.");
-                break;
-        }
+        case "test":
+            await TestBasic.RunAsync(serviceProvider);
+            break;
+        case "debug":
+            await DebugToolRegistry.RunAsync(serviceProvider);
+            break;
+        case "1":
+        case "basic":
+            await BasicUsageExamples.RunAsync(serviceProvider);
+            break;
+        case "2":
+        case "file":
+            await FileOperationsExamples.RunAsync(serviceProvider);
+            break;
+        case "3":
+        case "text":
+            await TextProcessingExamples.RunAsync(serviceProvider);
+            break;
+        case "4":
+        case "chain":
+            await ToolChainExamples.RunAsync(serviceProvider);
+            break;
+        case "5":
+        case "custom":
+            await CustomToolExamples.RunAsync(serviceProvider);
+            break;
+        case "6":
+        case "security":
+            await SecurityExamples.RunAsync(serviceProvider);
+            break;
+        case "7":
+        case "cache":
+            await CachingExamples.RunAsync(serviceProvider);
+            break;
+        case "8":
+        case "web":
+            await WebOperationsExamples.RunAsync(serviceProvider);
+            break;
+        case "9":
+        case "system":
+            await SystemInfoExamples.RunAsync(serviceProvider);
+            break;
+        case "all":
+            Console.WriteLine("Running all examples...\n");
+            
+            Console.WriteLine("\n=== BASIC USAGE ===");
+            await BasicUsageExamples.RunAsync(serviceProvider);
+            
+            Console.WriteLine("\n\n=== FILE OPERATIONS ===");
+            await FileOperationsExamples.RunAsync(serviceProvider);
+            
+            Console.WriteLine("\n\n=== TEXT PROCESSING ===");
+            await TextProcessingExamples.RunAsync(serviceProvider);
+            
+            Console.WriteLine("\n\n=== TOOL CHAINS ===");
+            await ToolChainExamples.RunAsync(serviceProvider);
+            
+            Console.WriteLine("\n\n=== CUSTOM TOOLS ===");
+            await CustomToolExamples.RunAsync(serviceProvider);
+            
+            Console.WriteLine("\n\n=== SECURITY ===");
+            await SecurityExamples.RunAsync(serviceProvider);
+            
+            Console.WriteLine("\n\n=== CACHING ===");
+            await CachingExamples.RunAsync(serviceProvider);
+            
+            Console.WriteLine("\n\n=== WEB OPERATIONS ===");
+            await WebOperationsExamples.RunAsync(serviceProvider);
+            
+            Console.WriteLine("\n\n=== SYSTEM INFO ===");
+            await SystemInfoExamples.RunAsync(serviceProvider);
+            break;
+        default:
+            Console.WriteLine($"Unknown example: {exampleToRun}");
+            Console.WriteLine("Usage: dotnet run [example]");
+            Console.WriteLine("Where [example] is one of:");
+            Console.WriteLine("  1 or basic    - Basic Tool Usage");
+            Console.WriteLine("  2 or file     - File Operations");
+            Console.WriteLine("  3 or text     - Text Processing");
+            Console.WriteLine("  4 or chain    - Tool Chains");
+            Console.WriteLine("  5 or custom   - Custom Tools");
+            Console.WriteLine("  6 or security - Security and Permissions");
+            Console.WriteLine("  7 or cache    - Caching Examples");
+            Console.WriteLine("  8 or web      - Web Operations");
+            Console.WriteLine("  9 or system   - System Information");
+            Console.WriteLine("  all           - Run all examples (default)");
+            Environment.Exit(1);
+            break;
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error running example: {ex.Message}");
-    }
-
-    Console.WriteLine("\nPress any key to continue...");
-    Console.ReadKey();
+    
+    Console.WriteLine("\n\n✅ Examples completed successfully!");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"\n❌ Error running examples: {ex.Message}");
+    Console.WriteLine(ex.StackTrace);
+    Environment.Exit(1);
 }

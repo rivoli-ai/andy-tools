@@ -11,16 +11,8 @@ public static class CustomToolExamples
         Console.WriteLine("=== Custom Tool Examples ===\n");
         Console.WriteLine("This demonstrates how to create your own tools.\n");
 
-        // Register custom tools
-        var services = new ServiceCollection();
-        
-        // Add our custom tools
-        services.AddTool<WordCountTool>();
-        services.AddTool<CsvProcessorTool>();
-        services.AddTool<PasswordGeneratorTool>();
-        
-        var customProvider = services.BuildServiceProvider();
-        var toolExecutor = customProvider.GetRequiredService<IToolExecutor>();
+        // Use the existing service provider which already has tools registered
+        var toolExecutor = serviceProvider.GetRequiredService<IToolExecutor>();
 
         // Example 1: Word count tool
         Console.WriteLine("1. Word Count Tool:");

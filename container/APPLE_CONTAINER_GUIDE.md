@@ -15,11 +15,13 @@ This guide provides detailed instructions for running Andy Tools Examples using 
    make && sudo make install
    ```
 
-2. **Rosetta 2** (for Apple Silicon Macs): Required for x86_64 emulation
+2. **Rosetta 2** (for Apple Silicon Macs only): Required for x86_64 emulation
    ```bash
-   # Install Rosetta if not already installed
+   # Install Rosetta if not already installed (Apple Silicon only)
    softwareupdate --install-rosetta --agree-to-license
    ```
+   
+   Note: Intel Mac users can skip this step.
 
 3. **Configure Kernel**: Set up the container kernel for your architecture
    ```bash
@@ -39,15 +41,15 @@ Apple Container can build images directly without Docker. There are two approach
 Build a self-contained image with the Andy Tools binary included:
 
 ```bash
-# First, ensure the project is built
 cd /path/to/andy-tools
-dotnet build examples/Andy.Tools.Examples/Andy.Tools.Examples.csproj
-
-# Build the container image
 container build -t andy-tools:self-contained -f container/Dockerfile.apple .
 ```
 
-This creates a completely self-contained image that doesn't require access to your local filesystem.
+This creates a completely self-contained image that:
+- Builds the project with the container-specific entry point (ProgramContainer.cs)
+- Includes all dependencies in the image
+- Runs non-interactively without requiring keyboard input
+- Doesn't require access to your local filesystem
 
 ### Option 2: Using the Original Dockerfile (Alternative)
 

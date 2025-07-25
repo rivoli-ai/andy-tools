@@ -6,13 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <StartupObject>Program</StartupObject>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="ProgramContainer.cs" Condition="'$(UseContainerEntryPoint)' != 'true'" />
-    <Compile Remove="Program.cs" Condition="'$(UseContainerEntryPoint)' == 'true'" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Andy.Tools\Andy.Tools.csproj" />

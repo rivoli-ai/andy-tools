@@ -74,40 +74,30 @@ public static class ToolChainExamples
             return;
         }
         Console.WriteLine("✓ File read");
-
-        // Step 3: Transform to uppercase
-        var replaceParams = new Dictionary<string, object?>
-        {
-            ["text"] = readResult.Data?.ToString(),
-            ["search_pattern"] = ".*",
-            ["replacement"] = readResult.Data?.ToString()?.ToUpper(),
-            ["use_regex"] = true
-        };
         
-        var replaceResult = await toolExecutor.ExecuteAsync("replace_text", replaceParams, context);
-        if (!replaceResult.IsSuccessful)
-        {
-            Console.WriteLine($"Failed to transform text: {replaceResult.ErrorMessage}");
-            return;
-        }
+        // Extract the content from read result
+        var fileContent = readResult.Data is Dictionary<string, object?> readDict 
+            ? readDict.GetValueOrDefault("content")?.ToString() ?? ""
+            : readResult.Data?.ToString() ?? "";
+
+        // Step 3: Transform to uppercase using simple string manipulation
+        // (replace_text tool is for files, not in-memory strings)
+        var transformedContent = fileContent.ToUpper();
         Console.WriteLine("✓ Text transformed");
 
         // Step 4: Save the result
-        var transformedText = replaceResult.Data is Dictionary<string, object?> dict 
-            ? dict.GetValueOrDefault("result")?.ToString() 
-            : replaceResult.Data?.ToString();
             
         var saveParams = new Dictionary<string, object?>
         {
             ["file_path"] = "output.txt",
-            ["content"] = transformedText
+            ["content"] = transformedContent
         };
         
         var saveResult = await toolExecutor.ExecuteAsync("write_file", saveParams, context);
         if (saveResult.IsSuccessful)
         {
             Console.WriteLine("✓ Result saved");
-            Console.WriteLine($"Final output: {transformedText}");
+            Console.WriteLine($"Final output: {transformedContent}");
         }
     }
 
@@ -141,7 +131,10 @@ public static class ToolChainExamples
             var result = await toolExecutor.ExecuteAsync("read_file", readParams, context);
             if (result.IsSuccessful)
             {
-                allContent.Add(result.Data?.ToString() ?? "");
+                var content = result.Data is Dictionary<string, object?> dict 
+                    ? dict.GetValueOrDefault("content")?.ToString() ?? ""
+                    : result.Data?.ToString() ?? "";
+                allContent.Add(content);
             }
         }
 

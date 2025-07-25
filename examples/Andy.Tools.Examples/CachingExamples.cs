@@ -57,7 +57,8 @@ public static class CachingExamples
         var sw1 = System.Diagnostics.Stopwatch.StartNew();
         var result1 = await toolExecutor.ExecuteAsync("datetime", parameters, context);
         sw1.Stop();
-        Console.WriteLine($"Result: {result1.Data}");
+        var dateTime1 = ExtractData(result1.Data);
+        Console.WriteLine($"Result: {dateTime1}");
         Console.WriteLine($"Time: {sw1.ElapsedMilliseconds}ms");
 
         // Second execution - should be cached
@@ -65,9 +66,11 @@ public static class CachingExamples
         var sw2 = System.Diagnostics.Stopwatch.StartNew();
         var result2 = await toolExecutor.ExecuteAsync("datetime", parameters, context);
         sw2.Stop();
-        Console.WriteLine($"Result: {result2.Data}");
+        var dateTime2 = ExtractData(result2.Data);
+        Console.WriteLine($"Result: {dateTime2}");
         Console.WriteLine($"Time: {sw2.ElapsedMilliseconds}ms");
-        Console.WriteLine($"Cache hit: {result2.Metadata?.GetValueOrDefault("cache_hit") ?? false}");
+        var isCached = dateTime1 == dateTime2;
+        Console.WriteLine($"Cache hit: {isCached}");
 
         // Wait a moment to show time hasn't changed
         await Task.Delay(1000);
@@ -75,7 +78,8 @@ public static class CachingExamples
         // Third execution - still cached
         Console.WriteLine("\nThird execution (still cached):");
         var result3 = await toolExecutor.ExecuteAsync("datetime", parameters, context);
-        Console.WriteLine($"Result: {result3.Data} (note: same as previous)");
+        var dateTime3 = ExtractData(result3.Data);
+        Console.WriteLine($"Result: {dateTime3} (note: {(dateTime3 == dateTime2 ? "same as previous" : "different!")})");
     }
 
     private static async Task DemonstrateCacheExpiration(IToolExecutor toolExecutor)
@@ -100,12 +104,14 @@ public static class CachingExamples
         // Execute and cache
         Console.WriteLine("Initial execution:");
         var result1 = await toolExecutor.ExecuteAsync("random_number", parameters, context);
-        Console.WriteLine($"Random number: {result1.Data}");
+        var random1 = ExtractData(result1.Data);
+        Console.WriteLine($"Random number: {random1}");
 
         // Immediate re-execution (cached)
         Console.WriteLine("\nImmediate re-execution (cached):");
         var result2 = await toolExecutor.ExecuteAsync("random_number", parameters, context);
-        Console.WriteLine($"Random number: {result2.Data} (same as above)");
+        var random2 = ExtractData(result2.Data);
+        Console.WriteLine($"Random number: {random2} {(random2 == random1 ? "(same as above)" : "(different!)")})");
 
         // Wait for cache to expire
         Console.WriteLine("\nWaiting for cache to expire (2 seconds)...");
@@ -114,7 +120,8 @@ public static class CachingExamples
         // Execute again (cache expired)
         Console.WriteLine("\nAfter expiration:");
         var result3 = await toolExecutor.ExecuteAsync("random_number", parameters, context);
-        Console.WriteLine($"Random number: {result3.Data} (new value)");
+        var random3 = ExtractData(result3.Data);
+        Console.WriteLine($"Random number: {random3} {(random3 != random2 ? "(new value)" : "(still cached!)")})");
     }
 
     private static async Task DemonstrateCacheInvalidation(IToolExecutor toolExecutor, IToolExecutionCache cache)
@@ -143,7 +150,8 @@ public static class CachingExamples
 
             Console.WriteLine("First read (not cached):");
             var result1 = await toolExecutor.ExecuteAsync("read_file", readParams, context);
-            Console.WriteLine($"Content: {result1.Data}");
+            var content1 = ExtractData(result1.Data);
+            Console.WriteLine($"Content: {content1}");
 
             // Update file content
             await File.WriteAllTextAsync(tempFile, "Updated content");
@@ -151,7 +159,8 @@ public static class CachingExamples
             // Read again (still cached - shows old content)
             Console.WriteLine("\nSecond read (cached - shows old content):");
             var result2 = await toolExecutor.ExecuteAsync("read_file", readParams, context);
-            Console.WriteLine($"Content: {result2.Data}");
+            var content2 = ExtractData(result2.Data);
+            Console.WriteLine($"Content: {content2}");
 
             // Invalidate cache for this file
             var cacheKey = GenerateCacheKey("read_file", readParams);
@@ -161,7 +170,8 @@ public static class CachingExamples
             // Read again (cache invalidated - shows new content)
             Console.WriteLine("\nThird read (after invalidation):");
             var result3 = await toolExecutor.ExecuteAsync("read_file", readParams, context);
-            Console.WriteLine($"Content: {result3.Data}");
+            var content3 = ExtractData(result3.Data);
+            Console.WriteLine($"Content: {content3}");
         }
         finally
         {
@@ -194,6 +204,32 @@ public static class CachingExamples
         var paramString = string.Join(",", parameters.OrderBy(p => p.Key)
             .Select(p => $"{p.Key}={p.Value}"));
         return $"tool:{toolId}:params:{paramString}";
+    }
+
+    private static string ExtractData(object? data)
+    {
+        if (data == null) return "null";
+        
+        // If it's a dictionary (common for tool results), extract the actual content
+        if (data is Dictionary<string, object?> dict)
+        {
+            // Common keys for content in tool results
+            if (dict.TryGetValue("content", out var content))
+                return content?.ToString() ?? "null";
+            if (dict.TryGetValue("result", out var result))
+                return result?.ToString() ?? "null";
+            if (dict.TryGetValue("value", out var value))
+                return value?.ToString() ?? "null";
+            if (dict.TryGetValue("data", out var dataValue))
+                return dataValue?.ToString() ?? "null";
+            
+            // If no common keys found, try to get the first value
+            if (dict.Count == 1)
+                return dict.Values.First()?.ToString() ?? "null";
+        }
+        
+        // Otherwise just convert to string
+        return data.ToString() ?? "null";
     }
 }
 

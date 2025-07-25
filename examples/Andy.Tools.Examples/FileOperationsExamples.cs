@@ -1,5 +1,6 @@
 using Andy.Tools.Core;
 using Microsoft.Extensions.DependencyInjection;
+using System.Linq;
 
 namespace Andy.Tools.Examples;
 
@@ -75,11 +76,11 @@ public static class FileOperationsExamples
         };
 
         var readResult = await toolExecutor.ExecuteAsync("read_file", readParams, context);
-        if (readResult.IsSuccessful)
+        if (readResult.IsSuccessful && readResult.Data is Dictionary<string, object?> fileData)
         {
             Console.WriteLine("File content (first 100 chars):");
-            var preview = readResult.Data?.ToString() ?? "";
-            Console.WriteLine(preview.Length > 100 ? preview[..100] + "..." : preview);
+            var fileContent = fileData.GetValueOrDefault("content")?.ToString() ?? "";
+            Console.WriteLine(fileContent.Length > 100 ? fileContent[..100] + "..." : fileContent);
         }
     }
 
@@ -111,9 +112,27 @@ public static class FileOperationsExamples
         if (result.IsSuccessful && result.Data is Dictionary<string, object?> copyStats)
         {
             Console.WriteLine($"Copy completed:");
-            Console.WriteLine($"- Bytes copied: {copyStats.GetValueOrDefault("bytes_copied")}");
-            Console.WriteLine($"- Duration: {copyStats.GetValueOrDefault("duration_ms")}ms");
-            Console.WriteLine($"- Throughput: {copyStats.GetValueOrDefault("throughput_mb_per_sec")} MB/s");
+            Console.WriteLine($"- Bytes copied: {copyStats.GetValueOrDefault("bytes_copied_formatted") ?? copyStats.GetValueOrDefault("bytes_copied") ?? "N/A"}");
+            var operationTime = copyStats.GetValueOrDefault("operation_time");
+            if (operationTime != null && double.TryParse(operationTime.ToString(), out var seconds))
+            {
+                Console.WriteLine($"- Duration: {seconds * 1000:F1}ms");
+                var bytesCopied = copyStats.GetValueOrDefault("bytes_copied");
+                if (bytesCopied != null && long.TryParse(bytesCopied.ToString(), out var bytes))
+                {
+                    var throughputMBps = (bytes / (1024.0 * 1024.0)) / seconds;
+                    Console.WriteLine($"- Throughput: {throughputMBps:F2} MB/s");
+                }
+                else
+                {
+                    Console.WriteLine($"- Throughput: N/A MB/s");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"- Duration: N/A ms");
+                Console.WriteLine($"- Throughput: N/A MB/s");
+            }
         }
     }
 
@@ -141,17 +160,61 @@ public static class FileOperationsExamples
         
         if (result.IsSuccessful && result.Data is Dictionary<string, object?> listData)
         {
-            if (listData.TryGetValue("items", out var items) && items is List<object> fileList)
+            if (listData.TryGetValue("items", out var items))
             {
-                Console.WriteLine($"Found {fileList.Count} .txt files:");
+                List<object> fileList = new List<object>();
+                if (items is List<object> objList)
+                {
+                    fileList = objList;
+                }
+                else if (items is IEnumerable<object> enumerable)
+                {
+                    fileList = enumerable.ToList();
+                }
+                
+                Console.WriteLine($"Found {fileList.Count} matching items:");
                 foreach (var item in fileList)
                 {
                     if (item is Dictionary<string, object?> file)
                     {
-                        Console.WriteLine($"- {file.GetValueOrDefault("name")} ({file.GetValueOrDefault("size")} bytes)");
+                        var name = file.GetValueOrDefault("name") ?? file.GetValueOrDefault("Name") ?? file.GetValueOrDefault("path");
+                        var size = file.GetValueOrDefault("size") ?? file.GetValueOrDefault("Size") ?? file.GetValueOrDefault("file_size");
+                        Console.WriteLine($"- {name} ({size} bytes)");
+                    }
+                    else if (item != null)
+                    {
+                        // Handle strongly-typed FileSystemEntry objects
+                        var type = item.GetType();
+                        var nameProperty = type.GetProperty("Name");
+                        var sizeProperty = type.GetProperty("Size");
+                        
+                        if (nameProperty != null)
+                        {
+                            var name = nameProperty.GetValue(item)?.ToString();
+                            var typeProperty = type.GetProperty("Type");
+                            var fileType = typeProperty?.GetValue(item)?.ToString();
+                            
+                            if (fileType == "directory")
+                            {
+                                Console.WriteLine($"- {name} (directory)");
+                            }
+                            else
+                            {
+                                var size = sizeProperty?.GetValue(item);
+                                Console.WriteLine($"- {name} ({size ?? "?"} bytes)");
+                            }
+                        }
                     }
                 }
             }
+            else
+            {
+                Console.WriteLine("No matching files found or unexpected response format");
+            }
+        }
+        else
+        {
+            Console.WriteLine($"List directory failed: {result.ErrorMessage}");
         }
     }
 
@@ -198,7 +261,7 @@ public static class FileOperationsExamples
 
         var deleteParams = new Dictionary<string, object?>
         {
-            ["file_path"] = "delete-me.txt",
+            ["target_path"] = "delete-me.txt",
             ["recursive"] = false // For directories
         };
 

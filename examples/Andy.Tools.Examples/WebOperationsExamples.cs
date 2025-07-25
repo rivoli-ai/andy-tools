@@ -6,6 +6,41 @@ namespace Andy.Tools.Examples;
 
 public static class WebOperationsExamples
 {
+    private static string ExtractFormattedText(object? data)
+    {
+        if (data == null) return "null";
+        
+        // If it's a dictionary, extract the content field
+        if (data is Dictionary<string, object?> dict)
+        {
+            if (dict.TryGetValue("content", out var content))
+                return content?.ToString() ?? "";
+            else if (dict.TryGetValue("formatted_text", out var formatted))
+                return formatted?.ToString() ?? "";
+            else if (dict.TryGetValue("result", out var result))
+                return result?.ToString() ?? "";
+        }
+        
+        return data.ToString() ?? "";
+    }
+    
+    private static string ExtractJsonValue(object? data)
+    {
+        if (data == null) return "null";
+        
+        // If it's a dictionary, check for value or result
+        if (data is Dictionary<string, object?> dict)
+        {
+            if (dict.TryGetValue("value", out var value))
+                return value?.ToString() ?? "";
+            else if (dict.TryGetValue("result", out var result))
+                return result?.ToString() ?? "";
+            else if (dict.TryGetValue("data", out var dataValue))
+                return dataValue?.ToString() ?? "";
+        }
+        
+        return data.ToString() ?? "";
+    }
     public static async Task RunAsync(IServiceProvider serviceProvider)
     {
         Console.WriteLine("=== Web Operations Examples ===\n");
@@ -35,7 +70,11 @@ public static class WebOperationsExamples
         var parameters = new Dictionary<string, object?>
         {
             ["url"] = "https://api.github.com/zen",
-            ["method"] = "GET"
+            ["method"] = "GET",
+            ["headers"] = new Dictionary<string, object?>
+            {
+                ["User-Agent"] = "Andy-Tools-Examples/1.0"
+            }
         };
 
         var result = await toolExecutor.ExecuteAsync("http_request", parameters);
@@ -43,11 +82,12 @@ public static class WebOperationsExamples
         if (result.IsSuccessful && result.Data is Dictionary<string, object?> response)
         {
             Console.WriteLine($"Status: {response.GetValueOrDefault("status_code")}");
-            Console.WriteLine($"GitHub Zen: {response.GetValueOrDefault("body")}");
+            var content = response.GetValueOrDefault("content") ?? response.GetValueOrDefault("body");
+            Console.WriteLine($"GitHub Zen: {content}");
             
             if (response.TryGetValue("headers", out var headers) && headers is Dictionary<string, object?> headerDict)
             {
-                Console.WriteLine($"Content-Type: {headerDict.GetValueOrDefault("content-type")}");
+                Console.WriteLine($"Content-Type: {headerDict.GetValueOrDefault("content-type") ?? headerDict.GetValueOrDefault("Content-Type")}");
             }
         }
         else
@@ -62,48 +102,71 @@ public static class WebOperationsExamples
         var httpParams = new Dictionary<string, object?>
         {
             ["url"] = "https://api.github.com/users/github",
-            ["method"] = "GET"
+            ["method"] = "GET",
+            ["headers"] = new Dictionary<string, object?>
+            {
+                ["User-Agent"] = "Andy-Tools-Examples/1.0"
+            }
         };
 
         var httpResult = await toolExecutor.ExecuteAsync("http_request", httpParams);
         
         if (httpResult.IsSuccessful && httpResult.Data is Dictionary<string, object?> response)
         {
-            var jsonBody = response.GetValueOrDefault("body")?.ToString() ?? "{}";
+            var statusCode = response.GetValueOrDefault("status_code");
+            Console.WriteLine($"HTTP Status: {statusCode}");
+            
+            var jsonBody = (response.GetValueOrDefault("content") ?? response.GetValueOrDefault("body"))?.ToString() ?? "{}";
+            
+            // Show a preview of the JSON
+            if (jsonBody.Length > 100)
+            {
+                Console.WriteLine($"Received JSON (preview): {jsonBody.Substring(0, 100)}...");
+            }
             
             // Process the JSON
             var jsonParams = new Dictionary<string, object?>
             {
-                ["json_data"] = jsonBody,
+                ["json_input"] = jsonBody,
                 ["operation"] = "query",
-                ["json_path"] = "$.name"
+                ["query_path"] = "$.name"
             };
 
             var jsonResult = await toolExecutor.ExecuteAsync("json_processor", jsonParams);
             
             if (jsonResult.IsSuccessful)
             {
-                Console.WriteLine($"GitHub user name: {jsonResult.Data}");
+                var extractedName = ExtractJsonValue(jsonResult.Data);
+                Console.WriteLine($"GitHub user name: {extractedName}");
+            }
+            else
+            {
+                Console.WriteLine($"JSON query failed: {jsonResult.ErrorMessage}");
             }
 
-            // Extract multiple values
-            var multiParams = new Dictionary<string, object?>
+            // Extract another value
+            var extractParams = new Dictionary<string, object?>
             {
-                ["json_data"] = jsonBody,
+                ["json_input"] = jsonBody,
                 ["operation"] = "extract",
-                ["paths"] = new[] { "$.login", "$.public_repos", "$.created_at" }
+                ["query_path"] = "$.public_repos"
             };
 
-            var multiResult = await toolExecutor.ExecuteAsync("json_processor", multiParams);
+            var extractResult = await toolExecutor.ExecuteAsync("json_processor", extractParams);
             
-            if (multiResult.IsSuccessful && multiResult.Data is Dictionary<string, object?> extracted)
+            if (extractResult.IsSuccessful)
             {
-                Console.WriteLine("Extracted values:");
-                foreach (var kvp in extracted)
-                {
-                    Console.WriteLine($"- {kvp.Key}: {kvp.Value}");
-                }
+                var repos = ExtractJsonValue(extractResult.Data);
+                Console.WriteLine($"Public repositories: {repos}");
             }
+            else
+            {
+                Console.WriteLine($"Extract failed: {extractResult.ErrorMessage}");
+            }
+        }
+        else
+        {
+            Console.WriteLine($"HTTP request failed: {httpResult.ErrorMessage}");
         }
     }
 
@@ -113,7 +176,7 @@ public static class WebOperationsExamples
         {
             ["url"] = "https://httpbin.org/headers",
             ["method"] = "GET",
-            ["headers"] = new Dictionary<string, string>
+            ["headers"] = new Dictionary<string, object?>
             {
                 ["User-Agent"] = "Andy-Tools-Examples/1.0",
                 ["Accept"] = "application/json",
@@ -125,14 +188,13 @@ public static class WebOperationsExamples
         
         if (result.IsSuccessful && result.Data is Dictionary<string, object?> response)
         {
-            var body = response.GetValueOrDefault("body")?.ToString() ?? "";
+            var body = (response.GetValueOrDefault("content") ?? response.GetValueOrDefault("body"))?.ToString() ?? "";
             
             // Parse and format the response
             var formatParams = new Dictionary<string, object?>
             {
-                ["text"] = body,
-                ["format"] = "json",
-                ["indent_size"] = 2
+                ["input_text"] = body,
+                ["operation"] = "format_json"
             };
 
             var formatResult = await toolExecutor.ExecuteAsync("format_text", formatParams);
@@ -140,7 +202,8 @@ public static class WebOperationsExamples
             if (formatResult.IsSuccessful)
             {
                 Console.WriteLine("Request headers echoed by server:");
-                Console.WriteLine(formatResult.Data);
+                var formattedText = ExtractFormattedText(formatResult.Data);
+                Console.WriteLine(formattedText);
             }
         }
     }

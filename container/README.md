@@ -15,13 +15,9 @@ This directory contains configuration files for running the Andy Tools examples 
 
 ## Quick Start - Self-Contained Container (Recommended)
 
-### Step 1: Build the Project
+### Step 1: Build the Container Image
 
-```bash
-cd ..
-dotnet build examples/Andy.Tools.Examples/Andy.Tools.Examples.csproj
-cd container
-```
+No need to pre-build the project - the container build process handles everything!
 
 ### Step 2: Configure Apple Container Kernel
 
@@ -36,8 +32,14 @@ container system kernel set --recommended --arch amd64
 ### Step 3: Build the Container Image
 
 ```bash
-container build -t andy-tools:self-contained -f Dockerfile.apple ..
+cd /path/to/andy-tools
+container build -t andy-tools:self-contained -f container/Dockerfile.apple .
 ```
+
+This builds a multi-stage image that:
+- Compiles the code with the container-specific entry point
+- Creates a minimal runtime image with just the necessary binaries
+- Configures everything for non-interactive execution
 
 ### Step 4: Run the Self-Contained Container
 
