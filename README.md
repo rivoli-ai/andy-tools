@@ -40,6 +40,18 @@ dotnet build
 
 # Run tests
 dotnet test
+
+# Run examples
+cd examples/Andy.Tools.Examples
+dotnet run -- all              # Run all examples
+dotnet run -- basic            # Run basic usage examples
+dotnet run -- file             # Run file operations examples
+dotnet run -- text             # Run text processing examples
+dotnet run -- web              # Run web operations examples
+dotnet run -- system           # Run system information examples
+dotnet run -- cache            # Run caching examples
+dotnet run -- chain            # Run tool chain examples
+dotnet run -- custom           # Run custom tool examples
 ```
 
 ## Quick Start
@@ -105,6 +117,20 @@ var chain = chainBuilder
 
 var result = await chain.ExecuteAsync(new ToolExecutionContext());
 ```
+
+## Examples
+
+The `examples/Andy.Tools.Examples` project demonstrates all features of Andy Tools:
+
+- **BasicUsageExamples**: Simple tool execution, parameter passing, error handling
+- **FileOperationsExamples**: File reading, writing, copying, moving, deleting, directory listing
+- **TextProcessingExamples**: JSON/XML formatting, text search and replace, regex operations
+- **WebOperationsExamples**: HTTP requests, JSON processing, error handling
+- **SystemInfoExamples**: System information, process details, environment variables
+- **CachingExamples**: Tool result caching with TTL and cache invalidation
+- **ToolChainExamples**: Sequential tool execution, data pipelines, parallel processing
+- **CustomToolExamples**: Creating and using custom tools
+- **SecurityExamples**: Permission management, secure tool execution
 
 ## Built-in Tools
 
