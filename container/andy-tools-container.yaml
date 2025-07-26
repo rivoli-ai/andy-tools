@@ -1,0 +1,75 @@
+# Apple Container configuration for Andy Tools Examples
+apiVersion: v1
+kind: Container
+metadata:
+  name: andy-tools-examples
+  labels:
+    app: andy-tools
+    version: alpha
+spec:
+  # Use the container image
+  image: andy-tools:latest
+  
+  # Container settings
+  settings:
+    # Run as non-privileged user
+    privileged: false
+    
+    # Resource limits
+    resources:
+      limits:
+        cpu: "2"
+        memory: "1Gi"
+      requests:
+        cpu: "0.5"
+        memory: "256Mi"
+    
+    # Security context
+    securityContext:
+      readOnlyRootFilesystem: false
+      allowPrivilegeEscalation: false
+      runAsNonRoot: true
+      capabilities:
+        drop:
+          - ALL
+    
+    # Environment variables
+    env:
+      - name: DOTNET_SYSTEM_GLOBALIZATION_INVARIANT
+        value: "false"
+      - name: LC_ALL
+        value: "en_US.UTF-8"
+      - name: LANG
+        value: "en_US.UTF-8"
+      - name: ANDY_TOOLS_SAFE_MODE
+        value: "true"
+    
+    # Working directory
+    workingDir: /app
+    
+    # Mount points for examples to write to
+    mounts:
+      - name: examples-workspace
+        path: /tmp/andy-tools-examples
+        type: tmpfs
+        options:
+          size: "100Mi"
+    
+    # Network settings
+    network:
+      mode: bridge
+      # Allow outbound connections for web examples
+      allowOutbound: true
+      # Restrict inbound connections
+      allowInbound: false
+  
+  # Command to run
+  command: ["dotnet", "Andy.Tools.Examples.dll"]
+  args: ["all"]
+  
+  # Health check
+  healthcheck:
+    command: ["test", "-f", "/app/Andy.Tools.Examples.dll"]
+    interval: 30s
+    timeout: 10s
+    retries: 3

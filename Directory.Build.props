@@ -1,0 +1,42 @@
+<Project>
+  <PropertyGroup>
+    <!-- Versioning -->
+    <VersionPrefix>1.0.0</VersionPrefix>
+    <VersionSuffix Condition="'$(GITHUB_REF)' == 'refs/heads/develop'">beta</VersionSuffix>
+    <VersionSuffix Condition="'$(GITHUB_REF)' == 'refs/heads/main'">rc</VersionSuffix>
+    
+    <!-- Common Package Properties -->
+    <Authors>Rivoli AI</Authors>
+    <Company>Rivoli AI</Company>
+    <Product>Andy Configuration</Product>
+    <Copyright>Copyright © $(CurrentYear) $(Company)</Copyright>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/rivoli-ai/andy-tools</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/rivoli-ai/andy-tools</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>llm;tools;dependency-injection;dotnet</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    
+    <!-- Build Configuration -->
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    
+    <!-- Code Quality -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn> <!-- Missing XML comment for publicly visible type or member -->
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <CurrentYear>$([System.DateTime]::Now.ToString("yyyy"))</CurrentYear>
+  </PropertyGroup>
+  
+  <!-- Source Link -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
+  </ItemGroup>
+</Project>

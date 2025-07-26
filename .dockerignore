@@ -1,0 +1,38 @@
+# Git
+.git
+.gitignore
+
+# Build outputs
+**/bin/
+**/obj/
+**/out/
+
+# Test results
+TestResults/
+coverage/
+test-results/
+
+# IDE files
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation
+*.md
+!README.md
+
+# Container files
+container/
+Dockerfile
+.dockerignore
+
+# Temporary files
+*.tmp
+*.temp
+*.log

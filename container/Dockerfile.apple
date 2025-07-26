@@ -1,0 +1,48 @@
+# Build stage - compile with container entry point
+FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
+WORKDIR /src
+
+# Copy project files
+COPY andy-tools.sln ./
+COPY Directory.Build.props ./
+COPY src/Andy.Tools/Andy.Tools.csproj ./src/Andy.Tools/
+COPY examples/Andy.Tools.Examples/Andy.Tools.Examples.csproj ./examples/Andy.Tools.Examples/
+
+# Restore dependencies
+RUN dotnet restore
+
+# Copy source code
+COPY src/ ./src/
+COPY examples/ ./examples/
+
+# Build the examples project
+WORKDIR /src/examples/Andy.Tools.Examples
+RUN dotnet publish -c Release -o /app/publish
+
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/runtime:8.0-alpine
+WORKDIR /app
+
+# Install required dependencies including ICU for globalization
+RUN apk add --no-cache curl jq icu-libs icu-data-full
+
+# Create a non-root user
+RUN adduser -D -s /bin/sh andytools && \
+    chown -R andytools:andytools /app
+
+# Copy published binaries from build stage
+COPY --from=build /app/publish ./
+
+# Switch to non-root user
+USER andytools
+
+# Set environment variables
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false \
+    LC_ALL=en_US.UTF-8 \
+    LANG=en_US.UTF-8 \
+    HOME=/app \
+    TMPDIR=/tmp
+
+# Default command runs all examples
+ENTRYPOINT ["dotnet", "Andy.Tools.Examples.dll"]
+CMD ["all"]
