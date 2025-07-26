@@ -446,13 +446,17 @@ public class CopyFileToolTests : IDisposable
         // Arrange
         await File.WriteAllTextAsync(_sourceFile, "Content");
 
+        var traversalPath = Path.Combine(_testDirectory, "..", "..", "dangerous.txt");
         var parameters = new Dictionary<string, object?>
         {
             ["source_path"] = _sourceFile,
-            ["destination_path"] = Path.Combine(_testDirectory, "..", "..", "dangerous.txt")
+            ["destination_path"] = traversalPath
         };
 
-        var context = new ToolExecutionContext();
+        var context = new ToolExecutionContext
+        {
+            WorkingDirectory = _testDirectory
+        };
 
         // Initialize the tool
         await _tool.InitializeAsync();
@@ -462,16 +466,10 @@ public class CopyFileToolTests : IDisposable
 
         // Assert
         result.Should().NotBeNull();
-        // The tool should either handle path traversal safely or reject it
-        if (!result.IsSuccessful)
-        {
-            result.ErrorMessage.Should().NotBeEmpty();
-        }
-        else
-        {
-            // If successful, the file should be created in a safe location
-            File.Exists(Path.Combine(_testDirectory, "..", "..", "dangerous.txt")).Should().BeFalse();
-        }
+        
+        // When a working directory is set, the tool should reject paths that escape it
+        result.IsSuccessful.Should().BeFalse();
+        result.ErrorMessage.Should().Contain("outside the allowed working directory");
     }
 
     #endregion
