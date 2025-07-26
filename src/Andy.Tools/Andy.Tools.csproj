@@ -4,6 +4,21 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    
+    <!-- NuGet Package Metadata -->
+    <PackageId>Andy.Tools</PackageId>
+    <Title>Andy Tools</Title>
+    <Authors>Rivoli AI</Authors>
+    <Company>Rivoli AI</Company>
+    <Description>A comprehensive and extensible tool execution framework for .NET applications</Description>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/rivoli-ai/andy-tools</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/rivoli-ai/andy-tools</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>tools;framework;extensible;automation;execution</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
   <!-- Suppress warnings for single-file publishing -->
@@ -14,6 +29,10 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>
