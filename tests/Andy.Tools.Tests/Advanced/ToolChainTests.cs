@@ -463,7 +463,7 @@ public class ToolChainTests
 
         // Assert
         capturedContext.Should().NotBeNull();
-        capturedContext.InitialParameters.Should().ContainKey("test");
+        capturedContext!.InitialParameters.Should().ContainKey("test");
         capturedContext.InitialParameters["test"].Should().Be("value");
     }
 

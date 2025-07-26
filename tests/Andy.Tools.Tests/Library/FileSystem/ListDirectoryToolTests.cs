@@ -215,7 +215,7 @@ public class ListDirectoryToolTests : IDisposable
         items.Should().HaveCountGreaterThan(3); // Should include nested files and directories
 
         // Should include files from subdirectories
-        var itemPaths = items.Select(item => item.FullPath ?? item.Name).ToList();
+        var itemPaths = items!.Select(item => item.FullPath ?? item.Name).ToList();
         itemPaths.Any(path => path.Contains("sub.txt")).Should().BeTrue();
         itemPaths.Any(path => path.Contains("deep.txt")).Should().BeTrue();
     }
@@ -254,7 +254,7 @@ public class ListDirectoryToolTests : IDisposable
         var items = data!["items"] as List<FileSystemEntry>;
         items.Should().HaveCount(3);
 
-        items[0].Name.Should().Be("alpha.txt");
+        items![0].Name.Should().Be("alpha.txt");
         items[1].Name.Should().Be("beta.txt");
         items[2].Name.Should().Be("zebra.txt");
     }
@@ -290,7 +290,7 @@ public class ListDirectoryToolTests : IDisposable
         items.Should().HaveCount(3);
 
         // Should be sorted by size (ascending)
-        var sizes = items.Select(item => item.Size ?? 0L).ToArray();
+        var sizes = items!.Select(item => item.Size ?? 0L).ToArray();
         sizes.Should().BeInAscendingOrder();
     }
 
@@ -333,7 +333,7 @@ public class ListDirectoryToolTests : IDisposable
         var items = data!["items"] as List<FileSystemEntry>;
         items.Should().HaveCount(3);
 
-        items[0].Name.Should().Be("oldest.txt");
+        items![0].Name.Should().Be("oldest.txt");
         items[1].Name.Should().Be("middle.txt");
         items[2].Name.Should().Be("newest.txt");
     }
@@ -381,7 +381,7 @@ public class ListDirectoryToolTests : IDisposable
         var data = result.Data as Dictionary<string, object?>;
         var items = data!["items"] as List<FileSystemEntry>;
 
-        var itemNames = items.Select(item => item.Name).ToList();
+        var itemNames = items!.Select(item => item.Name).ToList();
         itemNames.Should().Contain(".hidden");
         itemNames.Should().Contain(".hidden.txt");
         itemNames.Should().Contain("visible.txt");
@@ -417,7 +417,7 @@ public class ListDirectoryToolTests : IDisposable
         var data = result.Data as Dictionary<string, object?>;
         var items = data!["items"] as List<FileSystemEntry>;
 
-        var itemNames = items.Select(item => item.Name).ToList();
+        var itemNames = items!.Select(item => item.Name).ToList();
         itemNames.Should().Contain("visible.txt");
         itemNames.Any(name => name.StartsWith(".")).Should().BeFalse();
     }
@@ -467,7 +467,7 @@ public class ListDirectoryToolTests : IDisposable
         // Depth 0: root.txt, subdirectory
         // Depth 1: level1.txt, level2 directory  
         // Depth 2 and beyond: NOT scanned
-        var itemNames = items.Select(item => item.Name).ToList();
+        var itemNames = items!.Select(item => item.Name).ToList();
         itemNames.Should().Contain("root.txt");
         itemNames.Should().Contain("subdirectory");
         itemNames.Should().Contain("level1.txt");
@@ -590,7 +590,7 @@ public class ListDirectoryToolTests : IDisposable
         var data = result.Data as Dictionary<string, object?>;
         var items = data!["items"] as List<FileSystemEntry>;
 
-        var itemNames = items.Select(item => item.Name).ToList();
+        var itemNames = items!.Select(item => item.Name).ToList();
         itemNames.Should().Contain("accessible.txt");
 
         // Clean up - restore permissions

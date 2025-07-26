@@ -386,7 +386,7 @@ public class FormatTextToolTests : IDisposable
         result.IsSuccessful.Should().BeTrue();
         var data = result.Data as Dictionary<string, object?>;
         data.Should().NotBeNull();
-        var lines = ((string)data!["content"]).Split('\n');
+        var lines = ((string)data!["content"]!).Split('\n');
         lines.Should().Contain("apple");
         lines.Should().Contain("banana");
         lines.Should().Contain("cherry");
@@ -480,7 +480,7 @@ public class FormatTextToolTests : IDisposable
 
         var data = result.Data as Dictionary<string, object?>;
         data.Should().NotBeNull();
-        var content = (string)data!["content"];
+        var content = (string)data!["content"]!;
         content.Should().Contain("\n"); // Should contain line breaks
 
         var lines = content.Split('\n');
@@ -685,7 +685,7 @@ public class FormatTextToolTests : IDisposable
         result.IsSuccessful.Should().BeTrue();
         var data = result.Data as Dictionary<string, object?>;
         data.Should().NotBeNull();
-        var content = (string)data!["content"];
+        var content = (string)data!["content"]!;
         content.Should().Contain("\"name\": \"test\"");
         content.Should().Contain("\"value\": 123");
     }
@@ -739,7 +739,7 @@ public class FormatTextToolTests : IDisposable
         result.IsSuccessful.Should().BeTrue();
         var data = result.Data as Dictionary<string, object?>;
         data.Should().NotBeNull();
-        var content = (string)data!["content"];
+        var content = (string)data!["content"]!;
         content.Should().Contain("<root>");
         content.Should().Contain("  <item>test</item>");
         content.Should().Contain("</root>");
@@ -773,7 +773,7 @@ public class FormatTextToolTests : IDisposable
 
         var data = result.Data as Dictionary<string, object?>;
         data.Should().NotBeNull();
-        var numbers = ((string)data!["content"]).Split('\n');
+        var numbers = ((string)data!["content"]!).Split('\n');
         numbers.Should().Contain("25.99");
         numbers.Should().Contain("3");
         numbers.Should().Contain("77.97");
@@ -806,7 +806,7 @@ public class FormatTextToolTests : IDisposable
 
         var data = result.Data as Dictionary<string, object?>;
         data.Should().NotBeNull();
-        var emails = ((string)data!["content"]).Split('\n');
+        var emails = ((string)data!["content"]!).Split('\n');
         emails.Should().Contain("support@example.com");
         emails.Should().Contain("sales@test.org");
 
@@ -838,7 +838,7 @@ public class FormatTextToolTests : IDisposable
 
         var data = result.Data as Dictionary<string, object?>;
         data.Should().NotBeNull();
-        var urls = ((string)data!["content"]).Split('\n');
+        var urls = ((string)data!["content"]!).Split('\n');
         urls.Should().Contain("https://example.com");
         urls.Should().Contain("http://test.org");
 
@@ -873,7 +873,7 @@ public class FormatTextToolTests : IDisposable
         result.IsSuccessful.Should().BeTrue();
         var data = result.Data as Dictionary<string, object?>;
         data.Should().NotBeNull();
-        var content = (string)data!["content"];
+        var content = (string)data!["content"]!;
         content.Should().Contain("Words: 4");
         content.Should().Contain("Unique words: 3");
 
@@ -906,7 +906,7 @@ public class FormatTextToolTests : IDisposable
         result.IsSuccessful.Should().BeTrue();
         var data = result.Data as Dictionary<string, object?>;
         data.Should().NotBeNull();
-        var content = (string)data!["content"];
+        var content = (string)data!["content"]!;
         content.Should().Contain("Total characters: 17");
         content.Should().Contain("Letters: 10");
         content.Should().Contain("Digits: 3");
@@ -985,7 +985,7 @@ public class FormatTextToolTests : IDisposable
         result.IsSuccessful.Should().BeTrue();
         var data = result.Data as Dictionary<string, object?>;
         data.Should().NotBeNull();
-        var content = (string)data!["content"];
+        var content = (string)data!["content"]!;
         content.Should().Contain("\n");
     }
 
@@ -1219,7 +1219,7 @@ public class FormatTextToolTests : IDisposable
         result.IsSuccessful.Should().BeTrue();
         var data = result.Data as Dictionary<string, object?>;
         data.Should().NotBeNull();
-        var content = (string)data!["content"];
+        var content = (string)data!["content"]!;
         content.Should().HaveLength(100000);
         data!["content"].Should().Be(longText.ToUpperInvariant());
     }
@@ -1247,7 +1247,7 @@ public class FormatTextToolTests : IDisposable
         result.IsSuccessful.Should().BeTrue();
         var data = result.Data as Dictionary<string, object?>;
         data.Should().NotBeNull();
-        var content = (string)data!["content"];
+        var content = (string)data!["content"]!;
         content.Should().Contain("HELLO");
         content.Should().Contain("世界"); // Chinese characters don't have uppercase
         content.Should().Contain("🌍"); // Emoji unchanged

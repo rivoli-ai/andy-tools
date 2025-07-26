@@ -111,7 +111,7 @@ public class PermissionProfileServiceTests : IDisposable
         Assert.True(await _service.ProfileExistsAsync("existing"));
         Assert.False(await _service.ProfileExistsAsync("non-existing"));
         Assert.False(await _service.ProfileExistsAsync(""));
-        Assert.False(await _service.ProfileExistsAsync(null));
+        Assert.False(await _service.ProfileExistsAsync(null!));
     }
 
     [Fact]

@@ -87,7 +87,7 @@ public class OutputLimitingIntegrationTests : IDisposable
         {
             var itemCount = dataDict.ContainsKey("count") ? dataDict["count"] : "unknown";
             var hasItems = dataDict.ContainsKey("items");
-            var itemsType = hasItems && dataDict["items"] != null ? dataDict["items"].GetType().Name : "null";
+            var itemsType = hasItems && dataDict["items"] != null ? dataDict["items"]!.GetType().Name : "null";
             
             // We expect to see 100 items since we created 100 files
             // If count is less than 100, truncation happened

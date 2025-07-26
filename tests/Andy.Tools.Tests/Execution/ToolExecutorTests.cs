@@ -508,7 +508,7 @@ public class ToolExecutorTests : IDisposable
         // Assert
         result.Should().NotBeNull();
         result.ResourceUsage.Should().NotBeNull();
-        result.ResourceUsage.PeakMemoryBytes.Should().Be(50);
+        result.ResourceUsage!.PeakMemoryBytes.Should().Be(50);
 
         _mockResourceMonitor.Verify(x => x.StartMonitoring(It.IsAny<string>(), It.IsAny<ToolResourceLimits>()), Times.Once);
         _mockResourceMonitor.Verify(x => x.StopMonitoring(It.IsAny<string>()), Times.Once);
@@ -531,11 +531,11 @@ public class ToolExecutorTests : IDisposable
 
         // Assert
         startedEventArgs.Should().NotBeNull();
-        startedEventArgs.ToolId.Should().Be("test-tool");
+        startedEventArgs!.ToolId.Should().Be("test-tool");
         startedEventArgs.CorrelationId.Should().Be("test-correlation-id");
 
         completedEventArgs.Should().NotBeNull();
-        completedEventArgs.Result.Should().NotBeNull();
+        completedEventArgs!.Result.Should().NotBeNull();
         completedEventArgs.Result.IsSuccessful.Should().BeTrue();
     }
 
