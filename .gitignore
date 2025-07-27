@@ -45,7 +45,11 @@ CodeCoverage/
 coverage/
 coveragereport/
 coverage-results/
+coverage-results-*/
+coverage-report/
+coverage-report-*/
 test-results/
+test-results-*/
 
 # macOS
 .DS_Store
