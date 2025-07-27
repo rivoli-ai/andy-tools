@@ -8,7 +8,7 @@
     <!-- Common Package Properties -->
     <Authors>Rivoli AI</Authors>
     <Company>Rivoli AI</Company>
-    <Product>Andy Configuration</Product>
+    <Product>Andy Tools</Product>
     <Copyright>Copyright © $(CurrentYear) $(Company)</Copyright>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/rivoli-ai/andy-tools</PackageProjectUrl>
