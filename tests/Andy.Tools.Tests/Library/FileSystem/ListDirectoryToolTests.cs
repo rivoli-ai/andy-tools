@@ -395,6 +395,12 @@ public class ListDirectoryToolTests : IDisposable
 
         var hiddenFile = Path.Combine(_testDirectory, ".hidden.txt");
         await File.WriteAllTextAsync(hiddenFile, "Hidden content");
+        
+        // On Windows, we need to set the hidden attribute explicitly
+        if (OperatingSystem.IsWindows())
+        {
+            File.SetAttributes(hiddenFile, File.GetAttributes(hiddenFile) | FileAttributes.Hidden);
+        }
 
         var parameters = new Dictionary<string, object?>
         {
@@ -419,7 +425,17 @@ public class ListDirectoryToolTests : IDisposable
 
         var itemNames = items!.Select(item => item.Name).ToList();
         itemNames.Should().Contain("visible.txt");
-        itemNames.Any(name => name.StartsWith(".")).Should().BeFalse();
+        
+        // On Windows, check that our explicitly hidden file is excluded
+        // On Unix-like systems, files starting with . should be excluded
+        if (OperatingSystem.IsWindows())
+        {
+            itemNames.Should().NotContain(".hidden.txt");
+        }
+        else
+        {
+            itemNames.Any(name => name.StartsWith(".")).Should().BeFalse();
+        }
     }
 
     #endregion

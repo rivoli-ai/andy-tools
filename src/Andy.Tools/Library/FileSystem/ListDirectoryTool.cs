@@ -198,7 +198,7 @@ public partial class ListDirectoryTool : ToolBase
             {
                 context.CancellationToken.ThrowIfCancellationRequested();
 
-                if (!includeHidden && file.Attributes.HasFlag(FileAttributes.Hidden))
+                if (!includeHidden && IsHidden(file))
                 {
                     continue;
                 }
@@ -222,7 +222,7 @@ public partial class ListDirectoryTool : ToolBase
             {
                 context.CancellationToken.ThrowIfCancellationRequested();
 
-                if (!includeHidden && directory.Attributes.HasFlag(FileAttributes.Hidden))
+                if (!includeHidden && IsHidden(directory))
                 {
                     continue;
                 }
@@ -288,11 +288,37 @@ public partial class ListDirectoryTool : ToolBase
             result.Created = entry.CreatedTime;
             result.Modified = entry.ModifiedTime;
             result.Attributes = entry.Attributes.ToString();
-            result.IsHidden = entry.Attributes.HasFlag(FileAttributes.Hidden);
+            result.IsHidden = IsHidden(entry);
             result.IsReadonly = entry.Attributes.HasFlag(FileAttributes.ReadOnly);
             result.Depth = entry.Depth;
         }
 
         return result;
+    }
+    
+    private static bool IsHidden(FileSystemInfo info)
+    {
+        // On Windows, check the Hidden attribute
+        if (OperatingSystem.IsWindows())
+        {
+            return info.Attributes.HasFlag(FileAttributes.Hidden);
+        }
+        
+        // On Unix-like systems, files/directories starting with . are hidden
+        // Also check the Hidden attribute in case it's set
+        return info.Name.StartsWith('.') || info.Attributes.HasFlag(FileAttributes.Hidden);
+    }
+    
+    private static bool IsHidden(FileSystemEntryInfo entry)
+    {
+        // On Windows, check the Hidden attribute
+        if (OperatingSystem.IsWindows())
+        {
+            return entry.Attributes.HasFlag(FileAttributes.Hidden);
+        }
+        
+        // On Unix-like systems, files/directories starting with . are hidden
+        // Also check the Hidden attribute in case it's set
+        return entry.Name.StartsWith('.') || entry.Attributes.HasFlag(FileAttributes.Hidden);
     }
 }
