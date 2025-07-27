@@ -34,7 +34,19 @@ public class MoveFileToolTests : IDisposable
     {
         if (Directory.Exists(_testDirectory))
         {
-            Directory.Delete(_testDirectory, true);
+            try
+            {
+                // Remove read-only attributes from all files before deletion
+                foreach (var file in Directory.GetFiles(_testDirectory, "*", SearchOption.AllDirectories))
+                {
+                    File.SetAttributes(file, FileAttributes.Normal);
+                }
+                Directory.Delete(_testDirectory, true);
+            }
+            catch
+            {
+                // Best effort cleanup
+            }
         }
     }
 

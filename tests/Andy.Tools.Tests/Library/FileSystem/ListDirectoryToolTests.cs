@@ -400,6 +400,10 @@ public class ListDirectoryToolTests : IDisposable
         if (OperatingSystem.IsWindows())
         {
             File.SetAttributes(hiddenFile, File.GetAttributes(hiddenFile) | FileAttributes.Hidden);
+            
+            // Verify the attribute was set
+            var attrs = File.GetAttributes(hiddenFile);
+            attrs.Should().HaveFlag(FileAttributes.Hidden, "Hidden attribute should be set on Windows");
         }
 
         var parameters = new Dictionary<string, object?>
@@ -424,18 +428,26 @@ public class ListDirectoryToolTests : IDisposable
         var items = data!["items"] as List<FileSystemEntry>;
 
         var itemNames = items!.Select(item => item.Name).ToList();
+        
+        // Debug output on test failure
+        if (itemNames.Contains(".hidden.txt"))
+        {
+            Console.WriteLine($"Test failure: hidden file was included in results");
+            Console.WriteLine($"Operating System: {(OperatingSystem.IsWindows() ? "Windows" : "Non-Windows")}");
+            Console.WriteLine($"Files found: {string.Join(", ", itemNames)}");
+            foreach (var item in items!.Where(i => i.Name == ".hidden.txt"))
+            {
+                Console.WriteLine($"Hidden file attributes: {item.Attributes}");
+                Console.WriteLine($"Hidden file IsHidden: {item.IsHidden}");
+            }
+        }
+        
         itemNames.Should().Contain("visible.txt");
         
-        // On Windows, check that our explicitly hidden file is excluded
-        // On Unix-like systems, files starting with . should be excluded
-        if (OperatingSystem.IsWindows())
-        {
-            itemNames.Should().NotContain(".hidden.txt");
-        }
-        else
-        {
-            itemNames.Any(name => name.StartsWith(".")).Should().BeFalse();
-        }
+        // The hidden file should be excluded regardless of OS
+        // On Windows, it's hidden because we set the Hidden attribute
+        // On Unix-like systems, it's hidden because it starts with .
+        itemNames.Should().NotContain(".hidden.txt");
     }
 
     #endregion

@@ -298,10 +298,10 @@ public partial class ListDirectoryTool : ToolBase
     
     private static bool IsHidden(FileSystemInfo info)
     {
-        // On Windows, check the Hidden attribute
+        // On Windows, check the Hidden attribute OR if the name starts with .
         if (OperatingSystem.IsWindows())
         {
-            return info.Attributes.HasFlag(FileAttributes.Hidden);
+            return info.Attributes.HasFlag(FileAttributes.Hidden) || info.Name.StartsWith('.');
         }
         
         // On Unix-like systems, files/directories starting with . are hidden
@@ -311,10 +311,10 @@ public partial class ListDirectoryTool : ToolBase
     
     private static bool IsHidden(FileSystemEntryInfo entry)
     {
-        // On Windows, check the Hidden attribute
+        // On Windows, check the Hidden attribute OR if the name starts with .
         if (OperatingSystem.IsWindows())
         {
-            return entry.Attributes.HasFlag(FileAttributes.Hidden);
+            return entry.Attributes.HasFlag(FileAttributes.Hidden) || entry.Name.StartsWith('.');
         }
         
         // On Unix-like systems, files/directories starting with . are hidden
