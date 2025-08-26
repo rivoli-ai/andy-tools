@@ -17,6 +17,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>tools;framework;extensible;automation;execution</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>andy_tools_icon.png</PackageIcon>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
   </PropertyGroup>
@@ -33,6 +34,7 @@
 
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\assets\andy_tools_icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>
