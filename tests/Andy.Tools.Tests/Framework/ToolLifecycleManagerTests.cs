@@ -20,7 +20,6 @@ public class ToolLifecycleManagerTests : IDisposable
     private readonly Mock<ILogger<ToolLifecycleManager>> _loggerMock;
     private readonly ToolFrameworkOptions _options;
     private readonly List<ToolRegistrationInfo> _registrationInfos;
-    private readonly ToolLifecycleManager _lifecycleManager;
 
     public ToolLifecycleManagerTests()
     {
@@ -37,14 +36,21 @@ public class ToolLifecycleManagerTests : IDisposable
         _executorMock.Setup(e => e.GetRunningExecutions()).Returns(new List<RunningExecutionInfo>());
         _executorMock.Setup(e => e.GetStatistics()).Returns(new ToolExecutionStatistics());
 
-        _lifecycleManager = new ToolLifecycleManager(
-            _options,
+        // Don't create the lifecycle manager in the constructor - create it in each test
+    }
+    
+    private ToolLifecycleManager CreateLifecycleManager(
+        ToolFrameworkOptions? options = null,
+        List<ToolRegistrationInfo>? registrationInfos = null)
+    {
+        return new ToolLifecycleManager(
+            options ?? _options,
             _registryMock.Object,
             _discoveryMock.Object,
             _securityManagerMock.Object,
             _executorMock.Object,
             _serviceProviderMock.Object,
-            _registrationInfos,
+            registrationInfos ?? _registrationInfos,
             _loggerMock.Object);
     }
 
@@ -68,9 +74,10 @@ public class ToolLifecycleManagerTests : IDisposable
         });
 
         _options.AutoDiscoverTools = false;
+        var lifecycleManager = CreateLifecycleManager();
 
         // Act
-        await _lifecycleManager.InitializeAsync();
+        await lifecycleManager.InitializeAsync();
 
         // Assert
         _registryMock.Verify(r => r.RegisterTool(toolType, config), Times.Once);
@@ -89,7 +96,8 @@ public class ToolLifecycleManagerTests : IDisposable
             .ReturnsAsync(discoveredTools);
 
         // Act
-        await _lifecycleManager.InitializeAsync();
+        var lifecycleManager = CreateLifecycleManager();
+        await lifecycleManager.InitializeAsync();
 
         // Assert
         _discoveryMock.Verify(d => d.DiscoverToolsAsync(_options.DiscoveryOptions, It.IsAny<CancellationToken>()), Times.Once);
@@ -103,7 +111,8 @@ public class ToolLifecycleManagerTests : IDisposable
         _options.AutoDiscoverTools = false;
 
         // Act
-        await _lifecycleManager.InitializeAsync();
+        var lifecycleManager = CreateLifecycleManager();
+        await lifecycleManager.InitializeAsync();
 
         // Assert
         _discoveryMock.Verify(d => d.DiscoverToolsAsync(It.IsAny<ToolDiscoveryOptions>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -121,8 +130,9 @@ public class ToolLifecycleManagerTests : IDisposable
         _registryMock.Setup(r => r.Tools).Returns(registrations);
 
         // Act
-        await _lifecycleManager.InitializeAsync();
-        var status = _lifecycleManager.GetStatus();
+        var lifecycleManager = CreateLifecycleManager();
+        await lifecycleManager.InitializeAsync();
+        var status = lifecycleManager.GetStatus();
 
         // Assert
         status.IsInitialized.Should().BeTrue();
@@ -135,16 +145,31 @@ public class ToolLifecycleManagerTests : IDisposable
     public async Task InitializeAsync_ShouldLogError_WhenInitializationFails()
     {
         // Arrange
+        var options = new ToolFrameworkOptions { FailOnExplicitToolRegistrationError = true };
+        var registrationInfos = new List<ToolRegistrationInfo>
+        {
+            new() { ToolType = typeof(SampleTool) }
+        };
+        
         var exception = new InvalidOperationException("Init failed");
         _registryMock.Setup(r => r.RegisterTool(It.IsAny<Type>(), It.IsAny<Dictionary<string, object?>>()))
             .Throws(exception);
-        _registrationInfos.Add(new ToolRegistrationInfo { ToolType = typeof(SampleTool) });
+        
+        var lifecycleManager = new ToolLifecycleManager(
+            options,
+            _registryMock.Object,
+            _discoveryMock.Object,
+            _securityManagerMock.Object,
+            _executorMock.Object,
+            _serviceProviderMock.Object,
+            registrationInfos,
+            _loggerMock.Object);
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _lifecycleManager.InitializeAsync());
+        await Assert.ThrowsAsync<InvalidOperationException>(() => lifecycleManager.InitializeAsync());
 
-        var status = _lifecycleManager.GetStatus();
-        status.StartupErrors.Should().Contain("Init failed");
+        var status = lifecycleManager.GetStatus();
+        status.StartupErrors.Should().Contain(e => e.Contains("SampleTool"));
     }
 
     [Fact]
@@ -156,9 +181,11 @@ public class ToolLifecycleManagerTests : IDisposable
 
         _registryMock.Setup(r => r.RegisterTool(typeof(SampleTool), It.IsAny<Dictionary<string, object?>>()))
             .Throws(new InvalidOperationException("Registration failed"));
+        
+        var lifecycleManager = CreateLifecycleManager();
 
         // Act
-        await _lifecycleManager.InitializeAsync();
+        await lifecycleManager.InitializeAsync();
 
         // Assert
         _registryMock.Verify(r => r.RegisterTool(typeof(SampleTool), It.IsAny<Dictionary<string, object?>>()), Times.Once);
@@ -183,7 +210,8 @@ public class ToolLifecycleManagerTests : IDisposable
             .ReturnsAsync(discoveredTools);
 
         // Act
-        var count = await _lifecycleManager.DiscoverAndRegisterToolsAsync();
+        var lifecycleManager = CreateLifecycleManager();
+        var count = await lifecycleManager.DiscoverAndRegisterToolsAsync();
 
         // Assert
         count.Should().Be(2);
@@ -208,7 +236,8 @@ public class ToolLifecycleManagerTests : IDisposable
             .ReturnsAsync(discoveredTools);
 
         // Act
-        var count = await _lifecycleManager.DiscoverAndRegisterToolsAsync();
+        var lifecycleManager = CreateLifecycleManager();
+        var count = await lifecycleManager.DiscoverAndRegisterToolsAsync();
 
         // Assert
         count.Should().Be(1);
@@ -232,7 +261,8 @@ public class ToolLifecycleManagerTests : IDisposable
             .Throws(new InvalidOperationException("Registration failed"));
 
         // Act
-        var count = await _lifecycleManager.DiscoverAndRegisterToolsAsync();
+        var lifecycleManager = CreateLifecycleManager();
+        var count = await lifecycleManager.DiscoverAndRegisterToolsAsync();
 
         // Assert
         count.Should().Be(1);
@@ -248,7 +278,8 @@ public class ToolLifecycleManagerTests : IDisposable
             .ThrowsAsync(new InvalidOperationException("Discovery failed"));
 
         // Act
-        var count = await _lifecycleManager.DiscoverAndRegisterToolsAsync();
+        var lifecycleManager = CreateLifecycleManager();
+        var count = await lifecycleManager.DiscoverAndRegisterToolsAsync();
 
         // Assert
         count.Should().Be(0);
@@ -270,7 +301,8 @@ public class ToolLifecycleManagerTests : IDisposable
         _executorMock.Setup(e => e.GetRunningExecutions()).Returns(runningExecutions);
 
         // Act
-        await _lifecycleManager.ShutdownAsync();
+        var lifecycleManager = CreateLifecycleManager();
+        await lifecycleManager.ShutdownAsync();
 
         // Assert
         foreach (var execution in runningExecutions)
@@ -283,11 +315,12 @@ public class ToolLifecycleManagerTests : IDisposable
     public async Task ShutdownAsync_ShouldUpdateStatus()
     {
         // Arrange
-        await _lifecycleManager.InitializeAsync();
+        var lifecycleManager = CreateLifecycleManager();
+        await lifecycleManager.InitializeAsync();
 
         // Act
-        await _lifecycleManager.ShutdownAsync();
-        var status = _lifecycleManager.GetStatus();
+        await lifecycleManager.ShutdownAsync();
+        var status = lifecycleManager.GetStatus();
 
         // Assert
         status.IsInitialized.Should().BeFalse();
@@ -307,7 +340,8 @@ public class ToolLifecycleManagerTests : IDisposable
             .ThrowsAsync(new InvalidOperationException("Cancel failed"));
 
         // Act
-        await _lifecycleManager.ShutdownAsync();
+        var lifecycleManager = CreateLifecycleManager();
+        await lifecycleManager.ShutdownAsync();
 
         // Assert
         _executorMock.Verify(e => e.CancelExecutionsAsync("execution1"), Times.Once);
@@ -326,7 +360,8 @@ public class ToolLifecycleManagerTests : IDisposable
             .Returns(5);
 
         // Act
-        await _lifecycleManager.PerformMaintenanceAsync();
+        var lifecycleManager = CreateLifecycleManager();
+        await lifecycleManager.PerformMaintenanceAsync();
 
         // Assert
         _securityManagerMock.Verify(s => s.ClearOldViolations(_options.SecurityViolationMaxAge), Times.Once);
@@ -336,11 +371,12 @@ public class ToolLifecycleManagerTests : IDisposable
     public async Task PerformMaintenanceAsync_ShouldUpdateLastMaintenanceTime()
     {
         // Arrange
-        await _lifecycleManager.InitializeAsync();
+        var lifecycleManager = CreateLifecycleManager();
+        await lifecycleManager.InitializeAsync();
 
         // Act
-        await _lifecycleManager.PerformMaintenanceAsync();
-        var status = _lifecycleManager.GetStatus();
+        await lifecycleManager.PerformMaintenanceAsync();
+        var status = lifecycleManager.GetStatus();
 
         // Assert
         status.LastMaintenanceAt.Should().NotBeNull();
@@ -355,7 +391,8 @@ public class ToolLifecycleManagerTests : IDisposable
             .Throws(new InvalidOperationException("Maintenance failed"));
 
         // Act & Assert
-        await _lifecycleManager.PerformMaintenanceAsync();
+        var lifecycleManager = CreateLifecycleManager();
+        await lifecycleManager.PerformMaintenanceAsync();
         // Should not throw
     }
 
@@ -389,9 +426,11 @@ public class ToolLifecycleManagerTests : IDisposable
             FailedExecutions = 10
         };
         _executorMock.Setup(e => e.GetStatistics()).Returns(stats);
+        
+        var lifecycleManager = CreateLifecycleManager();
 
         // Act
-        var status = _lifecycleManager.GetStatus();
+        var status = lifecycleManager.GetStatus();
 
         // Assert
         status.RegisteredToolsCount.Should().Be(3);
@@ -403,9 +442,10 @@ public class ToolLifecycleManagerTests : IDisposable
     public async Task GetStatus_ShouldReflectInitializationState()
     {
         // Arrange & Act
-        var statusBefore = _lifecycleManager.GetStatus();
-        await _lifecycleManager.InitializeAsync();
-        var statusAfter = _lifecycleManager.GetStatus();
+        var lifecycleManager = CreateLifecycleManager();
+        var statusBefore = lifecycleManager.GetStatus();
+        await lifecycleManager.InitializeAsync();
+        var statusAfter = lifecycleManager.GetStatus();
 
         // Assert
         statusBefore.IsInitialized.Should().BeFalse();
@@ -418,9 +458,12 @@ public class ToolLifecycleManagerTests : IDisposable
     [Fact]
     public void GetStatus_ShouldReturnIndependentInstance()
     {
+        // Arrange
+        var lifecycleManager = CreateLifecycleManager();
+        
         // Act
-        var status1 = _lifecycleManager.GetStatus();
-        var status2 = _lifecycleManager.GetStatus();
+        var status1 = lifecycleManager.GetStatus();
+        var status2 = lifecycleManager.GetStatus();
 
         // Assert
         status1.Should().NotBeSameAs(status2);

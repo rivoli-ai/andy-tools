@@ -77,4 +77,11 @@ public class ToolFrameworkOptions
     /// Gets or sets directories to scan for plugin tools.
     /// </summary>
     public List<string> PluginDirectories { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets whether to fail initialization when explicit tool registration fails.
+    /// When true, any failure in registering explicitly configured tools will cause initialization to fail.
+    /// When false, registration failures are logged as warnings and initialization continues.
+    /// </summary>
+    public bool FailOnExplicitToolRegistrationError { get; set; } = false;
 }

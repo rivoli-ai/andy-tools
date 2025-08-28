@@ -4,6 +4,7 @@ using Andy.Tools.Advanced.ToolChains;
 using Andy.Tools.Core;
 using Andy.Tools.Core.OutputLimiting;
 using Andy.Tools.Execution;
+using Andy.Tools.Registry;
 using Andy.Tools.Validation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -103,6 +104,16 @@ public static class ServiceCollectionExtensions
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddToolChains(this IServiceCollection services)
     {
+        // Ensure core dependencies are registered
+        services.TryAddSingleton<IToolExecutor, Execution.ToolExecutor>();
+        services.TryAddSingleton<IToolRegistry, ToolRegistry>();
+        services.TryAddSingleton<IToolValidator, ToolValidator>();
+        services.TryAddSingleton<ISecurityManager, SecurityManager>();
+        services.TryAddSingleton<IResourceMonitor, ResourceMonitor>();
+        services.TryAddSingleton<IToolOutputLimiter, ToolOutputLimiter>();
+        services.TryAddSingleton<ILoggerFactory, LoggerFactory>();
+        
+        // Register the ToolChainBuilder
         services.TryAddTransient<ToolChainBuilder>();
         return services;
     }

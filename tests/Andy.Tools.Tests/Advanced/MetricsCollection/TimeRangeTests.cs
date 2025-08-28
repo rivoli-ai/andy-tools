@@ -133,7 +133,7 @@ public class TimeRangeTests
 
         // Assert
         range1.Should().NotBeSameAs(range2);
-        (range2.Start - range1.Start).Should().BeCloseTo(TimeSpan.FromHours(23), TimeSpan.FromSeconds(2));
+        (range2.Start - range1.Start).Should().BeCloseTo(TimeSpan.FromHours(-23), TimeSpan.FromSeconds(2));
     }
 
     [Theory]

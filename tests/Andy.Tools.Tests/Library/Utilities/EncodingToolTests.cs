@@ -165,11 +165,16 @@ public class EncodingToolTests : IDisposable
         result.IsSuccessful.Should().BeTrue();
         result.Data.Should().NotBeNull();
         
-        var json = global::System.Text.Json.JsonSerializer.Serialize(result.Data);
-        json.Should().Contain("Hello+World");
-        json.Should().Contain("%26");
-        json.Should().Contain("%3D");
-        json.Should().Contain("%3F");
+        var jsonData = global::System.Text.Json.JsonSerializer.Serialize(result.Data);
+        var jsonObject = global::System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(jsonData);
+        jsonObject.Should().NotBeNull();
+        var encoded = jsonObject?["encoded"]?.ToString();
+        encoded.Should().NotBeNull();
+        // Uri.EscapeDataString uses %20 for spaces, not +
+        encoded.Should().Contain("Hello%20World");
+        encoded.Should().Contain("%26");
+        encoded.Should().Contain("%3D");
+        encoded.Should().Contain("%3F");
     }
 
     [Fact]
@@ -195,8 +200,12 @@ public class EncodingToolTests : IDisposable
         result.IsSuccessful.Should().BeTrue();
         result.Data.Should().NotBeNull();
         
-        var json = global::System.Text.Json.JsonSerializer.Serialize(result.Data);
-        json.Should().Contain("Hello World! Special chars: &=?");
+        var jsonData = global::System.Text.Json.JsonSerializer.Serialize(result.Data);
+        var jsonObject = global::System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(jsonData);
+        jsonObject.Should().NotBeNull();
+        var decoded = jsonObject?["decoded"]?.ToString();
+        decoded.Should().NotBeNull();
+        decoded.Should().Be("Hello World! Special chars: &=?");
     }
 
     #endregion
@@ -226,9 +235,13 @@ public class EncodingToolTests : IDisposable
         result.IsSuccessful.Should().BeTrue();
         result.Data.Should().NotBeNull();
         
-        var json = global::System.Text.Json.JsonSerializer.Serialize(result.Data);
-        json.Should().Contain("&lt;script&gt;");
-        json.Should().Contain("&lt;/script&gt;");
+        var jsonData = global::System.Text.Json.JsonSerializer.Serialize(result.Data);
+        var jsonObject = global::System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(jsonData);
+        jsonObject.Should().NotBeNull();
+        var encoded = jsonObject?["encoded"]?.ToString();
+        encoded.Should().NotBeNull();
+        encoded.Should().Contain("&lt;script&gt;");
+        encoded.Should().Contain("&lt;/script&gt;");
     }
 
     [Fact]
@@ -254,8 +267,12 @@ public class EncodingToolTests : IDisposable
         result.IsSuccessful.Should().BeTrue();
         result.Data.Should().NotBeNull();
         
-        var json = global::System.Text.Json.JsonSerializer.Serialize(result.Data);
-        json.Should().Contain("<div>Hello & Welcome</div>");
+        var jsonData = global::System.Text.Json.JsonSerializer.Serialize(result.Data);
+        var jsonObject = global::System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(jsonData);
+        jsonObject.Should().NotBeNull();
+        var decoded = jsonObject?["decoded"]?.ToString();
+        decoded.Should().NotBeNull();
+        decoded.Should().Be("<div>Hello & Welcome</div>");
     }
 
     #endregion

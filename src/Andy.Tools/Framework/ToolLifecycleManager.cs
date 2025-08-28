@@ -202,6 +202,13 @@ public class ToolLifecycleManager(
             {
                 _logger.LogWarning(ex, "Failed to register explicit tool: {ToolType}",
                     registrationInfo.ToolType.FullName);
+                
+                // If configured to fail on registration errors, rethrow the exception
+                if (_options.FailOnExplicitToolRegistrationError)
+                {
+                    throw new InvalidOperationException(
+                        $"Failed to register explicit tool: {registrationInfo.ToolType.FullName}", ex);
+                }
             }
         }
     }

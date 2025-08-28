@@ -18,18 +18,26 @@ public class TimeRange
     /// <summary>
     /// Creates a time range for the last N hours.
     /// </summary>
-    public static TimeRange LastHours(int hours) => new()
+    public static TimeRange LastHours(int hours)
     {
-        Start = DateTimeOffset.UtcNow.AddHours(-hours),
-        End = DateTimeOffset.UtcNow
-    };
+        var now = DateTimeOffset.UtcNow;
+        return new TimeRange
+        {
+            Start = now.AddHours(-hours),
+            End = now
+        };
+    }
 
     /// <summary>
     /// Creates a time range for the last N days.
     /// </summary>
-    public static TimeRange LastDays(int days) => new()
+    public static TimeRange LastDays(int days)
     {
-        Start = DateTimeOffset.UtcNow.AddDays(-days),
-        End = DateTimeOffset.UtcNow
-    };
+        var now = DateTimeOffset.UtcNow;
+        return new TimeRange
+        {
+            Start = now.AddDays(-days),
+            End = now
+        };
+    }
 }
