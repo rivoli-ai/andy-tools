@@ -162,6 +162,76 @@ public class CopyFileToolTests : IDisposable
     }
 
     [Fact]
+    public async Task ExecuteAsync_CopyFileToExistingDirectory_ShouldPreserveFilename()
+    {
+        // Arrange
+        const string content = "Test file content";
+        await File.WriteAllTextAsync(_sourceFile, content);
+        Directory.CreateDirectory(_destinationDirectory);
+
+        var parameters = new Dictionary<string, object?>
+        {
+            ["source_path"] = _sourceFile,
+            ["destination_path"] = _destinationDirectory
+        };
+
+        var context = new ToolExecutionContext();
+
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
+        // Act
+        var result = await _tool.ExecuteAsync(parameters, context);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccessful.Should().BeTrue();
+        
+        var expectedDestFile = Path.Combine(_destinationDirectory, Path.GetFileName(_sourceFile));
+        File.Exists(expectedDestFile).Should().BeTrue();
+        (await File.ReadAllTextAsync(expectedDestFile)).Should().Be(content);
+
+        var data = result.Data as Dictionary<string, object?>;
+        data.Should().NotBeNull();
+        data!["files_copied"].Should().Be(1);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CopyFileToDirectoryPathWithTrailingSeparator_ShouldPreserveFilename()
+    {
+        // Arrange
+        const string content = "Test file content with trailing separator";
+        await File.WriteAllTextAsync(_sourceFile, content);
+        
+        // Add trailing separator to destination path
+        var destinationWithSeparator = _destinationDirectory + Path.DirectorySeparatorChar;
+
+        var parameters = new Dictionary<string, object?>
+        {
+            ["source_path"] = _sourceFile,
+            ["destination_path"] = destinationWithSeparator,
+            ["create_destination_directory"] = true
+        };
+
+        var context = new ToolExecutionContext();
+
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
+        // Act
+        var result = await _tool.ExecuteAsync(parameters, context);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccessful.Should().BeTrue();
+        
+        Directory.Exists(_destinationDirectory).Should().BeTrue();
+        var expectedDestFile = Path.Combine(_destinationDirectory, Path.GetFileName(_sourceFile));
+        File.Exists(expectedDestFile).Should().BeTrue();
+        (await File.ReadAllTextAsync(expectedDestFile)).Should().Be(content);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_CopyFileWithTimestampPreservation_ShouldPreserveTimestamps()
     {
         // Arrange
@@ -297,6 +367,88 @@ public class CopyFileToolTests : IDisposable
         File.Exists(Path.Combine(_destinationDirectory, "important.txt")).Should().BeTrue();
         File.Exists(Path.Combine(_destinationDirectory, "temp.tmp")).Should().BeFalse();
         File.Exists(Path.Combine(_destinationDirectory, "backup.bak")).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CopyDirectoryWithExcludePatternsAsList_ShouldExcludeMatchingFiles()
+    {
+        // Arrange
+        Directory.CreateDirectory(_sourceDirectory);
+
+        await File.WriteAllTextAsync(Path.Combine(_sourceDirectory, "readme.md"), "Keep this");
+        await File.WriteAllTextAsync(Path.Combine(_sourceDirectory, "debug.log"), "Exclude this");
+        await File.WriteAllTextAsync(Path.Combine(_sourceDirectory, "trace.log"), "Exclude this too");
+
+        var parameters = new Dictionary<string, object?>
+        {
+            ["source_path"] = _sourceDirectory,
+            ["destination_path"] = _destinationDirectory,
+            ["recursive"] = true,
+            ["exclude_patterns"] = new List<string> { "*.log" }
+        };
+
+        var context = new ToolExecutionContext();
+
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
+        // Act
+        var result = await _tool.ExecuteAsync(parameters, context);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccessful.Should().BeTrue();
+
+        File.Exists(Path.Combine(_destinationDirectory, "readme.md")).Should().BeTrue();
+        File.Exists(Path.Combine(_destinationDirectory, "debug.log")).Should().BeFalse();
+        File.Exists(Path.Combine(_destinationDirectory, "trace.log")).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CopyDirectoryWithExcludePatternsAndSubdirectories_ShouldExcludeMatchingItems()
+    {
+        // Arrange
+        Directory.CreateDirectory(_sourceDirectory);
+        var subDir1 = Path.Combine(_sourceDirectory, "docs");
+        var subDir2 = Path.Combine(_sourceDirectory, ".git");
+        var subDir3 = Path.Combine(_sourceDirectory, "node_modules");
+        Directory.CreateDirectory(subDir1);
+        Directory.CreateDirectory(subDir2);
+        Directory.CreateDirectory(subDir3);
+
+        await File.WriteAllTextAsync(Path.Combine(_sourceDirectory, "app.js"), "Keep this");
+        await File.WriteAllTextAsync(Path.Combine(subDir1, "readme.md"), "Keep this");
+        await File.WriteAllTextAsync(Path.Combine(subDir2, "config"), "Exclude this");
+        await File.WriteAllTextAsync(Path.Combine(subDir3, "package.json"), "Exclude this");
+
+        var parameters = new Dictionary<string, object?>
+        {
+            ["source_path"] = _sourceDirectory,
+            ["destination_path"] = _destinationDirectory,
+            ["recursive"] = true,
+            ["exclude_patterns"] = new List<string> { ".git", "node_modules" }
+        };
+
+        var context = new ToolExecutionContext();
+
+        // Initialize the tool
+        await _tool.InitializeAsync();
+
+        // Act
+        var result = await _tool.ExecuteAsync(parameters, context);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccessful.Should().BeTrue();
+
+        // Check included files and directories
+        File.Exists(Path.Combine(_destinationDirectory, "app.js")).Should().BeTrue();
+        Directory.Exists(Path.Combine(_destinationDirectory, "docs")).Should().BeTrue();
+        File.Exists(Path.Combine(_destinationDirectory, "docs", "readme.md")).Should().BeTrue();
+        
+        // Check excluded directories
+        Directory.Exists(Path.Combine(_destinationDirectory, ".git")).Should().BeFalse();
+        Directory.Exists(Path.Combine(_destinationDirectory, "node_modules")).Should().BeFalse();
     }
 
     #endregion

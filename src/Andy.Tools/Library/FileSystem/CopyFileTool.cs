@@ -30,7 +30,7 @@ public partial class CopyFileTool : ToolBase
             new()
             {
                 Name = "destination_path",
-                Description = "The path to copy the file or directory to",
+                Description = "The destination path. Can be a file path or directory path. If it's an existing directory or ends with a path separator, the source filename will be preserved",
                 Type = "string",
                 Required = true
             },
@@ -145,6 +145,8 @@ public partial class CopyFileTool : ToolBase
 
             if (isDirectory)
             {
+                // For directories, if destination doesn't exist or is not a directory,
+                // treat destination as the target directory name
                 await CopyDirectoryAsync(
                     safeSourcePath,
                     safeDestinationPath,
@@ -160,6 +162,7 @@ public partial class CopyFileTool : ToolBase
             }
             else
             {
+                // For files, intelligently determine if destination is a directory
                 await CopyFileAsync(
                     safeSourcePath,
                     safeDestinationPath,
@@ -233,7 +236,18 @@ public partial class CopyFileTool : ToolBase
         ToolExecutionContext context)
     {
         var sourceFile = new FileInfo(sourcePath);
-        var destinationFile = new FileInfo(destinationPath);
+        
+        // Check if destination is a directory path (ends with separator or exists as directory)
+        var finalDestPath = destinationPath;
+        if (Directory.Exists(destinationPath) || 
+            destinationPath.EndsWith(Path.DirectorySeparatorChar) || 
+            destinationPath.EndsWith(Path.AltDirectorySeparatorChar))
+        {
+            // Destination is a directory, append source filename
+            finalDestPath = Path.Combine(destinationPath, sourceFile.Name);
+        }
+        
+        var destinationFile = new FileInfo(finalDestPath);
 
         // Create destination directory if needed
         if (createDestinationDirectory && destinationFile.DirectoryName != null)
@@ -244,20 +258,20 @@ public partial class CopyFileTool : ToolBase
         // Check if destination exists
         if (destinationFile.Exists && !overwrite)
         {
-            throw new IOException($"Destination file already exists: {destinationPath}");
+            throw new IOException($"Destination file already exists: {finalDestPath}");
         }
 
         ReportProgress(context, $"Copying file: {sourceFile.Name}", 50);
 
         // Copy the file
-        await Task.Run(() => File.Copy(sourcePath, destinationPath, overwrite), context.CancellationToken);
+        await Task.Run(() => File.Copy(sourcePath, finalDestPath, overwrite), context.CancellationToken);
 
         // Preserve timestamps if requested
         if (preserveTimestamps)
         {
-            File.SetCreationTimeUtc(destinationPath, sourceFile.CreationTimeUtc);
-            File.SetLastWriteTimeUtc(destinationPath, sourceFile.LastWriteTimeUtc);
-            File.SetLastAccessTimeUtc(destinationPath, sourceFile.LastAccessTimeUtc);
+            File.SetCreationTimeUtc(finalDestPath, sourceFile.CreationTimeUtc);
+            File.SetLastWriteTimeUtc(finalDestPath, sourceFile.LastWriteTimeUtc);
+            File.SetLastAccessTimeUtc(finalDestPath, sourceFile.LastAccessTimeUtc);
         }
 
         stats.FilesCopied++;
