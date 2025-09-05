@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Linq;
 using Andy.Tools.Core;
 using Andy.Tools.Library.Common;
 using SystemNet = System.Net;
@@ -458,11 +459,31 @@ public class EncodingTool : ToolBase
 
     private static object GeneratePassword(int length, bool includeSymbols, bool includeNumbers, EncodingOperationResult result)
     {
-        const string letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const string lowercase = "abcdefghijklmnopqrstuvwxyz";
+        const string uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         const string numbers = "0123456789";
         const string symbols = "!@#$%^&*()_+-=[]{}|;:,.<>?";
 
-        var characters = letters;
+        var random = new Random();
+        var password = new StringBuilder(length);
+        var requiredChars = new List<char>();
+
+        // Ensure at least one character from each required category
+        requiredChars.Add(lowercase[random.Next(lowercase.Length)]);
+        requiredChars.Add(uppercase[random.Next(uppercase.Length)]);
+        
+        if (includeNumbers)
+        {
+            requiredChars.Add(numbers[random.Next(numbers.Length)]);
+        }
+
+        if (includeSymbols)
+        {
+            requiredChars.Add(symbols[random.Next(symbols.Length)]);
+        }
+
+        // Build the full character set
+        var characters = lowercase + uppercase;
         if (includeNumbers)
         {
             characters += numbers;
@@ -473,12 +494,17 @@ public class EncodingTool : ToolBase
             characters += symbols;
         }
 
-        var random = new Random();
-        var password = new StringBuilder(length);
-
-        for (int i = 0; i < length; i++)
+        // Fill remaining positions with random characters
+        for (int i = requiredChars.Count; i < length; i++)
         {
-            password.Append(characters[random.Next(characters.Length)]);
+            requiredChars.Add(characters[random.Next(characters.Length)]);
+        }
+
+        // Shuffle the characters to avoid predictable patterns
+        var shuffled = requiredChars.OrderBy(x => random.Next()).ToList();
+        foreach (var c in shuffled)
+        {
+            password.Append(c);
         }
 
         result.Metadata["password_length"] = length;
