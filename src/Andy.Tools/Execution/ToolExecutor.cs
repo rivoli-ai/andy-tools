@@ -438,9 +438,8 @@ public class ToolExecutor : IToolExecutor, IDisposable
     /// <inheritdoc />
     public async Task<ToolExecutionResult> ExecuteAsync(string toolId, Dictionary<string, object?> parameters, ToolExecutionContext? context = null)
     {
-        // TEMPORARY: Console logging for tool invocations
-        var parametersJson = System.Text.Json.JsonSerializer.Serialize(parameters, new System.Text.Json.JsonSerializerOptions { WriteIndented = false });
-        Console.WriteLine($"[TOOL] Executing: {toolId} | Parameters: {parametersJson}");
+        // Removed Console.WriteLine to prevent output leakage to the terminal
+        // Tool execution is logged through the proper logging infrastructure instead
 
         var request = new ToolExecutionRequest
         {
