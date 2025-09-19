@@ -46,9 +46,11 @@ public static class BuiltInToolsExtensions
         services.AddTool<ReadFileTool>();
         services.AddTool<WriteFileTool>();
         services.AddTool<ListDirectoryTool>();
-        services.AddTool<CopyFileTool>();
+        // Temporarily disabled due to OpenAI schema validation issue with exclude_patterns array
+        // services.AddTool<CopyFileTool>();
         services.AddTool<MoveFileTool>();
-        services.AddTool<DeleteFileTool>();
+        // Temporarily disabled due to OpenAI schema validation issue
+        // services.AddTool<DeleteFileTool>();
 
         return services;
     }
@@ -113,7 +115,8 @@ public static class BuiltInToolsExtensions
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddProductivityTools(this IServiceCollection services)
     {
-        services.AddTool<TodoManagementTool>();
+        // Temporarily disabled due to OpenAI schema validation issue
+        // services.AddTool<TodoManagementTool>();
         services.AddTool<TodoExecutor>();
 
         return services;
@@ -227,9 +230,10 @@ public static class BuiltInToolsExtensions
             ["read_file"] = typeof(ReadFileTool),
             ["write_file"] = typeof(WriteFileTool),
             ["list_directory"] = typeof(ListDirectoryTool),
-            ["copy_file"] = typeof(CopyFileTool),
+            // Temporarily disabled due to OpenAI schema validation issues
+            // ["copy_file"] = typeof(CopyFileTool),
             ["move_file"] = typeof(MoveFileTool),
-            ["delete_file"] = typeof(DeleteFileTool),
+            // ["delete_file"] = typeof(DeleteFileTool),
 
             // Text Processing Tools
             ["search_text"] = typeof(SearchTextTool),
@@ -249,7 +253,7 @@ public static class BuiltInToolsExtensions
             ["encoding_tool"] = typeof(EncodingTool),
 
             // Productivity Tools
-            ["todo_management"] = typeof(TodoManagementTool),
+            // ["todo_management"] = typeof(TodoManagementTool), // Disabled for OpenAI
             ["todo_executor"] = typeof(TodoExecutor),
 
             // Git Tools
