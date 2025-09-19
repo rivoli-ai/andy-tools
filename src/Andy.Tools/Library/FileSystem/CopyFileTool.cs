@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Andy.Tools.Core;
 using Andy.Tools.Library.Common;
@@ -76,6 +77,17 @@ public partial class CopyFileTool : ToolBase
                 {
                     Type = "string",
                     Description = "File pattern to exclude (e.g., '*.tmp')"
+                },
+                // Explicitly set the schema for OpenAI compatibility
+                Schema = new Dictionary<string, object?>
+                {
+                    ["type"] = "array",
+                    ["description"] = "Array of file patterns to exclude (e.g., ['*.tmp', '.git'])",
+                    ["items"] = new Dictionary<string, object?>
+                    {
+                        ["type"] = "string",
+                        ["description"] = "File pattern to exclude (e.g., '*.tmp')"
+                    }
                 }
             },
             new()
