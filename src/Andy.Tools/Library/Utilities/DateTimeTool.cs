@@ -14,7 +14,32 @@ public class DateTimeTool : ToolBase
     {
         Id = "datetime_tool",
         Name = "Date Time Tool",
-        Description = "Performs date and time operations including formatting, parsing, and calculations",
+        Description = """
+            Performs date and time operations. Operation-specific requirements:
+
+            • now: Get current date/time (no date_input needed, optional: target_format for custom formatting)
+            • parse: Parse a date string (requires: date_input, optional: format if custom format needed)
+            • format: Format a date to string (requires: date_input AND target_format, optional: format for input parsing)
+            • add: Add time to date (requires: date_input, amount, unit)
+            • subtract: Subtract time from date (requires: date_input, amount, unit)
+            • diff: Calculate difference between dates (requires: date_input, end_date, optional: unit for result unit)
+            • convert_timezone: Convert between timezones (requires: date_input, target_timezone, optional: timezone for source)
+            • is_valid: Check if date string is valid (requires: date_input, optional: format)
+            • day_of_week: Get day of week (requires: date_input)
+            • day_of_year: Get day number in year (requires: date_input)
+            • days_in_month: Get number of days in month (requires: date_input)
+            • is_leap_year: Check if year is leap year (requires: date_input)
+            • start_of_day/end_of_day: Get start or end of day (requires: date_input)
+            • start_of_month/end_of_month: Get start or end of month (requires: date_input)
+            • start_of_year/end_of_year: Get start or end of year (requires: date_input)
+            • business_days: Count business days between dates (requires: date_input, end_date)
+            • age_calculation: Calculate age from birth date (requires: date_input, optional: end_date for reference)
+
+            Examples:
+            - Get today's date: operation=now, target_format="yyyy-MM-dd"
+            - Format a date: operation=format, date_input="2024-10-16", target_format="MMMM dd, yyyy"
+            - Add 5 days: operation=add, date_input="2024-10-16", amount=5, unit="days"
+            """,
         Version = "1.0.0",
         Category = ToolCategory.Utility,
         RequiredPermissions = ToolPermissionFlags.None,
@@ -23,7 +48,16 @@ public class DateTimeTool : ToolBase
             new()
             {
                 Name = "operation",
-                Description = "The date/time operation to perform",
+                Description = """
+                    The date/time operation to perform. Choose based on your need:
+                    - now: Get current date/time (use this when asked "what day is today")
+                    - format: Convert date to specific format (requires target_format)
+                    - parse: Parse date string to structured format
+                    - add/subtract: Perform date arithmetic (requires amount and unit)
+                    - diff: Calculate time between dates (requires end_date)
+                    - day_of_week/day_of_year: Get specific date information
+                    - Other operations: See main description for details
+                    """,
                 Type = "string",
                 Required = true,
                 AllowedValues =
@@ -37,49 +71,78 @@ public class DateTimeTool : ToolBase
             new()
             {
                 Name = "date_input",
-                Description = "Input date/time string or timestamp",
+                Description = """
+                    Input date/time string in ISO format (e.g., '2024-10-16' or '2024-10-16T14:30:00').
+                    NOT NEEDED for 'now' operation. REQUIRED for most other operations.
+                    Can be omitted for 'now' operation as it gets current date automatically.
+                    Examples: "2024-10-16", "2024-10-16T14:30:00", "October 16, 2024"
+                    """,
                 Type = "string",
                 Required = false
             },
             new()
             {
                 Name = "format",
-                Description = "Date/time format string (e.g., 'yyyy-MM-dd HH:mm:ss')",
+                Description = """
+                    Format string for PARSING the input date_input when it's not in standard format.
+                    Examples: 'yyyy-MM-dd', 'dd/MM/yyyy', 'MMMM dd, yyyy'
+                    Only needed when date_input is in a non-standard format.
+                    """,
                 Type = "string",
                 Required = false
             },
             new()
             {
                 Name = "target_format",
-                Description = "Target format for formatting operations",
+                Description = """
+                    Target format for OUTPUT formatting. REQUIRED for 'format' operation.
+                    Use this to specify how you want the date displayed.
+                    Examples: 'yyyy-MM-dd' → '2024-10-16', 'MMMM dd, yyyy' → 'October 16, 2024'
+                    Common formats: 'yyyy-MM-dd', 'dd/MM/yyyy', 'MMMM dd, yyyy', 'dddd, MMMM dd, yyyy'
+                    """,
                 Type = "string",
                 Required = false
             },
             new()
             {
                 Name = "timezone",
-                Description = "Timezone identifier (e.g., 'UTC', 'America/New_York')",
+                Description = """
+                    Source timezone identifier for 'now' or 'convert_timezone' operations.
+                    Examples: 'UTC', 'America/New_York', 'Europe/London', 'Asia/Tokyo'
+                    Optional for 'now' (defaults to UTC), required as source for timezone conversion.
+                    """,
                 Type = "string",
                 Required = false
             },
             new()
             {
                 Name = "target_timezone",
-                Description = "Target timezone for conversion operations",
+                Description = """
+                    Target timezone for 'convert_timezone' operation (REQUIRED for that operation).
+                    Examples: 'UTC', 'America/New_York', 'Europe/London', 'Asia/Tokyo'
+                    """,
                 Type = "string",
                 Required = false
             },
             new()
             {
                 Name = "amount",
-                Description = "Amount to add/subtract (number)",
+                Description = """
+                    Numeric amount to add or subtract. REQUIRED for 'add' and 'subtract' operations.
+                    Examples: 5 (days), 2 (months), 3.5 (hours)
+                    Can be decimal for sub-day units (hours, minutes, seconds).
+                    """,
                 Type = "number",
                 Required = false
             },
             new()
             {
                 Name = "unit",
-                Description = "Time unit for add/subtract operations",
+                Description = """
+                    Time unit for add/subtract/diff operations. REQUIRED for 'add' and 'subtract'.
+                    Allowed values: years, months, days, hours, minutes, seconds, milliseconds
+                    Examples: "days", "months", "hours"
+                    """,
                 Type = "string",
                 Required = false,
                 AllowedValues = ["years", "months", "days", "hours", "minutes", "seconds", "milliseconds"]
@@ -87,14 +150,22 @@ public class DateTimeTool : ToolBase
             new()
             {
                 Name = "end_date",
-                Description = "End date for difference calculations",
+                Description = """
+                    End date for 'diff' and 'business_days' operations (REQUIRED for those).
+                    Format same as date_input. Used to calculate the difference between dates.
+                    Examples: "2024-10-20", "2024-12-31"
+                    """,
                 Type = "string",
                 Required = false
             },
             new()
             {
                 Name = "culture",
-                Description = "Culture identifier for parsing/formatting (e.g., 'en-US', 'fr-FR')",
+                Description = """
+                    Culture identifier for parsing/formatting dates with locale-specific formats.
+                    Examples: 'en-US', 'fr-FR', 'de-DE', 'ja-JP'
+                    Defaults to 'en-US'. Affects month names and date formatting.
+                    """,
                 Type = "string",
                 Required = false,
                 DefaultValue = "en-US"
