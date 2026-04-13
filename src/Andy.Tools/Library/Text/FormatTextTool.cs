@@ -234,7 +234,7 @@ public partial class FormatTextTool : ToolBase
             return input;
         }
 
-        var words = input.Split([' ', '_', '-'], StringSplitOptions.RemoveEmptyEntries);
+        var words = input.Split(new[] { ' ', '_', '-' }, StringSplitOptions.RemoveEmptyEntries);
         var result = new StringBuilder();
 
         for (int i = 0; i < words.Length; i++)
@@ -262,7 +262,7 @@ public partial class FormatTextTool : ToolBase
             return input;
         }
 
-        var words = input.Split([' ', '_', '-'], StringSplitOptions.RemoveEmptyEntries);
+        var words = input.Split(new[] { ' ', '_', '-' }, StringSplitOptions.RemoveEmptyEntries);
         var result = new StringBuilder();
 
         foreach (var word in words)
@@ -518,7 +518,7 @@ public partial class FormatTextTool : ToolBase
 
     private static string CountWords(string input, FormatResult result)
     {
-        var words = input.Split([' ', '\t', '\n', '\r'], StringSplitOptions.RemoveEmptyEntries);
+        var words = input.Split(new[] { ' ', '\t', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
         var wordCount = words.Length;
         var uniqueWords = words.Distinct(StringComparer.OrdinalIgnoreCase).Count();
 
