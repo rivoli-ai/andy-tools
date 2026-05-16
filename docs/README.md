@@ -75,7 +75,7 @@ If you need help with Andy Tools:
 
 ## Contributing
 
-We welcome contributions! Please see our [Contributing Guide](../CONTRIBUTING.md) for details on:
+We welcome contributions! Please see the [Contributing section](../README.md#contributing) of the main README for details on:
 
 - Code style and standards
 - Testing requirements
