@@ -296,7 +296,7 @@ public class ReplaceTextTool : ToolBase
             Encoding encoding = !string.IsNullOrEmpty(encodingName)
                 ? encodingName.ToLowerInvariant() switch
                 {
-                    "utf-8" => Encoding.UTF8,
+                    "utf-8" => ToolHelpers.Utf8NoBom,
                     "ascii" => Encoding.ASCII,
                     "unicode" or "utf-16" => Encoding.Unicode,
                     "utf-32" => Encoding.UTF32,

@@ -13,6 +13,13 @@ namespace Andy.Tools.Library.Common;
 public static class ToolHelpers
 {
     /// <summary>
+    /// UTF-8 encoding that does NOT emit a byte-order mark. <see cref="Encoding.UTF8"/> emits a
+    /// BOM, which silently prepends EF BB BF to files written via File.WriteAllText — corrupting
+    /// source files and diffs. Use this for writing UTF-8 text unless a BOM is explicitly wanted.
+    /// </summary>
+    public static readonly Encoding Utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+
+    /// <summary>
     /// Safely converts a path to an absolute path, ensuring it exists within allowed boundaries.
     /// </summary>
     /// <param name="path">The input path.</param>
@@ -155,7 +162,7 @@ public static class ToolHelpers
     /// <param name="cancellationToken">Cancellation token.</param>
     public static async Task WriteTextFileAsync(string filePath, string content, Encoding? encoding = null, bool createBackup = true, CancellationToken cancellationToken = default)
     {
-        encoding ??= Encoding.UTF8;
+        encoding ??= Utf8NoBom;
 
         // Create backup if file exists and backup is requested
         if (createBackup && File.Exists(filePath))
@@ -189,7 +196,7 @@ public static class ToolHelpers
             Array.Resize(ref buffer, bytesRead);
         }
 
-        // Check for BOM
+        // Check for BOM — preserve a genuine UTF-8 BOM on rewrite.
         if (bytesRead >= 3 && buffer[0] == 0xEF && buffer[1] == 0xBB && buffer[2] == 0xBF)
         {
             return Encoding.UTF8;
@@ -210,7 +217,7 @@ public static class ToolHelpers
             return Encoding.BigEndianUnicode; // UTF-16 BE
         }
 
-        return Encoding.UTF8; // Default to UTF-8
+        return Utf8NoBom; // Default to UTF-8 without a BOM (no BOM was detected above)
     }
 
     /// <summary>

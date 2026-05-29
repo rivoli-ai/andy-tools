@@ -106,7 +106,7 @@ public class WriteFileTool : ToolBase
             // Determine encoding
             var encoding = encodingName.ToLowerInvariant() switch
             {
-                "utf-8" => Encoding.UTF8,
+                "utf-8" => Common.ToolHelpers.Utf8NoBom,
                 "ascii" => Encoding.ASCII,
                 "unicode" or "utf-16" => Encoding.Unicode,
                 "utf-32" => Encoding.UTF32,
