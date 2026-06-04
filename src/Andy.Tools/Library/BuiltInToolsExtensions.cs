@@ -78,6 +78,7 @@ public static class BuiltInToolsExtensions
     {
         services.AddTool<SystemInfoTool>();
         services.AddTool<ProcessInfoTool>();
+        services.AddTool<ExecuteCommandTool>();
 
         return services;
     }
@@ -243,6 +244,7 @@ public static class BuiltInToolsExtensions
             // System Tools
             ["system_info"] = typeof(SystemInfoTool),
             ["process_info"] = typeof(ProcessInfoTool),
+            ["execute_command"] = typeof(ExecuteCommandTool),
 
             // Web Tools
             ["http_request"] = typeof(HttpRequestTool),
