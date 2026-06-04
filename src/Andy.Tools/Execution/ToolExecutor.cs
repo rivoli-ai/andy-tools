@@ -20,6 +20,7 @@ public class ToolExecutor : IToolExecutor, IDisposable
     private readonly IResourceMonitor _resourceMonitor;
     private readonly IToolOutputLimiter _outputLimiter;
     private readonly IToolObservabilityService? _observabilityService;
+    private readonly IToolPermissionGate? _permissionGate;
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<ToolExecutor> _logger;
     private readonly ConcurrentDictionary<string, CancellationTokenSource> _runningExecutions = new();
@@ -56,6 +57,9 @@ public class ToolExecutor : IToolExecutor, IDisposable
 
         // Try to get observability service (optional)
         _observabilityService = serviceProvider.GetService<IToolObservabilityService>();
+
+        // Try to get the permission consent gate (optional; null ⇒ no gating, original behavior).
+        _permissionGate = serviceProvider.GetService<IToolPermissionGate>();
 
         // Subscribe to resource limit events
         _resourceMonitor.ResourceLimitExceeded += OnResourceLimitExceeded;
@@ -148,6 +152,35 @@ public class ToolExecutor : IToolExecutor, IDisposable
                         SecurityViolation?.Invoke(this, new SecurityViolationEventArgs(request.ToolId, correlationId, violation, SecurityViolationSeverity.High));
                     }
 
+                    return result;
+                }
+            }
+
+            // Permission consent gate (optional). Applies regardless of EnforcePermissions: it is the
+            // consent layer, distinct from the SecurityManager capability check above. No gate ⇒ no-op.
+            if (_permissionGate != null)
+            {
+                var verdict = await _permissionGate.CheckAsync(
+                    new ToolPermissionGateRequest
+                    {
+                        ToolId = request.ToolId,
+                        Parameters = request.Parameters,
+                        Context = request.Context,
+                        Metadata = registration.Metadata,
+                    },
+                    request.Context.CancellationToken);
+
+                if (!verdict.Allowed)
+                {
+                    var reason = verdict.Reason ?? $"Tool '{request.ToolId}' blocked by permission policy";
+                    result.IsSuccessful = false;
+                    result.ErrorMessage = reason;
+                    result.SecurityViolations = [reason];
+                    result.EndTime = DateTimeOffset.UtcNow;
+
+                    _securityManager.RecordViolation(request.ToolId, correlationId, reason, SecurityViolationSeverity.High);
+                    SecurityViolation?.Invoke(this, new SecurityViolationEventArgs(request.ToolId, correlationId, reason, SecurityViolationSeverity.High));
+                    ExecutionCompleted?.Invoke(this, new ToolExecutionCompletedEventArgs(result));
                     return result;
                 }
             }
