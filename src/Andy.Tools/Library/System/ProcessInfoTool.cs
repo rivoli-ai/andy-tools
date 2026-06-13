@@ -170,7 +170,9 @@ public class ProcessInfoTool : ToolBase
     {
         try
         {
-            var process = Process.GetProcessById(processId);
+            // Dispose the Process so its OS handle is released; the by-name/all paths already do this,
+            // but this path leaked a SafeProcessHandle on every call.
+            using var process = Process.GetProcessById(processId);
             return await CreateProcessInfoAsync(process, detailed, context);
         }
         catch (ArgumentException)
