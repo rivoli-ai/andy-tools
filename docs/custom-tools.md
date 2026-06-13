@@ -26,7 +26,7 @@ public class UpperCaseTool : ToolBase
         Name = "Upper Case Text",
         Description = "Converts text to uppercase",
         Version = "1.0.0",
-        Category = ToolCategory.Text,
+        Category = ToolCategory.TextProcessing,
         Parameters = new[]
         {
             new ToolParameter
@@ -57,10 +57,7 @@ public class UpperCaseTool : ToolBase
         
         if (string.IsNullOrWhiteSpace(text))
         {
-            return Task.FromResult(ToolResult.Failure(
-                "Input text cannot be empty",
-                "EMPTY_INPUT"
-            ));
+            return Task.FromResult(ToolResult.Failure("Input text cannot be empty"));
         }
 
         try
@@ -162,7 +159,7 @@ public class FileProcessorTool : ToolBase
         // Validate directory exists
         if (!Directory.Exists(directory))
         {
-            return ToolResult.Failure("Directory not found", "DIR_NOT_FOUND");
+            return ToolResult.Failure("Directory not found");
         }
         
         var files = Directory.GetFiles(directory, pattern);
@@ -173,13 +170,9 @@ public class FileProcessorTool : ToolBase
             // Check for cancellation
             context.CancellationToken.ThrowIfCancellationRequested();
             
-            // Report progress
+            // Report progress (ToolBase helper; ToolExecutionContext exposes OnProgress callbacks).
             var progress = (i + 1) * 100 / files.Length;
-            context.Progress?.Report(new ToolProgress
-            {
-                PercentComplete = progress,
-                Message = $"Processing {Path.GetFileName(files[i])}"
-            });
+            ReportProgress(context, $"Processing {Path.GetFileName(files[i])}", progress);
             
             // Process file (simulated)
             var fileInfo = new FileInfo(files[i]);
@@ -247,14 +240,11 @@ public class DataGeneratorTool : ToolBase
         var format = GetParameter<string>(parameters, "format", "json");
         
         // Check resource limits
-        var estimatedMemoryMB = count * 0.001; // Rough estimate
-        if (context.ResourceLimits?.MaxMemoryMB != null &&
-            estimatedMemoryMB > context.ResourceLimits.MaxMemoryMB)
+        var estimatedMemoryBytes = (long)(count * 0.001 * 1024 * 1024); // Rough estimate
+        if (context.ResourceLimits.MaxMemoryBytes > 0 &&
+            estimatedMemoryBytes > context.ResourceLimits.MaxMemoryBytes)
         {
-            return ToolResult.Failure(
-                $"Estimated memory usage ({estimatedMemoryMB}MB) exceeds limit",
-                "MEMORY_LIMIT_EXCEEDED"
-            );
+            return ToolResult.Failure($"Estimated memory usage exceeds limit");
         }
         
         var data = new List<object>();
@@ -263,15 +253,12 @@ public class DataGeneratorTool : ToolBase
         for (int i = 0; i < count; i++)
         {
             // Check execution time limit
-            if (context.ResourceLimits?.MaxExecutionTime != null)
+            if (context.ResourceLimits.MaxExecutionTimeMs > 0)
             {
                 var elapsed = DateTime.UtcNow - startTime;
-                if (elapsed > context.ResourceLimits.MaxExecutionTime)
+                if (elapsed > TimeSpan.FromMilliseconds(context.ResourceLimits.MaxExecutionTimeMs))
                 {
-                    return ToolResult.Failure(
-                        "Execution time limit exceeded",
-                        "TIMEOUT"
-                    );
+                    return ToolResult.Failure("Execution time limit exceeded");
                 }
             }
             
@@ -414,11 +401,11 @@ public class WeatherTool : ToolBase
         catch (HttpRequestException ex)
         {
             _logger.LogError(ex, "HTTP request failed");
-            return ToolResult.Failure("Network error occurred", "NETWORK_ERROR");
+            return ToolResult.Failure("Network error occurred");
         }
         catch (TaskCanceledException)
         {
-            return ToolResult.Failure("Request timeout", "TIMEOUT");
+            return ToolResult.Failure("Request timeout");
         }
     }
 }
@@ -455,11 +442,14 @@ var enabled = GetParameter<bool>(parameters, "enabled");
 var format = GetParameter<string>(parameters, "format", "json");
 var timeout = GetParameter<int>(parameters, "timeout", 30);
 
-// Nullable parameters
-var optionalValue = GetParameterOrDefault<int?>(parameters, "optional");
+// Nullable parameters (GetParameter supports an optional default)
+var optionalValue = GetParameter<int?>(parameters, "optional", null);
 ```
 
 ### Validation Helpers
+
+`ToolHelpers` (in `Andy.Tools.Library.Common`) provides path helpers, and `context.Permissions`
+exposes the granted capabilities.
 
 ```csharp
 protected override async Task<ToolResult> ExecuteInternalAsync(
@@ -467,24 +457,21 @@ protected override async Task<ToolResult> ExecuteInternalAsync(
     ToolExecutionContext context)
 {
     // Validate required permissions
-    if (!HasPermission(context, ToolPermissionFlags.FileSystemWrite))
+    if (!context.Permissions.FileSystemAccess)
     {
-        return ToolResult.Failure("File write permission required", "NO_PERMISSION");
+        return ToolResult.Failure("File system access permission required");
     }
-    
-    // Validate file paths
+
+    // Resolve and confine the path. GetSafePath throws if it escapes the working directory.
     var filePath = GetParameter<string>(parameters, "file_path");
-    if (!IsValidPath(filePath))
-    {
-        return ToolResult.Failure("Invalid file path", "INVALID_PATH");
-    }
-    
+    var safePath = ToolHelpers.GetSafePath(filePath, context.WorkingDirectory);
+
     // Validate within allowed paths
-    if (!IsPathAllowed(filePath, context))
+    if (!ToolHelpers.IsPathWithinAllowedPaths(safePath, context.Permissions))
     {
-        return ToolResult.Failure("Path not allowed", "PATH_DENIED");
+        return ToolResult.Failure("Path not allowed");
     }
-    
+
     // Continue with execution...
 }
 ```
@@ -503,17 +490,16 @@ protected override async Task<ToolResult> ExecuteInternalAsync(
     }
     catch (FileNotFoundException ex)
     {
-        return CreateErrorResult("File not found", "FILE_NOT_FOUND", ex);
+        return ToolResult.Failure($"File not found: {ex.Message}");
     }
     catch (UnauthorizedAccessException ex)
     {
-        return CreateErrorResult("Access denied", "ACCESS_DENIED", ex);
+        return ToolResult.Failure($"Access denied: {ex.Message}");
     }
     catch (Exception ex)
     {
-        // Log unexpected errors
-        LogError(ex, "Unexpected error in tool execution");
-        return CreateErrorResult("An unexpected error occurred", "INTERNAL_ERROR");
+        // ToolResult.Failure(Exception) captures the exception details.
+        return ToolResult.Failure(ex);
     }
 }
 ```
@@ -570,7 +556,7 @@ public class UpperCaseToolTests
         
         // Assert
         Assert.IsFalse(result.IsSuccessful);
-        Assert.AreEqual("EMPTY_INPUT", result.ErrorCode);
+        Assert.AreEqual("Input text cannot be empty", result.ErrorMessage);
     }
 }
 ```

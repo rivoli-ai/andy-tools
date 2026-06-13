@@ -82,7 +82,7 @@ var result = await toolExecutor.ExecuteAsync(
     new ToolExecutionContext()
 );
 
-if (result.IsSuccess)
+if (result.IsSuccessful)
 {
     Console.WriteLine($"File content: {result.Data}");
 }
@@ -95,27 +95,29 @@ using Andy.Tools.Advanced.ToolChains;
 
 var chainBuilder = serviceProvider.GetRequiredService<ToolChainBuilder>();
 
+// Build the chain, then add steps to it. AddToolStep takes (toolId, parameters, name?).
 var chain = chainBuilder
     .WithId("process-files")
     .WithName("File Processing Chain")
-    .AddToolStep("step1", "Read File", "read_file", new { file_path = "input.txt" })
-    .AddToolStep("step2", "Process Text", "replace_text", 
-        parameters: context => new 
-        { 
-            text = context.GetStepResult("step1")?.Data,
-            search_pattern = "old",
-            replacement = "new"
-        })
-    .AddToolStep("step3", "Write Result", "write_file",
-        parameters: context => new
-        {
-            file_path = "output.txt",
-            content = context.GetStepResult("step2")?.Data
-        },
-        dependencies: ["step2"])
     .Build();
 
-var result = await chain.ExecuteAsync(new ToolExecutionContext());
+chain.AddToolStep("read_file",
+    new Dictionary<string, object?> { ["file_path"] = "input.txt" },
+    "Read File");
+
+chain.AddToolStep("replace_text",
+    new Dictionary<string, object?>
+    {
+        ["search_pattern"] = "old",
+        ["replacement_text"] = "new"
+    },
+    "Process Text");
+
+chain.AddToolStep("write_file",
+    new Dictionary<string, object?> { ["file_path"] = "output.txt" },
+    "Write Result");
+
+var result = await chain.ExecuteAsync(initialParameters: null, new ToolExecutionContext());
 ```
 
 ## Examples
@@ -207,7 +209,7 @@ public class UpperCaseTool : ToolBase
         Name = "Upper Case",
         Description = "Converts text to uppercase",
         Version = "1.0.0",
-        Category = ToolCategory.Text,
+        Category = ToolCategory.TextProcessing,
         Parameters = new[]
         {
             new ToolParameter
@@ -278,10 +280,10 @@ var context = new ToolExecutionContext
 {
     ResourceLimits = new ToolResourceLimits
     {
-        MaxExecutionTime = TimeSpan.FromSeconds(30),
-        MaxMemoryMB = 100,
-        MaxFileSizeMB = 50,
-        MaxConcurrentOperations = 5
+        MaxExecutionTimeMs = 30_000,
+        MaxMemoryBytes = 100 * 1024 * 1024,
+        MaxFileSizeBytes = 50 * 1024 * 1024,
+        MaxFileCount = 5
     }
 };
 ```
@@ -293,10 +295,10 @@ var context = new ToolExecutionContext
 ```csharp
 services.AddAndyTools(options =>
 {
-    options.EnableDetailedLogging = true;
+    options.EnableDetailedTracing = true;
     options.RegisterBuiltInTools = true;
     options.EnableObservability = true;
-    options.DefaultTimeout = TimeSpan.FromMinutes(5);
+    options.DefaultResourceLimits.MaxExecutionTimeMs = (int)TimeSpan.FromMinutes(5).TotalMilliseconds;
 });
 ```
 
