@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Andy.Tools.Core;
+using Andy.Tools.Library.Common;
 using Microsoft.Extensions.Logging;
 
 namespace Andy.Tools.Execution;
@@ -119,7 +120,7 @@ public class SecurityManager : ISecurityManager
                 try
                 {
                     var normalizedBlockedPath = Path.GetFullPath(blockedPath.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)));
-                    return filePath.StartsWith(normalizedBlockedPath, StringComparison.OrdinalIgnoreCase);
+                    return ToolHelpers.IsPathWithinBoundary(filePath, normalizedBlockedPath);
                 }
                 catch
                 {
@@ -141,7 +142,7 @@ public class SecurityManager : ISecurityManager
                 try
                 {
                     var normalizedAllowedPath = Path.GetFullPath(allowedPath.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)));
-                    return filePath.StartsWith(normalizedAllowedPath, StringComparison.OrdinalIgnoreCase);
+                    return ToolHelpers.IsPathWithinBoundary(filePath, normalizedAllowedPath);
                 }
                 catch
                 {
@@ -166,7 +167,7 @@ public class SecurityManager : ISecurityManager
 
         foreach (var sensitiveDir in sensitiveDirectories.Where(d => !string.IsNullOrEmpty(d)))
         {
-            if (filePath.StartsWith(sensitiveDir, StringComparison.OrdinalIgnoreCase))
+            if (ToolHelpers.IsPathWithinBoundary(filePath, sensitiveDir))
             {
                 // Only allow read access to system directories unless explicitly allowed
                 if (accessType != FileAccessType.Read && !permissions.CustomPermissions.ContainsKey("allow_system_write"))

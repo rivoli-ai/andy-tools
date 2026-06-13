@@ -27,6 +27,47 @@ public static class ToolHelpers
     public static readonly Encoding Utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 
     /// <summary>
+    /// The <see cref="StringComparison"/> to use when comparing filesystem paths on the current OS.
+    /// Windows and macOS default to case-insensitive filesystems; Linux is case-sensitive. Using the
+    /// OS-appropriate comparison avoids both over-permitting (treating distinct paths as equal on a
+    /// case-sensitive FS) and under-blocking on a case-insensitive FS.
+    /// </summary>
+    public static readonly StringComparison PathComparison =
+        OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+
+    /// <summary>
+    /// Determines whether <paramref name="candidatePath"/> is the same as, or contained within,
+    /// <paramref name="boundaryPath"/>, using a directory-separator-aware comparison.
+    /// <para>
+    /// A bare prefix test (<c>candidate.StartsWith(boundary)</c>) is unsafe: with a boundary of
+    /// <c>/home/user/app</c> a sibling path <c>/home/user/app-secrets/x</c> shares the textual prefix
+    /// yet is a different directory. This method requires either exact equality with the boundary or a
+    /// match up to and including a directory separator, closing that escape.
+    /// </para>
+    /// </summary>
+    /// <param name="candidatePath">The path to test. It is fully resolved before comparison.</param>
+    /// <param name="boundaryPath">The boundary directory. It is fully resolved before comparison.</param>
+    /// <returns><c>true</c> if the candidate is the boundary itself or lies beneath it.</returns>
+    public static bool IsPathWithinBoundary(string candidatePath, string boundaryPath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(candidatePath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(boundaryPath);
+
+        var candidate = Path.GetFullPath(candidatePath);
+        var boundary = Path.GetFullPath(boundaryPath)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+        if (candidate.Equals(boundary, PathComparison))
+        {
+            return true;
+        }
+
+        return candidate.StartsWith(boundary + Path.DirectorySeparatorChar, PathComparison);
+    }
+
+    /// <summary>
     /// Safely converts a path to an absolute path, ensuring it exists within allowed boundaries.
     /// </summary>
     /// <param name="path">The input path.</param>
@@ -57,8 +98,7 @@ public static class ToolHelpers
             // Security check: ensure the path doesn't escape the working directory if specified
             if (workingDirectory != null)
             {
-                var normalizedWorkingDir = Path.GetFullPath(workingDirectory);
-                if (!fullPath.StartsWith(normalizedWorkingDir, StringComparison.OrdinalIgnoreCase))
+                if (!IsPathWithinBoundary(fullPath, workingDirectory))
                 {
                     throw new ArgumentException($"Path '{path}' is outside the allowed working directory");
                 }
@@ -92,8 +132,7 @@ public static class ToolHelpers
 
             foreach (var allowedPath in permissions.AllowedPaths)
             {
-                var normalizedAllowedPath = Path.GetFullPath(allowedPath);
-                if (normalizedPath.StartsWith(normalizedAllowedPath, StringComparison.OrdinalIgnoreCase))
+                if (IsPathWithinBoundary(normalizedPath, allowedPath))
                 {
                     return true;
                 }
