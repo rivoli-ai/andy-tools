@@ -13,6 +13,20 @@ namespace Andy.Tools.Library.Common;
 public static class ToolHelpers
 {
     /// <summary>
+    /// UTF-8 encoding that does NOT emit a byte-order mark.
+    /// <para>
+    /// The framework's <see cref="Encoding.UTF8"/> singleton is configured with
+    /// <c>encoderShouldEmitUTF8Identifier: true</c>, so passing it to
+    /// <see cref="File.WriteAllTextAsync(string, string?, Encoding, CancellationToken)"/>
+    /// prepends an <c>EF BB BF</c> BOM. For source files that originally had no BOM
+    /// that silently corrupts the file (a spurious leading character that breaks
+    /// diffs, patches, and tooling). Use this instance for all UTF-8 file writes so
+    /// non-BOM files stay non-BOM.
+    /// </para>
+    /// </summary>
+    public static readonly Encoding Utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+
+    /// <summary>
     /// Safely converts a path to an absolute path, ensuring it exists within allowed boundaries.
     /// </summary>
     /// <param name="path">The input path.</param>
@@ -155,7 +169,7 @@ public static class ToolHelpers
     /// <param name="cancellationToken">Cancellation token.</param>
     public static async Task WriteTextFileAsync(string filePath, string content, Encoding? encoding = null, bool createBackup = true, CancellationToken cancellationToken = default)
     {
-        encoding ??= Encoding.UTF8;
+        encoding ??= Utf8NoBom;
 
         // Create backup if file exists and backup is requested
         if (createBackup && File.Exists(filePath))
@@ -189,7 +203,9 @@ public static class ToolHelpers
             Array.Resize(ref buffer, bytesRead);
         }
 
-        // Check for BOM
+        // Check for BOM. Only when the file actually starts with a UTF-8 BOM do we
+        // return the BOM-emitting Encoding.UTF8, so a rewrite preserves it. Files
+        // without a BOM fall through to Utf8NoBom below and stay BOM-free.
         if (bytesRead >= 3 && buffer[0] == 0xEF && buffer[1] == 0xBB && buffer[2] == 0xBF)
         {
             return Encoding.UTF8;
@@ -210,7 +226,7 @@ public static class ToolHelpers
             return Encoding.BigEndianUnicode; // UTF-16 BE
         }
 
-        return Encoding.UTF8; // Default to UTF-8
+        return Utf8NoBom; // Default to UTF-8 without a BOM
     }
 
     /// <summary>

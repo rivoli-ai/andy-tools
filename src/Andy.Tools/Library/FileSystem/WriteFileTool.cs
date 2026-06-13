@@ -106,7 +106,9 @@ public class WriteFileTool : ToolBase
             // Determine encoding
             var encoding = encodingName.ToLowerInvariant() switch
             {
-                "utf-8" => Encoding.UTF8,
+                // No-BOM UTF-8: writing Encoding.UTF8 would prepend an EF BB BF BOM
+                // and corrupt files that had none (breaking diffs/patches).
+                "utf-8" => ToolHelpers.Utf8NoBom,
                 "ascii" => Encoding.ASCII,
                 "unicode" or "utf-16" => Encoding.Unicode,
                 "utf-32" => Encoding.UTF32,
