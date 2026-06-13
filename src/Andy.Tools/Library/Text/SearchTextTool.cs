@@ -350,8 +350,12 @@ public class SearchTextTool : ToolBase
                 allFiles.AddRange(directory.GetFiles("*", searchOption));
             }
 
-            // Filter out excluded files
-            var filesToSearch = allFiles.Where(f => !ShouldExcludeFile(f.Name, f.FullName, excludePatterns)).ToList();
+            // De-duplicate by full path (overlapping file_patterns can match the same file twice, which
+            // would otherwise double-count matches), then filter excludes.
+            var filesToSearch = allFiles
+                .DistinctBy(f => f.FullName)
+                .Where(f => !ShouldExcludeFile(f.Name, f.FullName, excludePatterns))
+                .ToList();
 
             var totalFiles = filesToSearch.Count;
             var processedFiles = 0;

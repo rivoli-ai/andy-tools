@@ -180,15 +180,21 @@ public class ReplaceTextTool : ToolBase
             var regex = CreateSearchRegex(searchPattern, searchType, caseSensitive, wholeWordsOnly);
             var maxFileSizeBytes = (long)(maxFileSizeMb * 1024 * 1024);
 
+            // For non-regex search types the replacement is literal. Regex.Replace interprets '$' as a
+            // substitution token ($1, $&, $$), so escape it to keep literal '$' characters intact.
+            var effectiveReplacement = searchType.Equals("regex", StringComparison.OrdinalIgnoreCase)
+                ? (replacementText ?? string.Empty)
+                : (replacementText ?? string.Empty).Replace("$", "$$");
+
             if (File.Exists(safeTargetPath))
             {
                 // Process a single file
-                await ProcessFileAsync(safeTargetPath, regex, replacementText, replaceResults, replaceStats, createBackup, dryRun, maxFileSizeBytes, encodingName, context);
+                await ProcessFileAsync(safeTargetPath, regex, effectiveReplacement, replaceResults, replaceStats, createBackup, dryRun, maxFileSizeBytes, encodingName, context);
             }
             else
             {
                 // Process directory
-                await ProcessDirectoryAsync(safeTargetPath, regex, replacementText, filePatterns, excludePatterns, recursive, replaceResults, replaceStats, createBackup, dryRun, maxFileSizeBytes, encodingName, context);
+                await ProcessDirectoryAsync(safeTargetPath, regex, effectiveReplacement, filePatterns, excludePatterns, recursive, replaceResults, replaceStats, createBackup, dryRun, maxFileSizeBytes, encodingName, context);
             }
 
             ReportProgress(context, "Replacement operation completed", 100);
@@ -402,8 +408,12 @@ public class ReplaceTextTool : ToolBase
                 allFiles.AddRange(directory.GetFiles("*", searchOption));
             }
 
-            // Filter out excluded files
-            var filesToProcess = allFiles.Where(f => !ShouldExcludeFile(f.Name, f.FullName, excludePatterns)).ToList();
+            // De-duplicate by full path: overlapping file_patterns can match the same file more than once,
+            // which would otherwise apply the replacement twice (corrupting content). Then filter excludes.
+            var filesToProcess = allFiles
+                .DistinctBy(f => f.FullName)
+                .Where(f => !ShouldExcludeFile(f.Name, f.FullName, excludePatterns))
+                .ToList();
 
             var totalFiles = filesToProcess.Count;
             var processedFiles = 0;
