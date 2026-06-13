@@ -294,6 +294,10 @@ public class ToolValidator : IToolValidator
     {
         var errors = new List<ValidationError>();
 
+        // Parameters deserialized from JSON arrive as JsonElement; coerce to the corresponding CLR type
+        // so the type/range/enum checks below see a bool/string/number rather than rejecting everything.
+        value = NormalizeJsonElement(value) ?? value;
+
         // Type validation
         switch (parameter.Type.ToLowerInvariant())
         {
@@ -379,16 +383,51 @@ public class ToolValidator : IToolValidator
                 break;
         }
 
-        // Validate allowed values
+        // Validate allowed values. Compare by normalized invariant string so an int allowed-value matches
+        // a long/double/JsonElement-sourced value of the same magnitude (default object equality would not).
         if (parameter.AllowedValues != null && parameter.AllowedValues.Count > 0)
         {
-            if (!parameter.AllowedValues.Contains(value))
+            if (!parameter.AllowedValues.Any(allowed => ValuesEqual(allowed, value)))
             {
                 errors.Add(new ValidationError("PARAMETER_VALUE_NOT_ALLOWED", $"Parameter '{parameter.Name}' value is not in the list of allowed values", parameter.Name, value));
             }
         }
 
         return errors;
+    }
+
+    private static object? NormalizeJsonElement(object? value)
+    {
+        if (value is not System.Text.Json.JsonElement element)
+        {
+            return value;
+        }
+
+        return element.ValueKind switch
+        {
+            System.Text.Json.JsonValueKind.String => element.GetString(),
+            System.Text.Json.JsonValueKind.True => true,
+            System.Text.Json.JsonValueKind.False => false,
+            System.Text.Json.JsonValueKind.Number => element.TryGetInt64(out var l) ? l : element.GetDouble(),
+            System.Text.Json.JsonValueKind.Null => null,
+            System.Text.Json.JsonValueKind.Array => element.EnumerateArray().Select(e => NormalizeJsonElement(e)).ToList(),
+            _ => value // Object/Undefined: leave as-is (the "object" type accepts it)
+        };
+    }
+
+    private static bool ValuesEqual(object? a, object? b)
+    {
+        a = NormalizeJsonElement(a);
+        b = NormalizeJsonElement(b);
+        if (a == null || b == null)
+        {
+            return a == null && b == null;
+        }
+
+        return string.Equals(
+            Convert.ToString(a, System.Globalization.CultureInfo.InvariantCulture),
+            Convert.ToString(b, System.Globalization.CultureInfo.InvariantCulture),
+            StringComparison.Ordinal);
     }
 
     private static bool IsNumericValue(object value, out double numericValue)
