@@ -368,7 +368,7 @@ var parameters = new Dictionary<string, object?>
 var result = await executor.ExecuteAsync("process_info", parameters);
 ```
 
-### date_time
+### datetime_tool
 
 Performs date and time operations.
 
@@ -398,15 +398,15 @@ var parameters = new Dictionary<string, object?>
     ["add_value"] = 30,
     ["add_unit"] = "days"
 };
-var result = await executor.ExecuteAsync("date_time", parameters);
+var result = await executor.ExecuteAsync("datetime_tool", parameters);
 ```
 
-### encoding
+### encoding_tool
 
 Encodes and decodes text in various formats.
 
 **Parameters:**
-- `text` (string, required): Text to encode/decode
+- `input_text` (string, required): Text to encode/decode
 - `operation` (string, required): Operation
   - "base64_encode"
   - "base64_decode"
@@ -424,37 +424,10 @@ Encodes and decodes text in various formats.
 ```csharp
 var parameters = new Dictionary<string, object?>
 {
-    ["text"] = "Hello World!",
+    ["input_text"] = "Hello World!",
     ["operation"] = "base64_encode"
 };
-var result = await executor.ExecuteAsync("encoding", parameters);
-```
-
-### environment_variables
-
-Manages environment variables.
-
-**Parameters:**
-- `operation` (string, required): Operation
-  - "get": Get specific variable
-  - "list": List all variables
-  - "set": Set variable value
-- `name` (string, optional): Variable name
-- `value` (string, optional): Variable value (for set)
-
-**Returns:**
-- For "get": `value` of the variable
-- For "list": `variables` dictionary
-- For "set": `previous_value` and `new_value`
-
-**Example:**
-```csharp
-var parameters = new Dictionary<string, object?>
-{
-    ["operation"] = "get",
-    ["name"] = "PATH"
-};
-var result = await executor.ExecuteAsync("environment_variables", parameters);
+var result = await executor.ExecuteAsync("encoding_tool", parameters);
 ```
 
 ## Git Tools

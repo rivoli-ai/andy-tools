@@ -136,31 +136,39 @@ The `examples/Andy.Tools.Examples` project demonstrates all features of Andy Too
 
 ## Built-in Tools
 
+The tools registered by default are defined in `BuiltInToolsExtensions`.
+
 ### File System Tools
-- **ReadFileTool** - Read file contents
-- **WriteFileTool** - Write content to files
-- **DeleteFileTool** - Delete files
-- **CopyFileTool** - Copy files with progress tracking
-- **MoveFileTool** - Move/rename files
-- **ListDirectoryTool** - List directory contents with filtering
+- **ReadFileTool** (`read_file`) - Read file contents
+- **WriteFileTool** (`write_file`) - Write content to files
+- **MoveFileTool** (`move_file`) - Move/rename files
+- **ListDirectoryTool** (`list_directory`) - List directory contents with filtering
+
+> `CopyFileTool` and `DeleteFileTool` exist in the library but are **not registered by default**
+> (commented out in `BuiltInToolsExtensions`). Register them explicitly with
+> `services.AddTool<CopyFileTool>()` / `services.AddTool<DeleteFileTool>()` if you need them.
 
 ### Text Processing Tools
-- **FormatTextTool** - Format text (JSON, XML, etc.)
-- **ReplaceTextTool** - Find and replace text
-- **SearchTextTool** - Search text with regex support
+- **FormatTextTool** (`format_text`) - Format text (JSON, XML, etc.)
+- **ReplaceTextTool** (`replace_text`) - Find and replace text
+- **SearchTextTool** (`search_text`) - Search text with regex support
 
 ### Web Tools
-- **HttpRequestTool** - Make HTTP requests
-- **JsonProcessorTool** - Process JSON data with JSONPath
+- **HttpRequestTool** (`http_request`) - Make HTTP requests
+- **JsonProcessorTool** (`json_processor`) - Process JSON data
 
 ### System Tools
-- **SystemInfoTool** - Get system information
-- **ProcessInfoTool** - Get process information
-- **DateTimeTool** - Date/time operations
-- **EncodingTool** - Encode/decode text (Base64, URL, etc.)
+- **SystemInfoTool** (`system_info`) - Get system information
+- **ProcessInfoTool** (`process_info`) - Get process information
+- **ExecuteCommandTool** (`execute_command`) - Run a shell command (requires process-execution permission)
+
+### Utility Tools
+- **DateTimeTool** (`datetime_tool`) - Date/time operations
+- **EncodingTool** (`encoding_tool`) - Encode/decode/hash text (Base64, URL, etc.)
+- **TodoExecutor** (`todo_executor`) - Manage a todo list
 
 ### Git Tools
-- **GitDiffTool** - Get git diff information
+- **GitDiffTool** (`git_diff`) - Get git diff information
 
 ## Architecture
 
