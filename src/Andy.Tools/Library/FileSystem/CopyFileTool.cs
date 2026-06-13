@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using Andy.Tools.Core;
 using Andy.Tools.Library.Common;
 
@@ -396,16 +395,9 @@ public partial class CopyFileTool : ToolBase
     private static bool ShouldExclude(string name, List<string> excludePatterns)
     {
         return excludePatterns.Any(pattern =>
-        {
-            // Simple wildcard matching
-            if (pattern.Contains('*'))
-            {
-                var regexPattern = "^" + pattern.Replace("*", ".*") + "$";
-                return Regex.IsMatch(name, regexPattern, RegexOptions.IgnoreCase);
-            }
-
-            return string.Equals(name, pattern, StringComparison.OrdinalIgnoreCase);
-        });
+            pattern.Contains('*') || pattern.Contains('?')
+                ? ToolHelpers.IsGlobMatch(name, pattern)
+                : string.Equals(name, pattern, StringComparison.OrdinalIgnoreCase));
     }
 
     private static int CountFiles(DirectoryInfo directory, bool recursive, List<string> excludePatterns)

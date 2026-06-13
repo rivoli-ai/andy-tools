@@ -207,8 +207,14 @@ public class SearchTextTool : ToolBase
         }
     }
 
+    // Bounds the time spent on any single match to prevent catastrophic-backtracking (ReDoS) from a
+    // user-supplied pattern. A match exceeding this throws RegexMatchTimeoutException, surfaced as a
+    // clean failure rather than hanging the process.
+    private static readonly TimeSpan RegexMatchTimeout = TimeSpan.FromSeconds(2);
+
     private static Regex CreateSearchRegex(string pattern, string searchType, bool caseSensitive, bool wholeWordsOnly)
     {
+        var isUserRegex = searchType.Equals("regex", StringComparison.OrdinalIgnoreCase);
         var regexPattern = searchType.ToLowerInvariant() switch
         {
             "regex" => pattern,
@@ -223,13 +229,14 @@ public class SearchTextTool : ToolBase
             regexPattern = @"\b" + regexPattern + @"\b";
         }
 
-        var options = RegexOptions.Compiled;
+        // Do not JIT-compile an arbitrary user-supplied pattern; only our own escaped patterns.
+        var options = isUserRegex ? RegexOptions.None : RegexOptions.Compiled;
         if (!caseSensitive)
         {
             options |= RegexOptions.IgnoreCase;
         }
 
-        return new Regex(regexPattern, options);
+        return new Regex(regexPattern, options, RegexMatchTimeout);
     }
 
     private static async Task SearchFileAsync(

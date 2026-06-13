@@ -1,6 +1,6 @@
 using System.Reflection;
-using System.Text.RegularExpressions;
 using Andy.Tools.Core;
+using Andy.Tools.Library.Common;
 using Andy.Tools.Validation;
 using Microsoft.Extensions.Logging;
 
@@ -367,12 +367,7 @@ public class ToolDiscoveryService(IToolValidator validator, ILogger<ToolDiscover
     {
         var assemblyName = assembly.GetName().Name;
         return string.IsNullOrEmpty(assemblyName)
-            ? true
-            : excludePatterns.Any(pattern =>
-        {
-            var regex = new Regex(pattern.Replace("*", ".*"), RegexOptions.IgnoreCase);
-            return regex.IsMatch(assemblyName);
-        });
+            || excludePatterns.Any(pattern => ToolHelpers.IsGlobMatch(assemblyName, pattern));
     }
 
     private static IList<string> GetAvailablePluginDirectories()

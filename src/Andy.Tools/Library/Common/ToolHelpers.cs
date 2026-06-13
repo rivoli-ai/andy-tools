@@ -476,6 +476,29 @@ public static class ToolHelpers
     }
 
     /// <summary>
+    /// Matches a name against a shell-style glob containing <c>*</c> (any run) and <c>?</c> (any single
+    /// char). All other characters are treated literally — unlike a naive <c>pattern.Replace("*", ".*")</c>,
+    /// which leaves regex metacharacters (e.g. <c>.</c>, <c>(</c>, <c>[</c>) active and can either match
+    /// too much or throw on an invalid pattern. The match is anchored and bounded by a short timeout.
+    /// </summary>
+    /// <param name="name">The candidate name.</param>
+    /// <param name="pattern">The glob pattern.</param>
+    /// <param name="ignoreCase">Whether matching is case-insensitive (default true).</param>
+    public static bool IsGlobMatch(string name, string pattern, bool ignoreCase = true)
+    {
+        var regexPattern = "^" + Regex.Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".") + "$";
+        var options = ignoreCase ? RegexOptions.IgnoreCase : RegexOptions.None;
+        try
+        {
+            return Regex.IsMatch(name, regexPattern, options, TimeSpan.FromSeconds(1));
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Determines whether an IP address targets the loopback, link-local, unique-local, carrier-grade-NAT,
     /// private, multicast, or unspecified ranges — i.e. an internal/non-public address that should be
     /// blocked by default to prevent Server-Side Request Forgery (SSRF).
