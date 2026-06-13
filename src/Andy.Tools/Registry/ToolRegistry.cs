@@ -50,12 +50,6 @@ public class ToolRegistry(IToolValidator validator, ILogger<ToolRegistry> logger
             throw new ArgumentException($"Tool metadata validation failed: {errors}", nameof(metadata));
         }
 
-        // Check if tool already exists
-        if (_tools.ContainsKey(metadata.Id))
-        {
-            throw new InvalidOperationException($"Tool with ID '{metadata.Id}' is already registered");
-        }
-
         var registration = new ToolRegistration
         {
             Metadata = metadata,
@@ -66,9 +60,18 @@ public class ToolRegistry(IToolValidator validator, ILogger<ToolRegistry> logger
             RegisteredAt = DateTimeOffset.UtcNow
         };
 
+        // Add atomically and act on the result: the previous code checked ContainsKey outside the lock
+        // and ignored TryAdd's return, so a concurrent duplicate could silently fail to store yet still
+        // log success and raise ToolRegistered.
+        bool added;
         lock (_lockObject)
         {
-            _tools.TryAdd(metadata.Id, registration);
+            added = _tools.TryAdd(metadata.Id, registration);
+        }
+
+        if (!added)
+        {
+            throw new InvalidOperationException($"Tool with ID '{metadata.Id}' is already registered");
         }
 
         _logger.LogInformation("Registered tool '{ToolName}' (ID: {ToolId}) from factory", metadata.Name, metadata.Id);
@@ -109,7 +112,9 @@ public class ToolRegistry(IToolValidator validator, ILogger<ToolRegistry> logger
             {
                 try
                 {
-                    _ = tempInstance.DisposeAsync();
+                    // Await disposal: the metadata-probe instance may do real async cleanup. Fire-and-forget
+                    // (_ = DisposeAsync()) left it unobserved and possibly incomplete.
+                    tempInstance.DisposeAsync().GetAwaiter().GetResult();
                 }
                 catch (Exception ex)
                 {
@@ -126,12 +131,6 @@ public class ToolRegistry(IToolValidator validator, ILogger<ToolRegistry> logger
             throw new ArgumentException($"Tool metadata validation failed: {errors}");
         }
 
-        // Check if tool already exists
-        if (_tools.ContainsKey(metadata.Id))
-        {
-            throw new InvalidOperationException($"Tool with ID '{metadata.Id}' is already registered");
-        }
-
         var registration = new ToolRegistration
         {
             Metadata = metadata,
@@ -143,9 +142,15 @@ public class ToolRegistry(IToolValidator validator, ILogger<ToolRegistry> logger
             RegisteredAt = DateTimeOffset.UtcNow
         };
 
+        bool added;
         lock (_lockObject)
         {
-            _tools.TryAdd(metadata.Id, registration);
+            added = _tools.TryAdd(metadata.Id, registration);
+        }
+
+        if (!added)
+        {
+            throw new InvalidOperationException($"Tool with ID '{metadata.Id}' is already registered");
         }
 
         _logger.LogInformation("Registered tool '{ToolName}' (ID: {ToolId}) from type {ToolType}",

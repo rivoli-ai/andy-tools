@@ -19,6 +19,7 @@ public class PermissionProfileService : IPermissionProfileService
     private readonly string _profileDirectory;
     private readonly JsonSerializerOptions _jsonOptions;
     private ToolPermissions _currentPermissions;
+    private bool _defaultProfileLoaded;
     private readonly SemaphoreSlim _semaphore = new(1, 1);
 
     /// <summary>
@@ -40,8 +41,9 @@ public class PermissionProfileService : IPermissionProfileService
         // Ensure the profile directory exists
         Directory.CreateDirectory(_profileDirectory);
 
-        // Load default profile if it exists
-        _ = Task.Run(async () => await LoadDefaultProfileAsync());
+        // The persisted "default" profile is loaded lazily on first access (see GetCurrentPermissionsAsync)
+        // rather than via a fire-and-forget Task in the constructor, which raced with the first read and
+        // could expose built-in defaults or a half-applied profile.
     }
 
     /// <inheritdoc />
@@ -50,11 +52,39 @@ public class PermissionProfileService : IPermissionProfileService
         await _semaphore.WaitAsync(cancellationToken);
         try
         {
+            await EnsureDefaultProfileLoadedAsync(cancellationToken);
             return _currentPermissions.Clone();
         }
         finally
         {
             _semaphore.Release();
+        }
+    }
+
+    // Loads the persisted "default" profile once, on first access, while the caller holds the semaphore.
+    // Sets _currentPermissions directly (does NOT call SetCurrentPermissionsAsync, which would re-enter
+    // the semaphore and deadlock). Marked loaded even on failure so it is attempted at most once.
+    private async Task EnsureDefaultProfileLoadedAsync(CancellationToken cancellationToken)
+    {
+        if (_defaultProfileLoaded)
+        {
+            return;
+        }
+
+        _defaultProfileLoaded = true;
+
+        try
+        {
+            if (await ProfileExistsAsync("default", cancellationToken))
+            {
+                var defaultPermissions = await LoadProfileAsync("default", cancellationToken);
+                defaultPermissions.ModifiedAt = DateTimeOffset.UtcNow;
+                _currentPermissions = defaultPermissions;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to load default profile, using built-in defaults");
         }
     }
 
@@ -68,6 +98,8 @@ public class PermissionProfileService : IPermissionProfileService
         {
             permissions.ModifiedAt = DateTimeOffset.UtcNow;
             _currentPermissions = permissions.Clone();
+            // An explicit set supersedes the lazy default-profile load so a later read can't clobber it.
+            _defaultProfileLoaded = true;
 
             _logger.LogInformation("Updated current permissions to profile: {ProfileName}", permissions.ProfileName);
         }
@@ -233,22 +265,6 @@ public class PermissionProfileService : IPermissionProfileService
 
         var profilePath = GetProfilePath(profileName);
         return Task.FromResult(File.Exists(profilePath));
-    }
-
-    private async Task LoadDefaultProfileAsync()
-    {
-        try
-        {
-            if (await ProfileExistsAsync("default"))
-            {
-                var defaultPermissions = await LoadProfileAsync("default");
-                await SetCurrentPermissionsAsync(defaultPermissions);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to load default profile on startup, using built-in defaults");
-        }
     }
 
     private static string GetProfileDirectory()
