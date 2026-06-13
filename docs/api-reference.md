@@ -1,6 +1,10 @@
 # API Reference
 
-Complete API documentation for Andy Tools framework.
+> ⚠️ This reference was partly hand-written and had drifted from the code. The inline XML-doc comments
+> in the source under `src/Andy.Tools/` are the **authoritative** API surface. Verified corrections so
+> far: `ToolCategory`, `ToolPermissionFlags`, and `ToolResourceLimits` (below) now match source; the
+> public types live in `Andy.Tools.Core` (there is no `Andy.Tools.Core.Security` namespace). Remaining
+> blocks are being regenerated from source — see issue #32.
 
 ## Core Interfaces
 
@@ -384,47 +388,30 @@ namespace Andy.Tools.Core.Security
 Defines resource constraints for tool execution.
 
 ```csharp
-namespace Andy.Tools.Core.Security
+namespace Andy.Tools.Core
 {
     public class ToolResourceLimits
     {
-        /// <summary>
-        /// Maximum execution time.
-        /// </summary>
-        public TimeSpan? MaxExecutionTime { get; set; }
-        
-        /// <summary>
-        /// Maximum memory usage in MB.
-        /// </summary>
-        public long? MaxMemoryMB { get; set; }
-        
-        /// <summary>
-        /// Maximum file size in MB for operations.
-        /// </summary>
-        public long? MaxFileSizeMB { get; set; }
-        
-        /// <summary>
-        /// Maximum concurrent operations.
-        /// </summary>
-        public int? MaxConcurrentOperations { get; set; }
-        
-        /// <summary>
-        /// Maximum output size in bytes.
-        /// </summary>
-        public long? MaxOutputSizeBytes { get; set; }
-        
-        /// <summary>
-        /// Network request timeout.
-        /// </summary>
-        public TimeSpan? NetworkTimeout { get; set; }
-        
-        /// <summary>
-        /// Maximum number of files that can be processed.
-        /// </summary>
-        public int? MaxFileCount { get; set; }
+        /// <summary>Maximum execution time in milliseconds.</summary>
+        public int MaxExecutionTimeMs { get; set; }
+
+        /// <summary>Maximum memory usage in bytes.</summary>
+        public long MaxMemoryBytes { get; set; }
+
+        /// <summary>Maximum file size in bytes for operations.</summary>
+        public long MaxFileSizeBytes { get; set; }
+
+        /// <summary>Maximum number of files that can be processed.</summary>
+        public int MaxFileCount { get; set; }
+
+        /// <summary>Maximum output size in bytes.</summary>
+        public long MaxOutputSizeBytes { get; set; }
     }
 }
 ```
+
+> There is no `MaxExecutionTime` (TimeSpan), `MaxMemoryMB`, `MaxFileSizeMB`, `MaxConcurrentOperations`,
+> or `NetworkTimeout`. Values are non-nullable; sizes are in **bytes** and time in **milliseconds**.
 
 ## Framework Interfaces
 
@@ -876,15 +863,20 @@ namespace Andy.Tools.Core
 {
     public enum ToolCategory
     {
+        General,
         FileSystem,
-        Text,
         Web,
-        System,
-        Data,
+        Shell,
+        TextProcessing,
         Development,
+        System,
+        Database,
+        Cloud,
+        AI,
         Security,
         Utility,
-        Custom
+        Productivity,
+        Git
     }
 }
 ```
@@ -892,58 +884,26 @@ namespace Andy.Tools.Core
 ### ToolPermissionFlags
 
 ```csharp
-namespace Andy.Tools.Core.Security
+namespace Andy.Tools.Core
 {
     [Flags]
     public enum ToolPermissionFlags
     {
         None = 0,
-        FileSystemRead = 1,
-        FileSystemWrite = 2,
-        FileSystemDelete = 4,
-        Network = 8,
-        ProcessExecution = 16,
-        SystemInformation = 32,
-        EnvironmentVariables = 64,
-        AllFileSystem = FileSystemRead | FileSystemWrite | FileSystemDelete,
-        All = ~None
+        FileSystemRead = 1 << 0,    // 1
+        FileSystemWrite = 1 << 1,   // 2
+        Network = 1 << 2,           // 4
+        ProcessExecution = 1 << 3,  // 8
+        SystemInformation = 1 << 4, // 16
+        Environment = 1 << 5,       // 32
+        Elevated = 1 << 6           // 64
     }
 }
 ```
 
-### FileSystemOperations
-
-```csharp
-namespace Andy.Tools.Core.Security
-{
-    [Flags]
-    public enum FileSystemOperations
-    {
-        None = 0,
-        Read = 1,
-        Write = 2,
-        Delete = 4,
-        Create = 8,
-        List = 16,
-        All = ~None
-    }
-}
-```
-
-### EnvironmentVariableAccess
-
-```csharp
-namespace Andy.Tools.Core.Security
-{
-    public enum EnvironmentVariableAccess
-    {
-        None,
-        Read,
-        Write,
-        ReadWrite
-    }
-}
-```
+> Note: there is no `FileSystemDelete`, `AllFileSystem`, `All`, `FileSystemOperations`, or
+> `EnvironmentVariableAccess`; those were never part of the library. Path-level allow/block lists live on
+> `ToolPermissions` (`AllowedPaths`/`BlockedPaths`), not in a flags enum.
 
 ## Summary
 
