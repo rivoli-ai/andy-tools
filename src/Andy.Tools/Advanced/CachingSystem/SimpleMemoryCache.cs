@@ -81,8 +81,10 @@ public class SimpleMemoryCache : IDisposable
             entry.AbsoluteExpiration = DateTimeOffset.UtcNow.Add(options.SlidingExpiration.Value);
         }
 
-        // Check if we need to make room
-        if (_maxSizeBytes > 0 && options.SizeBytes > 0)
+        // Maintain the size accounting whenever a max size is configured. This runs even when the new
+        // entry's SizeBytes is 0 so that replacing an existing (sized) entry still subtracts its old size
+        // — otherwise _currentSizeBytes drifts upward permanently.
+        if (_maxSizeBytes > 0)
         {
             lock (_sizeLock)
             {
@@ -92,10 +94,14 @@ public class SimpleMemoryCache : IDisposable
                     _currentSizeBytes -= existingEntry.SizeBytes;
                 }
 
-                // Evict entries if necessary
+                // Evict entries if necessary. Stop if eviction makes no progress (e.g. all remaining
+                // entries are NeverEvict) — otherwise this spins forever while holding _sizeLock.
                 while (_currentSizeBytes + options.SizeBytes > _maxSizeBytes && _cache.Count > 0)
                 {
-                    EvictLeastRecentlyUsed();
+                    if (!EvictLeastRecentlyUsed())
+                    {
+                        break;
+                    }
                 }
 
                 _currentSizeBytes += options.SizeBytes;
@@ -198,29 +204,39 @@ public class SimpleMemoryCache : IDisposable
         }
     }
 
-    private void EvictLeastRecentlyUsed()
+    /// <summary>
+    /// Evicts the least-recently-used evictable entry. Returns <c>true</c> if an entry was removed, or
+    /// <c>false</c> if there was nothing to evict (so callers can stop looping instead of spinning).
+    /// </summary>
+    private bool EvictLeastRecentlyUsed()
     {
-        // Find entries eligible for eviction (not NeverEvict priority)
-        var evictableEntries = _cache
+        // Find the single best eviction candidate (not NeverEvict priority).
+        var entryToEvict = _cache
             .Where(kvp => kvp.Value.Priority != CachePriority.NeverEvict)
             .OrderBy(kvp => kvp.Value.Priority)
             .ThenBy(kvp => kvp.Value.LastAccessedAt)
-            .ToList();
+            .Select(kvp => (KeyValuePair<string, CacheEntry>?)kvp)
+            .FirstOrDefault();
 
-        if (evictableEntries.Count > 0)
+        if (entryToEvict is null)
         {
-            var entryToEvict = evictableEntries.First();
-            if (_cache.TryRemove(entryToEvict.Key, out var entry))
-            {
-                _currentSizeBytes -= entry.SizeBytes;
-
-                // Trigger eviction callbacks
-                foreach (var callback in entry.PostEvictionCallbacks)
-                {
-                    callback.EvictionCallback?.Invoke(entryToEvict.Key, entry.Value, EvictionReason.Capacity, callback.State);
-                }
-            }
+            return false;
         }
+
+        if (_cache.TryRemove(entryToEvict.Value.Key, out var entry))
+        {
+            _currentSizeBytes -= entry.SizeBytes;
+
+            // Trigger eviction callbacks
+            foreach (var callback in entry.PostEvictionCallbacks)
+            {
+                callback.EvictionCallback?.Invoke(entryToEvict.Value.Key, entry.Value, EvictionReason.Capacity, callback.State);
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     public void Dispose()
