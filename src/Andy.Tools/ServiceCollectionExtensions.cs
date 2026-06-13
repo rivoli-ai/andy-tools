@@ -10,6 +10,7 @@ using Andy.Tools.Validation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 
 namespace Andy.Tools;
 
@@ -52,12 +53,13 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IToolExecutor, ToolExecutor>();
         services.TryAddSingleton<IPermissionProfileService, PermissionProfileService>();
 
-        // Configure output limiter options
-        services.Configure<ToolOutputLimiterOptions>(configuration =>
-        {
-            var config = services.BuildServiceProvider().GetService<IConfiguration>();
-            config?.GetSection(ToolOutputLimiterOptions.SectionName).Bind(configuration);
-        });
+        // Configure output limiter options from IConfiguration if one is registered. Use an
+        // IConfigureOptions that resolves IConfiguration from the real container at options-build time,
+        // instead of calling services.BuildServiceProvider() here (which builds a throwaway container,
+        // duplicates/leaks singletons, and reads from the wrong provider — ASP0000).
+        services.AddSingleton<IConfigureOptions<ToolOutputLimiterOptions>>(sp =>
+            new ConfigureOptions<ToolOutputLimiterOptions>(opt =>
+                sp.GetService<IConfiguration>()?.GetSection(ToolOutputLimiterOptions.SectionName).Bind(opt)));
 
         // Integration services removed - they depend on Andy.GeminiClient
 
