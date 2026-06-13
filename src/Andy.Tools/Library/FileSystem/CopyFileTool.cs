@@ -323,6 +323,14 @@ public partial class CopyFileTool : ToolBase
                 continue;
             }
 
+            // Honor follow_symlinks: when disabled (the default), do not traverse symbolic-link entries,
+            // which could point outside the source tree.
+            if (!followSymlinks && file.Attributes.HasFlag(FileAttributes.ReparsePoint))
+            {
+                stats.FilesSkipped++;
+                continue;
+            }
+
             try
             {
                 var destFile = Path.Combine(destinationPath, file.Name);

@@ -102,10 +102,12 @@ public class SecurityManager : ISecurityManager
             return false;
         }
 
-        // Normalize the path
+        // Normalize the path to its real (symlink-resolved) location. Path.GetFullPath alone does not
+        // resolve symbolic links, so a symlink inside an allowed directory pointing at a blocked/sensitive
+        // target would otherwise evade these checks.
         try
         {
-            filePath = Path.GetFullPath(filePath);
+            filePath = ToolHelpers.ResolveRealPath(filePath);
         }
         catch
         {
@@ -119,7 +121,7 @@ public class SecurityManager : ISecurityManager
             {
                 try
                 {
-                    var normalizedBlockedPath = Path.GetFullPath(blockedPath.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)));
+                    var normalizedBlockedPath = ToolHelpers.ResolveRealPath(blockedPath.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)));
                     return ToolHelpers.IsPathWithinBoundary(filePath, normalizedBlockedPath);
                 }
                 catch
@@ -141,7 +143,7 @@ public class SecurityManager : ISecurityManager
             {
                 try
                 {
-                    var normalizedAllowedPath = Path.GetFullPath(allowedPath.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)));
+                    var normalizedAllowedPath = ToolHelpers.ResolveRealPath(allowedPath.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)));
                     return ToolHelpers.IsPathWithinBoundary(filePath, normalizedAllowedPath);
                 }
                 catch
@@ -167,7 +169,7 @@ public class SecurityManager : ISecurityManager
 
         foreach (var sensitiveDir in sensitiveDirectories.Where(d => !string.IsNullOrEmpty(d)))
         {
-            if (ToolHelpers.IsPathWithinBoundary(filePath, sensitiveDir))
+            if (ToolHelpers.IsPathWithinBoundary(filePath, ToolHelpers.ResolveRealPath(sensitiveDir)))
             {
                 // Only allow read access to system directories unless explicitly allowed
                 if (accessType != FileAccessType.Read && !permissions.CustomPermissions.ContainsKey("allow_system_write"))

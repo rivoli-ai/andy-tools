@@ -68,6 +68,83 @@ public static class ToolHelpers
     }
 
     /// <summary>
+    /// Resolves a path to its real, symlink-free location so that confinement checks cannot be
+    /// bypassed by a symbolic link inside an allowed directory that points outside it.
+    /// <para>
+    /// <see cref="Path.GetFullPath(string)"/> collapses <c>..</c> segments but does <b>not</b> resolve
+    /// symbolic links. This walks the path component-by-component from the root, following any link
+    /// target (including intermediate symlinked directories). Components that do not exist yet (e.g. a
+    /// file about to be created) are resolved relative to their nearest existing, canonicalized ancestor.
+    /// </para>
+    /// </summary>
+    /// <param name="path">The path to resolve.</param>
+    /// <returns>The canonical absolute path. On any resolution error the best-effort full path is returned.</returns>
+    public static string ResolveRealPath(string path)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        return ResolveRealPathCore(Path.GetFullPath(path), depth: 0);
+    }
+
+    private static string ResolveRealPathCore(string full, int depth)
+    {
+        // Guard against symlink loops (ResolveLinkTarget also throws on cycles, but bound recursion too).
+        if (depth > 40)
+        {
+            return full;
+        }
+
+        try
+        {
+            var root = Path.GetPathRoot(full);
+            if (string.IsNullOrEmpty(root))
+            {
+                return full;
+            }
+
+            var parts = full[root.Length..].Split(
+                [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar],
+                StringSplitOptions.RemoveEmptyEntries);
+
+            var current = root;
+            for (var i = 0; i < parts.Length; i++)
+            {
+                current = Path.Combine(current, parts[i]);
+
+                // Only existing entries can be reparse points; non-existent tail segments are appended literally.
+                FileSystemInfo? info =
+                    Directory.Exists(current) ? new DirectoryInfo(current)
+                    : File.Exists(current) ? new FileInfo(current)
+                    : null;
+
+                var target = info?.ResolveLinkTarget(returnFinalTarget: true);
+                if (target == null)
+                {
+                    continue;
+                }
+
+                // The target may itself sit under symlinked ancestors, so canonicalize it fully, then
+                // resolve any remaining components relative to the canonical target.
+                var resolvedTarget = ResolveRealPathCore(Path.GetFullPath(target.FullName), depth + 1);
+                for (var j = i + 1; j < parts.Length; j++)
+                {
+                    resolvedTarget = Path.Combine(resolvedTarget, parts[j]);
+                }
+
+                return i + 1 < parts.Length
+                    ? ResolveRealPathCore(resolvedTarget, depth + 1)
+                    : resolvedTarget;
+            }
+
+            return current;
+        }
+        catch
+        {
+            // Symlink loops or permission errors: fall back to the non-resolved full path.
+            return full;
+        }
+    }
+
+    /// <summary>
     /// Safely converts a path to an absolute path, ensuring it exists within allowed boundaries.
     /// </summary>
     /// <param name="path">The input path.</param>
@@ -95,10 +172,13 @@ public static class ToolHelpers
             // Get the full path and normalize it
             var fullPath = Path.GetFullPath(path);
 
-            // Security check: ensure the path doesn't escape the working directory if specified
+            // Security check: ensure the path doesn't escape the working directory if specified.
+            // Compare the *real* (symlink-resolved) paths so a symlink inside the working directory
+            // that points outside it cannot be used to escape. The unresolved fullPath is still what
+            // callers receive, but it can only be returned once its real target is confirmed inside.
             if (workingDirectory != null)
             {
-                if (!IsPathWithinBoundary(fullPath, workingDirectory))
+                if (!IsPathWithinBoundary(ResolveRealPath(fullPath), ResolveRealPath(workingDirectory)))
                 {
                     throw new ArgumentException($"Path '{path}' is outside the allowed working directory");
                 }
@@ -128,11 +208,11 @@ public static class ToolHelpers
 
         try
         {
-            var normalizedPath = Path.GetFullPath(path);
+            var normalizedPath = ResolveRealPath(path);
 
             foreach (var allowedPath in permissions.AllowedPaths)
             {
-                if (IsPathWithinBoundary(normalizedPath, allowedPath))
+                if (IsPathWithinBoundary(normalizedPath, ResolveRealPath(allowedPath)))
                 {
                     return true;
                 }
