@@ -55,8 +55,9 @@ public class ToolOutputLimiter : IToolOutputLimiter
         var size = EstimateSize(output);
         var maxSize = GetMaxSize(outputType);
 
-        // Check if output is a list
-        if (output is IList<object> list)
+        // Check if output is a list. Use the non-generic IList so strongly-typed lists (List<string>,
+        // FileInfo[], ...) are recognized — they are not IList<object> (no generic variance on IList<T>).
+        if (output is System.Collections.IList list)
         {
             return list.Count > GetMaxItems(outputType) || size > maxSize;
         }
@@ -76,23 +77,30 @@ public class ToolOutputLimiter : IToolOutputLimiter
         {
             null => 0,
             string str => Encoding.UTF8.GetByteCount(str),
-            IList<object> list => EstimateListSize(list),
+            System.Collections.IList list => EstimateListSize(list),
             _ => EstimateJsonSize(output)
         };
     }
 
-    private long EstimateListSize(IList<object> list)
+    private long EstimateListSize(System.Collections.IList list)
     {
         long totalSize = 0;
-        foreach (var item in list.Take(1000)) // Sample first 1000 items
+        var sampled = 0;
+        foreach (var item in list) // Sample first 1000 items
         {
+            if (sampled >= 1000)
+            {
+                break;
+            }
+
             totalSize += EstimateSize(item);
+            sampled++;
         }
 
-        if (list.Count > 1000)
+        if (list.Count > 1000 && sampled > 0)
         {
             // Estimate the rest based on average
-            var avgSize = totalSize / 1000;
+            var avgSize = totalSize / sampled;
             totalSize += avgSize * (list.Count - 1000);
         }
 
@@ -448,7 +456,8 @@ public class ToolOutputLimiter : IToolOutputLimiter
         // For structured data, try to preserve structure
         try
         {
-            var truncatedJson = json.Substring(0, context.MaxCharacters ?? _options.MaxOutputCharacters);
+            var cut = Math.Min(json.Length, context.MaxCharacters ?? _options.MaxOutputCharacters);
+            var truncatedJson = json.Substring(0, cut);
             var lastCompleteIndex = FindLastCompleteJsonElement(truncatedJson);
             truncatedJson = truncatedJson.Substring(0, lastCompleteIndex) + "\n... (truncated)";
 
@@ -475,9 +484,22 @@ public class ToolOutputLimiter : IToolOutputLimiter
 
         for (int i = 0; i < json.Length; i++)
         {
-            if (json[i] == '"' && (i == 0 || json[i - 1] != '\\'))
+            if (json[i] == '"')
             {
-                inString = !inString;
+                // A quote is escaped only when preceded by an ODD number of backslashes. The previous
+                // single-char check mis-read "\\\"" (an escaped backslash followed by a real quote).
+                var backslashes = 0;
+                var j = i - 1;
+                while (j >= 0 && json[j] == '\\')
+                {
+                    backslashes++;
+                    j--;
+                }
+
+                if (backslashes % 2 == 0)
+                {
+                    inString = !inString;
+                }
             }
 
             if (!inString)
@@ -564,7 +586,10 @@ public class ToolOutputLimiter : IToolOutputLimiter
             };
         }
 
-        var truncated = text.Substring(0, maxChars - 20) + "\n... (truncated)";
+        // Reserve room for the suffix, but clamp so a small maxChars (< 20) can't produce a negative
+        // length (ArgumentOutOfRangeException). Also never exceed the text length.
+        var keep = Math.Min(text.Length, Math.Max(0, maxChars - 20));
+        var truncated = text.Substring(0, keep) + "\n... (truncated)";
 
         return new LimitedOutput
         {
