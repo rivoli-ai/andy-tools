@@ -176,11 +176,13 @@ public class ToolExecutor : IToolExecutor, IDisposable
                     result.IsSuccessful = false;
                     result.ErrorMessage = reason;
                     result.SecurityViolations = [reason];
-                    result.EndTime = DateTimeOffset.UtcNow;
 
                     _securityManager.RecordViolation(request.ToolId, correlationId, reason, SecurityViolationSeverity.High);
                     SecurityViolation?.Invoke(this, new SecurityViolationEventArgs(request.ToolId, correlationId, reason, SecurityViolationSeverity.High));
-                    ExecutionCompleted?.Invoke(this, new ToolExecutionCompletedEventArgs(result));
+
+                    // Return through the finally block, which sets EndTime and raises ExecutionCompleted
+                    // exactly once — matching the other early-return paths. (Previously this branch raised
+                    // ExecutionCompleted itself and then returned, firing the event twice.)
                     return result;
                 }
             }

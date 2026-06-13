@@ -81,6 +81,21 @@ public class ToolExecutorPermissionGateTests
     }
 
     [Fact]
+    public async Task Gate_deny_raises_ExecutionCompleted_exactly_once()
+    {
+        // Regression for #16: the gate-denied branch raised ExecutionCompleted itself and then returned
+        // through the finally block, which raised it again — firing the event twice.
+        var gate = new FakeGate(ToolPermissionVerdict.Deny("blocked by policy"));
+        var (exec, _) = Build(gate);
+        var completed = 0;
+        exec.ExecutionCompleted += (_, _) => Interlocked.Increment(ref completed);
+
+        await exec.ExecuteAsync(Req());
+
+        Assert.Equal(1, completed);
+    }
+
+    [Fact]
     public async Task Gate_allow_runs_the_tool()
     {
         var gate = new FakeGate(ToolPermissionVerdict.Allow);
