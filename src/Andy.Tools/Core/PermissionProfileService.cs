@@ -257,9 +257,32 @@ public class PermissionProfileService : IPermissionProfileService
         return Path.Combine(userConfigDir, ".andy", "permissions");
     }
 
+    // A profile name maps directly onto a file name, so it must be a single, safe path token.
+    // Letters, digits, '-', '_' and '.' only; ".." is rejected to block traversal.
+    private static readonly System.Text.RegularExpressions.Regex ProfileNameRegex =
+        new("^[A-Za-z0-9_.-]+$", System.Text.RegularExpressions.RegexOptions.Compiled);
+
     private string GetProfilePath(string profileName)
     {
-        return Path.Combine(_profileDirectory, $"{profileName}.json");
+        if (string.IsNullOrWhiteSpace(profileName)
+            || profileName.Contains("..", StringComparison.Ordinal)
+            || !ProfileNameRegex.IsMatch(profileName))
+        {
+            throw new ArgumentException(
+                $"Invalid profile name '{profileName}'. Allowed characters: letters, digits, '-', '_', '.' (no path separators or '..').",
+                nameof(profileName));
+        }
+
+        var baseDir = Path.GetFullPath(_profileDirectory);
+        var profilePath = Path.GetFullPath(Path.Combine(baseDir, $"{profileName}.json"));
+
+        // Defense in depth: the resolved file must live directly inside the profile directory.
+        if (!string.Equals(Path.GetDirectoryName(profilePath), baseDir.TrimEnd(Path.DirectorySeparatorChar), StringComparison.Ordinal))
+        {
+            throw new ArgumentException($"Invalid profile name '{profileName}'.", nameof(profileName));
+        }
+
+        return profilePath;
     }
 
     private static ToolPermissions CreateDefaultPermissions()
