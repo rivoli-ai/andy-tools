@@ -163,7 +163,7 @@ public partial class MoveFileTool : ToolBase
             string? backupPath = null;
             if (backupExisting && destinationExists)
             {
-                backupPath = $"{safeDestinationPath}.backup.{DateTime.UtcNow:yyyyMMddHHmmss}";
+                backupPath = ToolHelpers.GetBackupPath(safeDestinationPath);
                 ReportProgress(context, "Creating backup...", 30);
 
                 if (isDirectory)

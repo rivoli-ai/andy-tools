@@ -152,6 +152,12 @@ public partial class CopyFileTool : ToolBase
                 return ToolResults.Failure($"Path '{safeDestinationPath}' is not within allowed paths", "PATH_NOT_ALLOWED");
             }
 
+            // Reject copying a path onto itself (File.Copy(src, src, true) throws a confusing IOException).
+            if (string.Equals(safeSourcePath, safeDestinationPath, ToolHelpers.PathComparison))
+            {
+                return ToolResults.Failure("Source and destination paths are the same", "SAME_PATH");
+            }
+
             if (!File.Exists(safeSourcePath) && !Directory.Exists(safeSourcePath))
             {
                 return ToolResults.Failure(
@@ -169,6 +175,9 @@ public partial class CopyFileTool : ToolBase
             {
                 // For directories, if destination doesn't exist or is not a directory,
                 // treat destination as the target directory name
+                // Compute the total file count once up front; it is only used for progress reporting and
+                // walking the whole subtree per file is an O(n^2) I/O blowup on large trees.
+                var totalFiles = CountFiles(new DirectoryInfo(safeSourcePath), recursive, excludePatterns);
                 await CopyDirectoryAsync(
                     safeSourcePath,
                     safeDestinationPath,
@@ -179,7 +188,8 @@ public partial class CopyFileTool : ToolBase
                     excludePatterns,
                     createDestinationDirectory,
                     copyStats,
-                    context
+                    context,
+                    totalFiles
                 );
             }
             else
@@ -310,7 +320,8 @@ public partial class CopyFileTool : ToolBase
         List<string> excludePatterns,
         bool createDestinationDirectory,
         CopyStatistics stats,
-        ToolExecutionContext context)
+        ToolExecutionContext context,
+        int totalFiles)
     {
         var sourceDir = new DirectoryInfo(sourcePath);
         var destinationDir = new DirectoryInfo(destinationPath);
@@ -346,8 +357,8 @@ public partial class CopyFileTool : ToolBase
                 var destFile = Path.Combine(destinationPath, file.Name);
                 await CopyFileAsync(file.FullName, destFile, overwrite, preserveTimestamps, false, stats, context);
 
-                // Update progress
-                var progressPercent = Math.Min(95, 10 + (stats.FilesCopied * 80 / Math.Max(1, CountFiles(sourceDir, recursive, excludePatterns))));
+                // Update progress (totalFiles is computed once by the caller).
+                var progressPercent = Math.Min(95, 10 + (stats.FilesCopied * 80 / Math.Max(1, totalFiles)));
                 ReportProgress(context, $"Copied: {file.Name}", progressPercent);
             }
             catch (Exception ex)
@@ -381,7 +392,8 @@ public partial class CopyFileTool : ToolBase
                         excludePatterns,
                         createDestinationDirectory,
                         stats,
-                        context
+                        context,
+                        totalFiles
                     );
                 }
                 catch (Exception ex)

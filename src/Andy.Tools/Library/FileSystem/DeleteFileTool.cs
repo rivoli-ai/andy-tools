@@ -394,9 +394,11 @@ public class DeleteFileTool : ToolBase
                     file.IsReadOnly = false;
                 }
 
+                // Capture the size before deleting; FileInfo.Length throws once the file is gone.
+                var fileSize = file.Length;
                 file.Delete();
                 stats.FilesDeleted++;
-                stats.BytesDeleted += file.Length;
+                stats.BytesDeleted += fileSize;
             }
             catch (Exception ex)
             {

@@ -352,7 +352,7 @@ public class ReplaceTextTool : ToolBase
                     // Create backup if requested
                     if (createBackup)
                     {
-                        var backupPath = $"{filePath}.backup.{DateTime.UtcNow:yyyyMMddHHmmss}";
+                        var backupPath = ToolHelpers.GetBackupPath(filePath);
                         File.Copy(filePath, backupPath, true);
                         result.BackupPath = backupPath;
                         result.BackupCreated = true;

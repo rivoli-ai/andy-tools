@@ -129,7 +129,7 @@ public class WriteFileTool : ToolBase
             string? backupPath = null;
             if (createBackup && fileExists && !append)
             {
-                backupPath = $"{safePath}.backup.{DateTime.UtcNow:yyyyMMddHHmmss}";
+                backupPath = ToolHelpers.GetBackupPath(safePath);
                 File.Copy(safePath, backupPath, true);
                 ReportProgress(context, "Created backup file", 50);
             }

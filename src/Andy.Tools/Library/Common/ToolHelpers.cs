@@ -279,6 +279,16 @@ public static class ToolHelpers
     }
 
     /// <summary>
+    /// Builds a unique backup path for a file. Uses a high-resolution timestamp plus a short random
+    /// token so multiple backups of the same file within the same second do not overwrite each other.
+    /// </summary>
+    /// <param name="originalPath">The path of the file being backed up.</param>
+    public static string GetBackupPath(string originalPath)
+    {
+        return $"{originalPath}.backup.{DateTime.UtcNow:yyyyMMddHHmmssfffffff}.{Guid.NewGuid().ToString("N")[..8]}";
+    }
+
+    /// <summary>
     /// Safely writes text to a file with backup creation.
     /// </summary>
     /// <param name="filePath">The file path to write.</param>
@@ -293,8 +303,7 @@ public static class ToolHelpers
         // Create backup if file exists and backup is requested
         if (createBackup && File.Exists(filePath))
         {
-            var backupPath = $"{filePath}.backup.{DateTime.UtcNow:yyyyMMddHHmmss}";
-            File.Copy(filePath, backupPath, true);
+            File.Copy(filePath, GetBackupPath(filePath), true);
         }
 
         // Ensure directory exists
