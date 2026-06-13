@@ -75,7 +75,10 @@ public class ResourceMonitor : IResourceMonitor
     {
         try
         {
-            var currentProcess = Process.GetCurrentProcess();
+            // Refresh so WorkingSet64 reflects the current value rather than a cached one, and dispose
+            // the Process to avoid leaking a handle on every tick.
+            using var currentProcess = Process.GetCurrentProcess();
+            currentProcess.Refresh();
             var currentMemory = currentProcess.WorkingSet64;
 
             foreach (var session in _sessions.Values)
@@ -126,7 +129,18 @@ internal class ResourceMonitoringSession(string correlationId, ToolResourceLimit
     private readonly HashSet<string> _accessedFiles = [];
     private readonly HashSet<string> _accessedHosts = [];
     private readonly HashSet<string> _executedProcesses = [];
+
+    // Process working set when this session began. Memory cannot be attributed per managed task, so we
+    // report this session's memory as the process growth since it started (best-effort, process-relative).
+    private readonly long _baselineMemoryBytes = ReadProcessWorkingSet();
     private bool _disposed;
+
+    private static long ReadProcessWorkingSet()
+    {
+        using var process = Process.GetCurrentProcess();
+        process.Refresh();
+        return process.WorkingSet64;
+    }
 
     /// <inheritdoc />
     public string CorrelationId { get; } = correlationId;
@@ -228,14 +242,19 @@ internal class ResourceMonitoringSession(string correlationId, ToolResourceLimit
 
         lock (_lockObject)
         {
-            if (memoryBytes > CurrentUsage.PeakMemoryBytes)
+            // Attribute the process growth since this session started, rather than the whole-process
+            // working set (which would make every concurrent session report identical memory and trip a
+            // single tool's limit as soon as the process total exceeded it).
+            var attributed = Math.Max(0, memoryBytes - _baselineMemoryBytes);
+
+            if (attributed > CurrentUsage.PeakMemoryBytes)
             {
-                CurrentUsage.PeakMemoryBytes = memoryBytes;
+                CurrentUsage.PeakMemoryBytes = attributed;
             }
 
             // Update average memory (simple running average)
             var samples = (DateTimeOffset.UtcNow - StartTime).TotalSeconds;
-            CurrentUsage.AverageMemoryBytes = samples > 0 ? (long)(((CurrentUsage.AverageMemoryBytes * (samples - 1)) + memoryBytes) / samples) : memoryBytes;
+            CurrentUsage.AverageMemoryBytes = samples > 0 ? (long)(((CurrentUsage.AverageMemoryBytes * (samples - 1)) + attributed) / samples) : attributed;
 
             // Check memory limit
             if (CurrentUsage.PeakMemoryBytes > Limits.MaxMemoryBytes && !_exceededLimits.Contains("memory"))

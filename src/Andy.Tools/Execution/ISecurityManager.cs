@@ -125,7 +125,7 @@ public class SecurityViolation
 /// <summary>
 /// Interface for monitoring resource usage during tool execution.
 /// </summary>
-public interface IResourceMonitor
+public interface IResourceMonitor : IDisposable
 {
     /// <summary>
     /// Starts monitoring resource usage for a tool execution.

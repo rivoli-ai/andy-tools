@@ -178,14 +178,22 @@ public class ResourceMonitorTests : IDisposable
         var correlationId = "test-correlation-id";
         var session = _resourceMonitor.StartMonitoring(correlationId, _testLimits);
 
+        // Memory is now reported relative to the session's baseline (process working set at start), so
+        // feed baseline + a large delta. Large deltas (100s of MB) dwarf any baseline drift between the
+        // session's capture and ours, keeping the assertion stable.
+        using var proc = global::System.Diagnostics.Process.GetCurrentProcess();
+        proc.Refresh();
+        var b = proc.WorkingSet64;
+        const long mb = 1024 * 1024;
+
         // Act
-        session.UpdateMemoryUsage(100);
-        session.UpdateMemoryUsage(200);
-        session.UpdateMemoryUsage(150);
+        session.UpdateMemoryUsage(b + (100 * mb));
+        session.UpdateMemoryUsage(b + (200 * mb));
+        session.UpdateMemoryUsage(b + (150 * mb));
 
         // Assert
         var usage = session.CurrentUsage;
-        Assert.Equal(200, usage.PeakMemoryBytes); // Peak should be 200
+        Assert.InRange(usage.PeakMemoryBytes, 199 * mb, 201 * mb); // Peak ~= 200MB above baseline
         Assert.True(usage.AverageMemoryBytes > 0); // Average should be calculated
     }
 
@@ -237,8 +245,10 @@ public class ResourceMonitorTests : IDisposable
 
         var session = _resourceMonitor.StartMonitoring(correlationId, _testLimits);
 
-        // Act - exceed memory limit (limit is 1MB = 1,048,576 bytes)
-        session.UpdateMemoryUsage(2 * 1024 * 1024); // 2MB
+        // Act - exceed memory limit (limit is 1MB). Memory is baseline-relative, so feed baseline + 2MB.
+        using var proc = global::System.Diagnostics.Process.GetCurrentProcess();
+        proc.Refresh();
+        session.UpdateMemoryUsage(proc.WorkingSet64 + (2 * 1024 * 1024)); // ~2MB above baseline
 
         // Assert
         Assert.True(limitExceededEventFired);
