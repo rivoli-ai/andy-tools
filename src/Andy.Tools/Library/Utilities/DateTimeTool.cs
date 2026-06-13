@@ -516,28 +516,47 @@ public class DateTimeTool : ToolBase
 
         var parsedDate = ParseDateTimeInput(dateInput, format, CultureInfo.InvariantCulture);
 
-        // If source timezone is specified, convert from that timezone to UTC first
-        if (!string.IsNullOrEmpty(timezone))
-        {
-            var sourceTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timezone);
-            parsedDate = TimeZoneInfo.ConvertTimeToUtc(parsedDate, sourceTimeZone);
-        }
+        // Treat the parsed value as wall-clock time with no implied zone. ConvertTimeToUtc throws if the
+        // Kind is Utc (or Local when the zone disagrees), and a parsed "Z"/offset input can carry Kind=Utc
+        // or Local — so normalize to Unspecified before applying the source zone.
+        var wallClock = DateTime.SpecifyKind(parsedDate, DateTimeKind.Unspecified);
 
-        // Convert to target timezone
-        var targetTimeZone = TimeZoneInfo.FindSystemTimeZoneById(targetTimezone);
-        var convertedDate = TimeZoneInfo.ConvertTimeFromUtc(parsedDate, targetTimeZone);
+        // Convert the source wall-clock time to UTC. When no source timezone is given, interpret the
+        // input in the machine's local zone (matching the reported "Local" source).
+        var sourceTimeZone = string.IsNullOrEmpty(timezone) ? TimeZoneInfo.Local : ResolveTimeZone(timezone);
+        var utc = TimeZoneInfo.ConvertTimeToUtc(wallClock, sourceTimeZone);
+
+        // Convert to the target timezone.
+        var targetTimeZone = ResolveTimeZone(targetTimezone);
+        var convertedDate = TimeZoneInfo.ConvertTimeFromUtc(utc, targetTimeZone);
 
         result.Metadata["source_timezone"] = timezone ?? "Local";
         result.Metadata["target_timezone"] = targetTimezone;
 
         return new
         {
-            original_date = parsedDate.ToString("O"),
+            original_date = wallClock.ToString("O"),
             converted_date = convertedDate.ToString("O"),
             source_timezone = timezone ?? "Local",
             target_timezone = targetTimezone,
             offset_hours = targetTimeZone.GetUtcOffset(convertedDate).TotalHours
         };
+    }
+
+    /// <summary>
+    /// Resolves a timezone id, surfacing an unknown/invalid id as a clear <see cref="ArgumentException"/>
+    /// (an invalid-parameter failure) rather than letting the raw lookup exception propagate.
+    /// </summary>
+    private static TimeZoneInfo ResolveTimeZone(string timezoneId)
+    {
+        try
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById(timezoneId);
+        }
+        catch (Exception ex) when (ex is TimeZoneNotFoundException or InvalidTimeZoneException)
+        {
+            throw new ArgumentException($"Unknown or invalid timezone '{timezoneId}'.", ex);
+        }
     }
 
     private static object ValidateDateTime(string? dateInput, string? format, CultureInfo culture, DateTimeOperationResult result)

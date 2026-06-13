@@ -258,8 +258,10 @@ public class EncodingTool : ToolBase
 
     private static object DecodeUrl(string input, EncodingOperationResult result)
     {
-        // First replace + with space (form-urlencoded convention), then unescape
-        var decoded = Uri.UnescapeDataString(input.Replace('+', ' '));
+        // Symmetric with EncodeUrl, which uses Uri.EscapeDataString (RFC 3986): spaces become %20 and a
+        // literal '+' stays '+'. So we must NOT translate '+' to space here, otherwise a round-trip of
+        // "a+b" would corrupt to "a b".
+        var decoded = Uri.UnescapeDataString(input);
 
         result.Metadata["original_length"] = input.Length;
         result.Metadata["decoded_length"] = decoded.Length;

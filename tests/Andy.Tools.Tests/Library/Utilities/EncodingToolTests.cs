@@ -184,7 +184,9 @@ public class EncodingToolTests : IDisposable
         var parameters = new Dictionary<string, object?>
         {
             ["operation"] = "url_decode",
-            ["input_text"] = "Hello+World%21+Special+chars%3A+%26%3D%3F"
+            // RFC 3986 form (spaces as %20) — matches what url_encode (Uri.EscapeDataString) produces.
+            // '+' is a literal '+', not a space, so encode/decode round-trip correctly.
+            ["input_text"] = "Hello%20World%21%20Special%20chars%3A%20%26%3D%3F"
         };
 
         var context = new ToolExecutionContext();
