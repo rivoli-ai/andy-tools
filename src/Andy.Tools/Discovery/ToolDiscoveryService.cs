@@ -108,10 +108,11 @@ public class ToolDiscoveryService(IToolValidator validator, ILogger<ToolDiscover
 
                 try
                 {
-                    var directoryTools = await DiscoverToolsFromDirectoryAsync(
+                    var directoryTools = await DiscoverToolsFromDirectoryCoreAsync(
                         directory,
                         options.PluginFilePatterns,
-                        options.MaxDirectoryDepth > 1,
+                        Math.Max(1, options.MaxDirectoryDepth),
+                        options.PluginAssemblyValidator,
                         cancellationToken);
                     discoveredTools.AddRange(directoryTools);
 
@@ -255,9 +256,25 @@ public class ToolDiscoveryService(IToolValidator validator, ILogger<ToolDiscover
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<DiscoveredTool>> DiscoverToolsFromDirectoryAsync(string directoryPath, IList<string>? filePatterns = null, bool recursive = true, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<DiscoveredTool>> DiscoverToolsFromDirectoryAsync(string directoryPath, IList<string>? filePatterns = null, bool recursive = true, CancellationToken cancellationToken = default)
     {
-        filePatterns ??= ["*.dll"];
+        // recursive==true preserves the documented "scan all subdirectories" behavior for direct callers;
+        // the options-driven path uses an explicit depth instead (see DiscoverToolsAsync).
+        return DiscoverToolsFromDirectoryCoreAsync(
+            directoryPath,
+            filePatterns ?? ["*.dll"],
+            recursive ? int.MaxValue : 1,
+            assemblyValidator: null,
+            cancellationToken);
+    }
+
+    private async Task<IReadOnlyList<DiscoveredTool>> DiscoverToolsFromDirectoryCoreAsync(
+        string directoryPath,
+        IList<string> filePatterns,
+        int maxDepth,
+        Func<string, bool>? assemblyValidator,
+        CancellationToken cancellationToken)
+    {
         var discoveredTools = new List<DiscoveredTool>();
 
         if (!Directory.Exists(directoryPath))
@@ -268,11 +285,7 @@ public class ToolDiscoveryService(IToolValidator validator, ILogger<ToolDiscover
 
         try
         {
-            var searchOption = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
-            var files = filePatterns
-                .SelectMany(pattern => Directory.GetFiles(directoryPath, pattern, searchOption))
-                .Distinct()
-                .ToList();
+            var files = EnumerateFilesUpToDepth(directoryPath, filePatterns, maxDepth);
 
             foreach (var file in files)
             {
@@ -280,7 +293,7 @@ public class ToolDiscoveryService(IToolValidator validator, ILogger<ToolDiscover
 
                 try
                 {
-                    var fileTools = await DiscoverToolsFromFileAsync(file, true);
+                    var fileTools = await DiscoverToolsFromFileAsync(file, true, assemblyValidator);
                     discoveredTools.AddRange(fileTools);
                 }
                 catch (Exception ex)
@@ -297,8 +310,42 @@ public class ToolDiscoveryService(IToolValidator validator, ILogger<ToolDiscover
         return discoveredTools.AsReadOnly();
     }
 
+    /// <summary>
+    /// Enumerates files matching any pattern, descending at most <paramref name="maxDepth"/> directory
+    /// levels (depth 1 = the root directory only). This honors the configured MaxDirectoryDepth instead
+    /// of collapsing any depth &gt; 1 into an unbounded recursive scan.
+    /// </summary>
+    private static IReadOnlyList<string> EnumerateFilesUpToDepth(string root, IList<string> patterns, int maxDepth)
+    {
+        var results = new List<string>();
+
+        void Walk(string dir, int depth)
+        {
+            foreach (var pattern in patterns)
+            {
+                results.AddRange(Directory.GetFiles(dir, pattern, SearchOption.TopDirectoryOnly));
+            }
+
+            if (depth >= maxDepth)
+            {
+                return;
+            }
+
+            foreach (var sub in Directory.GetDirectories(dir))
+            {
+                Walk(sub, depth + 1);
+            }
+        }
+
+        Walk(root, 1);
+        return results.Distinct().ToList();
+    }
+
     /// <inheritdoc />
-    public async Task<IReadOnlyList<DiscoveredTool>> DiscoverToolsFromFileAsync(string filePath, bool validate = true)
+    public Task<IReadOnlyList<DiscoveredTool>> DiscoverToolsFromFileAsync(string filePath, bool validate = true)
+        => DiscoverToolsFromFileAsync(filePath, validate, assemblyValidator: null);
+
+    private async Task<IReadOnlyList<DiscoveredTool>> DiscoverToolsFromFileAsync(string filePath, bool validate, Func<string, bool>? assemblyValidator)
     {
         var discoveredTools = new List<DiscoveredTool>();
 
@@ -308,12 +355,21 @@ public class ToolDiscoveryService(IToolValidator validator, ILogger<ToolDiscover
             return discoveredTools.AsReadOnly();
         }
 
+        // Gate untrusted plugin assemblies before loading: Assembly.LoadFrom executes module initializers
+        // and exposes the assembly's code, so an unvetted DLL is arbitrary code execution.
+        if (assemblyValidator != null && !assemblyValidator(filePath))
+        {
+            _logger.LogWarning("Skipping plugin assembly rejected by PluginAssemblyValidator: {FilePath}", filePath);
+            return discoveredTools.AsReadOnly();
+        }
+
         try
         {
             // Load the assembly
             Assembly assembly;
             try
             {
+                _logger.LogWarning("Loading plugin assembly from disk: {FilePath}", filePath);
                 assembly = Assembly.LoadFrom(filePath);
             }
             catch (Exception ex)

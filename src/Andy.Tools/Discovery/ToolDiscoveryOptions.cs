@@ -72,4 +72,14 @@ public class ToolDiscoveryOptions
     /// Gets or sets whether to load assemblies with reflection-only context.
     /// </summary>
     public bool UseReflectionOnlyLoad { get; set; } = false;
+
+    /// <summary>
+    /// Optional predicate used to vet a plugin assembly file before it is loaded from disk. Loading an
+    /// assembly executes its module initializers and exposes its code, so dropping an untrusted DLL into
+    /// a scanned directory is arbitrary code execution. When set, only files for which this returns
+    /// <c>true</c> are loaded; the rest are skipped and logged. Use it to enforce a strong-name /
+    /// Authenticode / hash allowlist. When <c>null</c> (default) all matching files are loaded (legacy
+    /// behavior) — only point <see cref="PluginDirectories"/> at trusted, write-protected locations.
+    /// </summary>
+    public Func<string, bool>? PluginAssemblyValidator { get; set; }
 }
