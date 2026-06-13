@@ -90,7 +90,8 @@ public static class ServiceCollectionExtensions
                 // Wrap with caching
                 var cache = sp.GetRequiredService<IToolExecutionCache>();
                 var cachingLogger = sp.GetRequiredService<ILogger<CachingToolExecutor>>();
-                return new CachingToolExecutor(innerExecutor, cache, cachingLogger);
+                var metrics = sp.GetService<IToolMetricsCollector>();
+                return new CachingToolExecutor(innerExecutor, cache, cachingLogger, metrics);
             });
         }
 

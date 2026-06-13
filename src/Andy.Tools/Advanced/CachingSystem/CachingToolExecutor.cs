@@ -1,3 +1,4 @@
+using Andy.Tools.Advanced.MetricsCollection;
 using Andy.Tools.Core;
 using Andy.Tools.Execution;
 using Microsoft.Extensions.Logging;
@@ -12,15 +13,18 @@ public class CachingToolExecutor : IToolExecutor
     private readonly IToolExecutor _innerExecutor;
     private readonly IToolExecutionCache _cache;
     private readonly ILogger<CachingToolExecutor> _logger;
+    private readonly IToolMetricsCollector? _metrics;
 
     public CachingToolExecutor(
         IToolExecutor innerExecutor,
         IToolExecutionCache cache,
-        ILogger<CachingToolExecutor> logger)
+        ILogger<CachingToolExecutor> logger,
+        IToolMetricsCollector? metrics = null)
     {
         _innerExecutor = innerExecutor ?? throw new ArgumentNullException(nameof(innerExecutor));
         _cache = cache ?? throw new ArgumentNullException(nameof(cache));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _metrics = metrics;
 
         // Forward events from inner executor
         _innerExecutor.ExecutionStarted += (sender, args) => ExecutionStarted?.Invoke(this, args);
@@ -44,13 +48,23 @@ public class CachingToolExecutor : IToolExecutor
             return await _innerExecutor.ExecuteAsync(request);
         }
 
-        // Generate cache key
+        // Generate cache key. Fold in the working directory and environment variables: a tool's output
+        // can depend on them, so two requests with identical parameters but different cwd/env must not
+        // collide on the same key. AdditionalContext is incorporated deterministically (sorted) by the cache.
         var cacheKeyContext = new CacheKeyContext
         {
-            UserId = request.Context.UserId,
-            Environment = null, // Environment is a dictionary, not a string
-            Version = null // No ToolVersion in context
+            UserId = request.Context.UserId
         };
+
+        if (!string.IsNullOrEmpty(request.Context.WorkingDirectory))
+        {
+            cacheKeyContext.AdditionalContext["__cwd"] = request.Context.WorkingDirectory;
+        }
+
+        foreach (var kvp in request.Context.Environment)
+        {
+            cacheKeyContext.AdditionalContext["__env:" + kvp.Key] = kvp.Value ?? string.Empty;
+        }
 
         var cacheKey = _cache.GenerateCacheKey(request.ToolId, request.Parameters, cacheKeyContext);
         _logger.LogDebug("Generated cache key: {CacheKey}", cacheKey);
@@ -60,7 +74,8 @@ public class CachingToolExecutor : IToolExecutor
         if (cachedResult != null && !cachedResult.IsExpired)
         {
             _logger.LogInformation("Cache hit for tool '{ToolId}' with key: {CacheKey}", request.ToolId, cacheKey);
-            
+            await RecordCacheMetricAsync(hit: true, request.ToolId, cachedResult.Result.DurationMs ?? 0);
+
             // Convert cached result to execution result
             var executionResult = new ToolExecutionResult
             {
@@ -85,6 +100,7 @@ public class CachingToolExecutor : IToolExecutor
         }
 
         _logger.LogDebug("Cache miss for tool '{ToolId}' with key: {CacheKey}", request.ToolId, cacheKey);
+        await RecordCacheMetricAsync(hit: false, request.ToolId, 0);
 
         // Execute the tool
         var result = await _innerExecutor.ExecuteAsync(request);
@@ -98,7 +114,8 @@ public class CachingToolExecutor : IToolExecutor
                 IsSuccessful = result.IsSuccessful,
                 Data = result.Data,
                 ErrorMessage = result.ErrorMessage,
-                // ErrorCode removed
+                // Preserve the execution duration so a future cache hit can report the time it saved.
+                DurationMs = result.DurationMs,
                 Metadata = result.Metadata
             }, cacheOptions, request.Context.CancellationToken);
 
@@ -152,6 +169,31 @@ public class CachingToolExecutor : IToolExecutor
         if (_innerExecutor is IDisposable disposable)
         {
             disposable.Dispose();
+        }
+    }
+
+    private async Task RecordCacheMetricAsync(bool hit, string toolId, double timeSavedMs)
+    {
+        if (_metrics == null)
+        {
+            return;
+        }
+
+        try
+        {
+            if (hit)
+            {
+                await _metrics.RecordCacheHitAsync(toolId, timeSavedMs);
+            }
+            else
+            {
+                await _metrics.RecordCacheMissAsync(toolId);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Metrics are best-effort; never fail an execution because recording failed.
+            _logger.LogDebug(ex, "Failed to record cache {Kind} metric for tool '{ToolId}'", hit ? "hit" : "miss", toolId);
         }
     }
 

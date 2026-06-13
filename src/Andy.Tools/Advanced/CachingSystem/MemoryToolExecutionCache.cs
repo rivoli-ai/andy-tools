@@ -18,7 +18,11 @@ public partial class MemoryToolExecutionCache : IToolExecutionCache, IDisposable
     private readonly ILogger<MemoryToolExecutionCache> _logger;
     private readonly ToolCacheOptions _options;
     private readonly ConcurrentDictionary<string, CacheEntryMetadata> _metadata = new();
-    private readonly ConcurrentDictionary<string, HashSet<string>> _dependencies = new();
+
+    // Maps a dependency name -> the set of cache keys that declared it. Invalidating that name (or a
+    // cache key used as a dependency) cascades to those dependents. The inner set is itself a
+    // ConcurrentDictionary because a plain HashSet is not safe to mutate/iterate concurrently.
+    private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, byte>> _dependencies = new();
     private readonly Timer _cleanupTimer;
     private long _hitCount;
     private long _missCount;
@@ -61,6 +65,7 @@ public partial class MemoryToolExecutionCache : IToolExecutionCache, IDisposable
                     {
                         var newExpiration = DateTimeOffset.UtcNow.Add(metadata.SlidingExpiration.Value);
                         cachedResult.ExpiresAt = newExpiration;
+                        metadata.ExpiresAt = newExpiration; // keep metadata in sync so cleanup/stats are accurate
 
                         // Re-cache with new expiration
                         await SetInternalAsync(cacheKey, cachedResult, metadata);
@@ -126,21 +131,17 @@ public partial class MemoryToolExecutionCache : IToolExecutionCache, IDisposable
                 Priority = options.Priority,
                 Dependencies = [.. options.Dependencies],
                 SlidingExpiration = options.SlidingExpiration,
+                ExpiresAt = cachedResult.ExpiresAt, // without this, cleanup/ExpiredCount never see it (null <= now is false)
                 SizeBytes = EstimateSize(result)
             };
 
             await SetInternalAsync(cacheKey, cachedResult, metadata);
 
-            // Register dependencies
+            // Register dependencies: dependency name -> set of dependent cache keys.
             foreach (var dependency in options.Dependencies)
             {
-                _dependencies.AddOrUpdate(dependency,
-                    [cacheKey],
-                    (_, set) =>
-                    {
-                        set.Add(cacheKey);
-                        return set;
-                    });
+                var dependents = _dependencies.GetOrAdd(dependency, static _ => new ConcurrentDictionary<string, byte>());
+                dependents[cacheKey] = 0;
             }
 
             _logger.LogDebug("Cached result for key: {CacheKey}, expires at: {ExpiresAt}", cacheKey, cachedResult.ExpiresAt);
@@ -161,15 +162,14 @@ public partial class MemoryToolExecutionCache : IToolExecutionCache, IDisposable
             _cache.Remove(cacheKey);
             _metadata.TryRemove(cacheKey, out _);
 
-            // Invalidate dependent entries
-            if (_dependencies.TryGetValue(cacheKey, out var dependents))
+            // Cascade to entries that declared this key as a dependency. Remove the edge set first so a
+            // dependency cycle terminates, then invalidate each dependent from the snapshot.
+            if (_dependencies.TryRemove(cacheKey, out var dependents))
             {
-                foreach (var dependent in dependents)
+                foreach (var dependent in dependents.Keys)
                 {
                     await InvalidateAsync(dependent, cancellationToken);
                 }
-
-                _dependencies.TryRemove(cacheKey, out _);
             }
 
             _logger.LogDebug("Invalidated cache key: {CacheKey}", cacheKey);
