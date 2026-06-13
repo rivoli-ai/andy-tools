@@ -315,7 +315,7 @@ public class JsonProcessorTool : ToolBase
 
         if (includeHeaders)
         {
-            csvLines.Add(string.Join(delimiter, headerList));
+            csvLines.Add(string.Join(delimiter, headerList.Select(h => EscapeCsvField(h, delimiter))));
         }
 
         // Convert each object to CSV row
@@ -326,10 +326,10 @@ public class JsonProcessorTool : ToolBase
             {
                 if (item.TryGetProperty(header, out var prop))
                 {
-                    var value = prop.ValueKind == JsonValueKind.String
-                        ? $"\"{prop.GetString()?.Replace("\"", "\"\"")}\""
-                        : prop.ToString();
-                    values.Add(value);
+                    // Use the raw string for string values; for everything else (numbers, bools, nested
+                    // objects/arrays) use the JSON text. Every field is then RFC 4180 escaped.
+                    var raw = prop.ValueKind == JsonValueKind.String ? prop.GetString() ?? string.Empty : prop.ToString();
+                    values.Add(EscapeCsvField(raw, delimiter));
                 }
                 else
                 {
@@ -343,6 +343,20 @@ public class JsonProcessorTool : ToolBase
         result.Metadata["csv_rows"] = csvLines.Count - (includeHeaders ? 1 : 0);
         result.Metadata["csv_columns"] = headerList.Count;
         return string.Join("\n", csvLines);
+    }
+
+    /// <summary>
+    /// Escapes a single CSV field per RFC 4180: a field containing the delimiter, a double quote, or a
+    /// CR/LF is wrapped in double quotes, and any embedded double quotes are doubled.
+    /// </summary>
+    private static string EscapeCsvField(string field, string delimiter)
+    {
+        var mustQuote = field.Contains('"')
+            || field.Contains('\n')
+            || field.Contains('\r')
+            || (!string.IsNullOrEmpty(delimiter) && field.Contains(delimiter, StringComparison.Ordinal));
+
+        return mustQuote ? "\"" + field.Replace("\"", "\"\"") + "\"" : field;
     }
 
     private static string FlattenJson(JsonDocument doc, JsonOperationResult result)
@@ -500,41 +514,103 @@ public class JsonProcessorTool : ToolBase
 
     private static JsonElement MergeJsonElements(JsonElement target, JsonElement source)
     {
-        // Simple merge implementation - source overwrites target
-        using var targetDoc = JsonDocument.Parse(target.GetRawText());
-        using var sourceDoc = JsonDocument.Parse(source.GetRawText());
-
+        // Deep merge: when both sides have an object at the same key, merge recursively rather than
+        // letting the source object wholesale-replace the target object.
         if (target.ValueKind == JsonValueKind.Object && source.ValueKind == JsonValueKind.Object)
         {
-            var merged = new Dictionary<string, object?>();
+            var merged = new Dictionary<string, JsonElement>();
 
             foreach (var prop in target.EnumerateObject())
             {
-                merged[prop.Name] = JsonSerializer.Deserialize<object>(prop.Value.GetRawText());
+                merged[prop.Name] = prop.Value.Clone();
             }
 
             foreach (var prop in source.EnumerateObject())
             {
-                merged[prop.Name] = JsonSerializer.Deserialize<object>(prop.Value.GetRawText());
+                merged[prop.Name] = merged.TryGetValue(prop.Name, out var existing)
+                    && existing.ValueKind == JsonValueKind.Object
+                    && prop.Value.ValueKind == JsonValueKind.Object
+                    ? MergeJsonElements(existing, prop.Value)
+                    : prop.Value.Clone();
             }
 
             return JsonSerializer.SerializeToElement(merged);
         }
 
-        return source; // If not both objects, source takes precedence
+        return source.Clone(); // If not both objects, source takes precedence
     }
 
     private static List<object> FindJsonDifferences(JsonElement left, JsonElement right)
     {
         var differences = new List<object>();
+        CompareJsonElements(left, right, "$", differences);
+        return differences;
+    }
 
+    private static void CompareJsonElements(JsonElement left, JsonElement right, string path, List<object> differences)
+    {
         if (left.ValueKind != right.ValueKind)
         {
-            differences.Add(new { path = "$", type = "type_difference", left = left.ValueKind.ToString(), right = right.ValueKind.ToString() });
+            differences.Add(new { path, type = "type_difference", left = left.ValueKind.ToString(), right = right.ValueKind.ToString() });
+            return;
         }
 
-        // Simple diff implementation - in a full implementation, this would do deep comparison
-        return differences;
+        switch (left.ValueKind)
+        {
+            case JsonValueKind.Object:
+                var leftProps = left.EnumerateObject().ToDictionary(p => p.Name, p => p.Value);
+                var rightProps = right.EnumerateObject().ToDictionary(p => p.Name, p => p.Value);
+                foreach (var key in leftProps.Keys.Union(rightProps.Keys))
+                {
+                    var childPath = $"{path}.{key}";
+                    var inLeft = leftProps.TryGetValue(key, out var lv);
+                    var inRight = rightProps.TryGetValue(key, out var rv);
+                    if (!inRight)
+                    {
+                        differences.Add(new { path = childPath, type = "removed", left = lv.ToString() });
+                    }
+                    else if (!inLeft)
+                    {
+                        differences.Add(new { path = childPath, type = "added", right = rv.ToString() });
+                    }
+                    else
+                    {
+                        CompareJsonElements(lv, rv, childPath, differences);
+                    }
+                }
+
+                break;
+
+            case JsonValueKind.Array:
+                var leftItems = left.EnumerateArray().ToList();
+                var rightItems = right.EnumerateArray().ToList();
+                for (var i = 0; i < Math.Max(leftItems.Count, rightItems.Count); i++)
+                {
+                    var childPath = $"{path}[{i}]";
+                    if (i >= rightItems.Count)
+                    {
+                        differences.Add(new { path = childPath, type = "removed", left = leftItems[i].ToString() });
+                    }
+                    else if (i >= leftItems.Count)
+                    {
+                        differences.Add(new { path = childPath, type = "added", right = rightItems[i].ToString() });
+                    }
+                    else
+                    {
+                        CompareJsonElements(leftItems[i], rightItems[i], childPath, differences);
+                    }
+                }
+
+                break;
+
+            default:
+                if (!string.Equals(left.GetRawText(), right.GetRawText(), StringComparison.Ordinal))
+                {
+                    differences.Add(new { path, type = "value_difference", left = left.ToString(), right = right.ToString() });
+                }
+
+                break;
+        }
     }
 
     private static Dictionary<string, object?> FlattenJsonElement(JsonElement element, string prefix = "")
