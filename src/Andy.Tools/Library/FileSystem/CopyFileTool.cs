@@ -142,6 +142,17 @@ public partial class CopyFileTool : ToolBase
             var safeSourcePath = ToolHelpers.GetSafePath(sourcePath, context.WorkingDirectory);
             var safeDestinationPath = ToolHelpers.GetSafePath(destinationPath, context.WorkingDirectory);
 
+            // Enforce the caller's allowed-paths restriction on both endpoints.
+            if (!ToolHelpers.IsPathWithinAllowedPaths(safeSourcePath, context.Permissions))
+            {
+                return ToolResults.Failure($"Path '{safeSourcePath}' is not within allowed paths", "PATH_NOT_ALLOWED");
+            }
+
+            if (!ToolHelpers.IsPathWithinAllowedPaths(safeDestinationPath, context.Permissions))
+            {
+                return ToolResults.Failure($"Path '{safeDestinationPath}' is not within allowed paths", "PATH_NOT_ALLOWED");
+            }
+
             if (!File.Exists(safeSourcePath) && !Directory.Exists(safeSourcePath))
             {
                 return ToolResults.Failure(

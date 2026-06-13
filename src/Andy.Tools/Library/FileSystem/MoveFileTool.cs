@@ -82,20 +82,21 @@ public partial class MoveFileTool : ToolBase
                 return ToolResults.Failure("destination_path cannot be empty", "MISSING_DESTINATION_PATH");
             }
             
-            // Resolve and validate paths
-            string safeSourcePath;
-            string safeDestinationPath;
-            try
+            // Resolve and validate paths. GetSafePath enforces the working-directory boundary (it throws
+            // if a path escapes it); that exception is surfaced as a clean failure by the catch below
+            // rather than being swallowed and retried unconfined.
+            var safeSourcePath = ToolHelpers.GetSafePath(sourcePath, context.WorkingDirectory);
+            var safeDestinationPath = ToolHelpers.GetSafePath(destinationPath, context.WorkingDirectory);
+
+            // Enforce the caller's allowed-paths restriction on both endpoints before moving anything.
+            if (!ToolHelpers.IsPathWithinAllowedPaths(safeSourcePath, context.Permissions))
             {
-                safeSourcePath = ToolHelpers.GetSafePath(sourcePath, context.WorkingDirectory);
-                safeDestinationPath = ToolHelpers.GetSafePath(destinationPath, context.WorkingDirectory);
+                return ToolResults.Failure($"Path '{safeSourcePath}' is not within allowed paths", "PATH_NOT_ALLOWED");
             }
-            catch (ArgumentException)
+
+            if (!ToolHelpers.IsPathWithinAllowedPaths(safeDestinationPath, context.Permissions))
             {
-                // If the path validation fails with working directory, try without it
-                // This handles cases where absolute paths are provided that are valid
-                safeSourcePath = ToolHelpers.GetSafePath(sourcePath, null);
-                safeDestinationPath = ToolHelpers.GetSafePath(destinationPath, null);
+                return ToolResults.Failure($"Path '{safeDestinationPath}' is not within allowed paths", "PATH_NOT_ALLOWED");
             }
 
             if (!File.Exists(safeSourcePath) && !Directory.Exists(safeSourcePath))

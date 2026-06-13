@@ -104,6 +104,12 @@ public partial class ListDirectoryTool : ToolBase
             // Resolve and validate the directory path
             var safePath = ToolHelpers.GetSafePath(directoryPath, context.WorkingDirectory);
 
+            // Enforce the caller's allowed-paths restriction before listing contents.
+            if (!ToolHelpers.IsPathWithinAllowedPaths(safePath, context.Permissions))
+            {
+                return ToolResults.Failure($"Path '{safePath}' is not within allowed paths", "PATH_NOT_ALLOWED");
+            }
+
             if (!Directory.Exists(safePath))
             {
                 return ToolResults.DirectoryNotFound(safePath);

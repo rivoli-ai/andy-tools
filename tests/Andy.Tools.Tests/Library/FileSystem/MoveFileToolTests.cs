@@ -390,7 +390,7 @@ public class MoveFileToolTests : IDisposable
         const string content = "Cross-volume content";
         await File.WriteAllTextAsync(_sourceFile, content);
 
-        // For testing purposes, we'll simulate a cross-volume move by using a different temp directory
+        // For testing purposes, we'll simulate a cross-volume move by using a different temp directory.
         var crossVolumeDestination = Path.Combine(Path.GetTempPath(), "CrossVolumeTest", "destination.txt");
         Directory.CreateDirectory(Path.GetDirectoryName(crossVolumeDestination)!);
 
@@ -400,7 +400,10 @@ public class MoveFileToolTests : IDisposable
             ["destination_path"] = crossVolumeDestination
         };
 
-        var context = new ToolExecutionContext { WorkingDirectory = _testDirectory };
+        // Both endpoints live under the system temp root. Use it as the working directory so the move
+        // stays within the confinement boundary (the destination is in a sibling temp folder, not under
+        // _testDirectory). This exercises cross-directory move handling without relying on a path escape.
+        var context = new ToolExecutionContext { WorkingDirectory = Path.GetTempPath() };
 
         // Initialize the tool
         await _tool.InitializeAsync();

@@ -124,17 +124,15 @@ public class DeleteFileTool : ToolBase
                 return ToolResults.Failure("Target path is required", "MISSING_TARGET_PATH");
             }
             
-            // Resolve and validate the target path
-            string safeTargetPath;
-            try
+            // Resolve and validate the target path. GetSafePath enforces the working-directory
+            // boundary (it throws if the path escapes it); that exception is surfaced as a clean
+            // failure by the catch below rather than being swallowed and retried unconfined.
+            var safeTargetPath = ToolHelpers.GetSafePath(targetPath, context.WorkingDirectory);
+
+            // Enforce the caller's allowed-paths restriction before touching anything.
+            if (!ToolHelpers.IsPathWithinAllowedPaths(safeTargetPath, context.Permissions))
             {
-                safeTargetPath = ToolHelpers.GetSafePath(targetPath, context.WorkingDirectory);
-            }
-            catch (ArgumentException)
-            {
-                // If the path validation fails with working directory, try without it
-                // This handles cases where absolute paths are provided that are valid
-                safeTargetPath = ToolHelpers.GetSafePath(targetPath, null);
+                return ToolResults.Failure($"Path '{safeTargetPath}' is not within allowed paths", "PATH_NOT_ALLOWED");
             }
 
             if (!File.Exists(safeTargetPath) && !Directory.Exists(safeTargetPath))
