@@ -604,8 +604,8 @@ public class EncodingToolTests : IDisposable
         result.Data.Should().NotBeNull();
         
         var json = global::System.Text.Json.JsonSerializer.Serialize(result.Data);
-        json.Should().Contain("\"hash\":\"$2"); // BCrypt hashes start with $2
-        json.Should().Contain("\"algorithm\":\"bcrypt\"");
+        json.Should().Contain("\"hash\":\"$pbkdf2-sha256$"); // PHC-style PBKDF2 format
+        json.Should().Contain("\"algorithm\":\"pbkdf2-sha256\"");
     }
 
     [Fact]

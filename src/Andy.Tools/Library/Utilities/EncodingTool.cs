@@ -368,25 +368,35 @@ public class EncodingTool : ToolBase
         return new { hash = hashString };
     }
 
+    // Password hashing parameters. The operation is named "bcrypt_*" for API compatibility, but a real
+    // bcrypt requires a third-party package; PBKDF2-HMAC-SHA256 is built in and provides proper key
+    // stretching (the previous implementation was a single unsalted-iteration SHA256 masquerading as bcrypt).
+    private const string Pbkdf2Prefix = "pbkdf2-sha256";
+    private const int Pbkdf2Iterations = 100_000;
+    private const int Pbkdf2SaltBytes = 16;
+    private const int Pbkdf2HashBytes = 32;
+
     private static object HashBcrypt(string input, string? salt, EncodingOperationResult result)
     {
-        // Simple BCrypt implementation would require additional package
-        // For now, use a combination of salt + SHA256
-        var saltToUse = salt ?? GenerateRandomSalt();
-        var combined = saltToUse + input;
-        var bytes = Encoding.UTF8.GetBytes(combined);
-        var hash = SHA256.HashData(bytes);
-        var hashString = BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+        var saltBytes = salt != null
+            ? Encoding.UTF8.GetBytes(salt)
+            : RandomNumberGenerator.GetBytes(Pbkdf2SaltBytes);
 
-        result.Metadata["hash_algorithm"] = "SHA256+Salt";
-        result.Metadata["salt_used"] = saltToUse;
-        result.Metadata["hash_length"] = hashString.Length;
+        var hashBytes = Rfc2898DeriveBytes.Pbkdf2(
+            Encoding.UTF8.GetBytes(input), saltBytes, Pbkdf2Iterations, HashAlgorithmName.SHA256, Pbkdf2HashBytes);
 
-        var bcryptHash = $"$2a$10${saltToUse}:hash:{hashString}";
-        return new 
-        { 
-            hash = bcryptHash,
-            algorithm = "bcrypt"
+        // Self-describing PHC-style format: $pbkdf2-sha256$<iterations>$<hex salt>$<hex hash>.
+        // Hex (not base64) keeps the encoded value free of JSON-escaped characters like '+'/'/'.
+        var encoded = $"${Pbkdf2Prefix}${Pbkdf2Iterations}${Convert.ToHexString(saltBytes)}${Convert.ToHexString(hashBytes)}";
+
+        result.Metadata["hash_algorithm"] = "PBKDF2-SHA256";
+        result.Metadata["iterations"] = Pbkdf2Iterations;
+        result.Metadata["hash_length"] = encoded.Length;
+
+        return new
+        {
+            hash = encoded,
+            algorithm = Pbkdf2Prefix
         };
     }
 
@@ -397,43 +407,33 @@ public class EncodingTool : ToolBase
             throw new ArgumentException("Hashed value is required for verification");
         }
 
-        // Check if it's our custom BCrypt format starting with $2a$10$
-        bool isValidFormat = false;
-        string salt = "";
-        string originalHash = "";
-        
-        if (hashedValue.StartsWith("$2a$10$"))
+        var matches = false;
+
+        // Expected format: $pbkdf2-sha256$<iterations>$<b64 salt>$<b64 hash>
+        var parts = hashedValue.Split('$', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 4 && parts[0] == Pbkdf2Prefix && int.TryParse(parts[1], out var iterations) && iterations > 0)
         {
-            // Parse our custom BCrypt-like format: $2a$10$salt:hash:value
-            var afterPrefix = hashedValue.Substring(7); // Skip "$2a$10$"
-            var parts = afterPrefix.Split(':');
-            
-            if (parts.Length >= 3 && parts[1] == "hash")
+            try
             {
-                salt = parts[0];
-                originalHash = parts[2];
-                isValidFormat = true;
+                var saltBytes = Convert.FromHexString(parts[2]);
+                var expected = Convert.FromHexString(parts[3]);
+                var actual = Rfc2898DeriveBytes.Pbkdf2(
+                    Encoding.UTF8.GetBytes(input), saltBytes, iterations, HashAlgorithmName.SHA256, expected.Length);
+
+                // Constant-time comparison to avoid leaking the hash via timing.
+                matches = CryptographicOperations.FixedTimeEquals(actual, expected);
+            }
+            catch (FormatException)
+            {
+                matches = false;
             }
         }
-        
-        if (!isValidFormat)
+        else
         {
-            result.Metadata["verification_result"] = false;
-            result.Metadata["error"] = "Invalid hash format";
-            return new { is_valid = false };
+            result.Metadata["error"] = $"Unrecognized hash format (expected ${Pbkdf2Prefix}$...)";
         }
 
-        // Recreate hash with same salt
-        var combined = salt + input;
-        var bytes = Encoding.UTF8.GetBytes(combined);
-        var hash = SHA256.HashData(bytes);
-        var hashString = BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
-
-        var matches = string.Equals(hashString, originalHash, StringComparison.OrdinalIgnoreCase);
-
         result.Metadata["verification_result"] = matches;
-        result.Metadata["salt_used"] = salt;
-
         return new { is_valid = matches };
     }
 
@@ -464,22 +464,22 @@ public class EncodingTool : ToolBase
         const string numbers = "0123456789";
         const string symbols = "!@#$%^&*()_+-=[]{}|;:,.<>?";
 
-        var random = new Random();
+        // Use a cryptographically secure RNG: generated passwords must not be predictable.
         var password = new StringBuilder(length);
         var requiredChars = new List<char>();
 
         // Ensure at least one character from each required category
-        requiredChars.Add(lowercase[random.Next(lowercase.Length)]);
-        requiredChars.Add(uppercase[random.Next(uppercase.Length)]);
-        
+        requiredChars.Add(lowercase[RandomNumberGenerator.GetInt32(lowercase.Length)]);
+        requiredChars.Add(uppercase[RandomNumberGenerator.GetInt32(uppercase.Length)]);
+
         if (includeNumbers)
         {
-            requiredChars.Add(numbers[random.Next(numbers.Length)]);
+            requiredChars.Add(numbers[RandomNumberGenerator.GetInt32(numbers.Length)]);
         }
 
         if (includeSymbols)
         {
-            requiredChars.Add(symbols[random.Next(symbols.Length)]);
+            requiredChars.Add(symbols[RandomNumberGenerator.GetInt32(symbols.Length)]);
         }
 
         // Build the full character set
@@ -497,12 +497,18 @@ public class EncodingTool : ToolBase
         // Fill remaining positions with random characters
         for (int i = requiredChars.Count; i < length; i++)
         {
-            requiredChars.Add(characters[random.Next(characters.Length)]);
+            requiredChars.Add(characters[RandomNumberGenerator.GetInt32(characters.Length)]);
         }
 
-        // Shuffle the characters to avoid predictable patterns
-        var shuffled = requiredChars.OrderBy(x => random.Next()).ToList();
-        foreach (var c in shuffled)
+        // Cryptographically secure Fisher-Yates shuffle so the guaranteed-category characters are not
+        // always at predictable positions.
+        for (int i = requiredChars.Count - 1; i > 0; i--)
+        {
+            var j = RandomNumberGenerator.GetInt32(i + 1);
+            (requiredChars[i], requiredChars[j]) = (requiredChars[j], requiredChars[i]);
+        }
+
+        foreach (var c in requiredChars)
         {
             password.Append(c);
         }
@@ -534,7 +540,7 @@ public class EncodingTool : ToolBase
             ["is_valid_sha1"] = IsValidHash(hash, 40),
             ["is_valid_sha256"] = IsValidHash(hash, 64),
             ["is_valid_sha512"] = IsValidHash(hash, 128),
-            ["is_valid_bcrypt"] = hash.StartsWith("salt:") && hash.Contains(":hash:"),
+            ["is_valid_pbkdf2"] = hash.StartsWith($"${Pbkdf2Prefix}$", StringComparison.Ordinal),
             ["hash_length"] = hash.Length,
             ["contains_only_hex"] = IsHexString(hash)
         };
@@ -560,9 +566,9 @@ public class EncodingTool : ToolBase
             possibleTypes.Add("SHA512");
         }
 
-        if ((bool)validationResults["is_valid_bcrypt"]!)
+        if ((bool)validationResults["is_valid_pbkdf2"]!)
         {
-            possibleTypes.Add("Custom BCrypt");
+            possibleTypes.Add("PBKDF2-SHA256");
         }
 
         validationResults["possible_types"] = possibleTypes;
@@ -622,20 +628,6 @@ public class EncodingTool : ToolBase
         };
     }
 
-    private static string GenerateRandomSalt(int length = 16)
-    {
-        var random = new Random();
-        var chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        var salt = new StringBuilder(length);
-
-        for (int i = 0; i < length; i++)
-        {
-            salt.Append(chars[random.Next(chars.Length)]);
-        }
-
-        return salt.ToString();
-    }
-
     private static bool IsValidHash(string hash, int expectedLength)
     {
         return hash.Length == expectedLength && IsHexString(hash);
@@ -666,9 +658,9 @@ public class EncodingTool : ToolBase
             };
             info.IsLikelyHash = info.MostLikelyType != "Unknown";
         }
-        else if (hash.StartsWith("salt:") && hash.Contains(":hash:"))
+        else if (hash.StartsWith($"${Pbkdf2Prefix}$", StringComparison.Ordinal))
         {
-            info.MostLikelyType = "Custom BCrypt";
+            info.MostLikelyType = "PBKDF2-SHA256";
             info.IsLikelyHash = true;
         }
         else
