@@ -197,11 +197,14 @@ Execution contexts specify allowed permissions:
 public class ToolPermissions
 {
     public bool FileSystemAccess { get; set; }
-    public string[]? AllowedPaths { get; set; }
     public bool NetworkAccess { get; set; }
-    public string[]? AllowedDomains { get; set; }
     public bool ProcessExecution { get; set; }
-    public bool SystemInformationAccess { get; set; }
+    public bool EnvironmentAccess { get; set; }
+    public HashSet<string> AllowedPaths { get; set; }
+    public HashSet<string> BlockedPaths { get; set; }
+    public HashSet<string> AllowedHosts { get; set; }
+    public HashSet<string> BlockedHosts { get; set; }
+    public Dictionary<string, object?> CustomPermissions { get; set; } // e.g. "allow_private_networks", "allow_localhost"
 }
 ```
 
@@ -214,11 +217,11 @@ Control resource consumption:
 ```csharp
 public class ToolResourceLimits
 {
-    public TimeSpan? MaxExecutionTime { get; set; }
-    public long? MaxMemoryMB { get; set; }
-    public long? MaxFileSizeMB { get; set; }
-    public int? MaxConcurrentOperations { get; set; }
-    public long? MaxOutputSizeBytes { get; set; }
+    public int MaxExecutionTimeMs { get; set; }   // milliseconds
+    public long MaxMemoryBytes { get; set; }       // bytes
+    public long MaxFileSizeBytes { get; set; }     // bytes
+    public int MaxFileCount { get; set; }
+    public long MaxOutputSizeBytes { get; set; }
 }
 ```
 

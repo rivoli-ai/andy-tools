@@ -53,16 +53,23 @@ var context = new ToolExecutionContext
     Permissions = new ToolPermissions
     {
         FileSystemAccess = true,
-        FileSystemOperations = FileSystemOperations.Read | FileSystemOperations.Write,
-        AllowedPaths = new[] { "/tmp", "/home/user/data" },
+        AllowedPaths = new HashSet<string> { "/tmp", "/home/user/data" },
         NetworkAccess = true,
-        AllowedDomains = new[] { "api.example.com", "*.trusted.com" },
+        AllowedHosts = new HashSet<string> { "api.example.com", "*.trusted.com" },
         ProcessExecution = false,
-        SystemInformationAccess = true,
-        EnvironmentVariableAccess = EnvironmentVariableAccess.Read
+        EnvironmentAccess = true
     }
 };
 ```
+
+### Enforced behaviors
+
+The framework enforces these automatically:
+
+- **Path confinement** — paths are resolved (including symbolic links, via `ToolHelpers.ResolveRealPath`) and compared with a directory-separator-aware, OS-case-aware boundary check, so a sibling directory sharing a textual prefix or a symlink pointing outside an allowed root cannot escape `WorkingDirectory` / `AllowedPaths`.
+- **Allowed-paths on all file tools** — `read_file`, `write_file`, `move_file`, `copy_file`, `list_directory`, and `delete_file` all reject paths outside `AllowedPaths` (returning `PATH_NOT_ALLOWED`); none silently bypass the working-directory boundary.
+- **SSRF protection** — `http_request` resolves the target host and blocks loopback, link-local (incl. `169.254.169.254`), unique-local, CGNAT, and private addresses, re-validating on every connection (so redirects and DNS rebinding can't bypass it). Opt in to internal targets with the `allow_private_networks` or `allow_localhost` custom permissions.
+- **Permission profiles** — profile names are validated (`^[A-Za-z0-9_.-]+$`, no `..`), so they can't be used to read/write files outside the profile directory.
 
 ## File System Security
 
@@ -200,9 +207,9 @@ public class SecureHttpTool : ToolBase
         }
         
         // Enforce HTTPS for sensitive operations
-        if (context.Permissions?.RequireHttps == true && uri.Scheme != "https")
+        if (uri.Scheme != "https")
         {
-            return ToolResult.Failure("HTTPS required", "HTTPS_REQUIRED");
+            return ToolResult.Failure("HTTPS required");
         }
         
         // Proceed with request
@@ -210,13 +217,13 @@ public class SecureHttpTool : ToolBase
     
     private bool IsDomainAllowed(string domain, ToolExecutionContext context)
     {
-        var allowedDomains = context.Permissions?.AllowedDomains;
-        if (allowedDomains == null || allowedDomains.Length == 0)
+        var allowedHosts = context.Permissions?.AllowedHosts;
+        if (allowedHosts == null || allowedHosts.Count == 0)
         {
             return true; // No restrictions
         }
         
-        foreach (var allowed in allowedDomains)
+        foreach (var allowed in allowedHosts)
         {
             if (allowed.StartsWith("*."))
             {
@@ -247,7 +254,7 @@ protected async Task<HttpResponseMessage> SafeHttpRequest(
     HttpRequestMessage request,
     ToolExecutionContext context)
 {
-    var timeout = context.ResourceLimits?.NetworkTimeout ?? TimeSpan.FromSeconds(30);
+    var timeout = TimeSpan.FromSeconds(30);
     
     using var cts = CancellationTokenSource.CreateLinkedTokenSource(context.CancellationToken);
     cts.CancelAfter(timeout);
@@ -342,7 +349,8 @@ public class MemoryAwareTool : ToolBase
         ToolExecutionContext context)
     {
         var dataSize = GetParameter<int>(parameters, "data_size");
-        var maxMemoryMB = context.ResourceLimits?.MaxMemoryMB ?? 100;
+        var maxMemoryBytes = context.ResourceLimits.MaxMemoryBytes > 0 ? context.ResourceLimits.MaxMemoryBytes : 100L * 1024 * 1024;
+        var maxMemoryMB = maxMemoryBytes / (1024.0 * 1024.0);
         
         // Estimate memory usage
         var estimatedMB = dataSize / (1024.0 * 1024.0);
@@ -398,7 +406,9 @@ protected async Task<ToolResult> ExecuteWithTimeout(
     Func<CancellationToken, Task<ToolResult>> operation,
     ToolExecutionContext context)
 {
-    var timeout = context.ResourceLimits?.MaxExecutionTime ?? TimeSpan.FromMinutes(5);
+    var timeout = context.ResourceLimits.MaxExecutionTimeMs > 0
+        ? TimeSpan.FromMilliseconds(context.ResourceLimits.MaxExecutionTimeMs)
+        : TimeSpan.FromMinutes(5);
     
     using var cts = CancellationTokenSource.CreateLinkedTokenSource(context.CancellationToken);
     cts.CancelAfter(timeout);
@@ -616,7 +626,7 @@ public class IsolatedToolExecutor : IToolExecutor
             Environment =
             {
                 ["TOOL_SANDBOX"] = "true",
-                ["TOOL_TIMEOUT"] = context?.ResourceLimits?.MaxExecutionTime?.ToString() ?? "300"
+                ["TOOL_TIMEOUT"] = (context?.ResourceLimits?.MaxExecutionTimeMs ?? 300_000).ToString()
             }
         };
         

@@ -52,7 +52,6 @@ This guide helps you diagnose and resolve common issues with Andy Tools.
        Permissions = new ToolPermissions
        {
            FileSystemAccess = true,
-           FileSystemOperations = FileSystemOperations.Read | FileSystemOperations.Write,
            NetworkAccess = true
        }
    };
@@ -115,7 +114,7 @@ This guide helps you diagnose and resolve common issues with Andy Tools.
    ```csharp
    context.ResourceLimits = new ToolResourceLimits
    {
-       MaxMemoryMB = 500 // Increase from default
+       MaxMemoryBytes = 500L * 1024 * 1024 // Increase from default
    };
    ```
 
@@ -151,8 +150,7 @@ This guide helps you diagnose and resolve common issues with Andy Tools.
    ```csharp
    context.ResourceLimits = new ToolResourceLimits
    {
-       MaxExecutionTime = TimeSpan.FromMinutes(10),
-       NetworkTimeout = TimeSpan.FromSeconds(60)
+       MaxExecutionTimeMs = (int)TimeSpan.FromMinutes(10).TotalMilliseconds
    };
    ```
 
@@ -185,7 +183,7 @@ This guide helps you diagnose and resolve common issues with Andy Tools.
 
 1. **Check domain whitelist**
    ```csharp
-   context.Permissions.AllowedDomains = new[]
+   context.Permissions.AllowedHosts = new HashSet<string>
    {
        "api.example.com",
        "*.trusted.com"

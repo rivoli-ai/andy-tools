@@ -115,7 +115,11 @@ public interface IToolChain
 {
     string Id { get; }
     IReadOnlyList<IToolChainStep> Steps { get; }
-    Task<ToolChainResult> ExecuteAsync(ToolExecutionContext context);
+    IToolChainStep AddToolStep(string toolId, Dictionary<string, object?> parameters, string? name = null);
+    Task<ToolChainResult> ExecuteAsync(
+        Dictionary<string, object?>? initialParameters,
+        ToolExecutionContext context,
+        CancellationToken cancellationToken = default);
 }
 ```
 

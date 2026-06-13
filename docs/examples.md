@@ -297,19 +297,16 @@ var secureContext = new ToolExecutionContext
     Permissions = new ToolPermissions
     {
         FileSystemAccess = true,
-        FileSystemOperations = FileSystemOperations.Read,
-        AllowedPaths = new[] { "/app/data", "/app/temp" },
+        AllowedPaths = new HashSet<string> { "/app/data", "/app/temp" },
         NetworkAccess = true,
-        AllowedDomains = new[] { "api.trusted.com", "*.mycompany.com" },
-        RequireHttps = true,
-        ProcessExecution = false,
-        SystemInformationAccess = false
+        AllowedHosts = new HashSet<string> { "api.trusted.com", "*.mycompany.com" },
+        ProcessExecution = false
     },
     ResourceLimits = new ToolResourceLimits
     {
-        MaxExecutionTime = TimeSpan.FromSeconds(30),
-        MaxMemoryMB = 100,
-        MaxFileSizeMB = 50,
+        MaxExecutionTimeMs = 30_000,
+        MaxMemoryBytes = 100 * 1024 * 1024,
+        MaxFileSizeBytes = 50 * 1024 * 1024,
         MaxOutputSizeBytes = 1024 * 1024 // 1MB
     }
 };
