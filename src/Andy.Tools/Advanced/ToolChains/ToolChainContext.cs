@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Andy.Tools.Core;
 
 namespace Andy.Tools.Advanced.ToolChains;
@@ -23,14 +24,16 @@ public class ToolChainContext
     public Dictionary<string, object?> InitialParameters { get; init; } = [];
 
     /// <summary>
-    /// Gets the results of completed steps.
+    /// Gets the results of completed steps. Backed by a concurrent dictionary because parallel steps
+    /// may read and write it simultaneously.
     /// </summary>
-    public Dictionary<string, ToolChainStepResult> StepResults { get; } = [];
+    public IDictionary<string, ToolChainStepResult> StepResults { get; } = new ConcurrentDictionary<string, ToolChainStepResult>();
 
     /// <summary>
-    /// Gets the shared state between steps.
+    /// Gets the shared state between steps. Backed by a concurrent dictionary because parallel steps may
+    /// read and write it simultaneously.
     /// </summary>
-    public Dictionary<string, object?> SharedState { get; } = [];
+    public IDictionary<string, object?> SharedState { get; } = new ConcurrentDictionary<string, object?>();
 
     /// <summary>
     /// Gets the execution context from the tool framework.
@@ -58,9 +61,17 @@ public class ToolChainContext
     public Action<ToolChainProgress>? OnProgress { get; set; }
 
     /// <summary>
-    /// Gets the result of the previous step.
+    /// Gets or sets the id of the most recently executed step. The orchestrator sets this so
+    /// <see cref="PreviousResult"/> is well-defined even though <see cref="StepResults"/> is unordered.
     /// </summary>
-    public object? PreviousResult => StepResults.Values.LastOrDefault()?.Data;
+    public string? LastStepId { get; set; }
+
+    /// <summary>
+    /// Gets the result data of the most recently executed step. Resolved via <see cref="LastStepId"/>
+    /// rather than dictionary enumeration order, which is not insertion-ordered.
+    /// </summary>
+    public object? PreviousResult =>
+        LastStepId != null && StepResults.TryGetValue(LastStepId, out var result) ? result?.Data : null;
 
     /// <summary>
     /// Gets a step result by step ID.

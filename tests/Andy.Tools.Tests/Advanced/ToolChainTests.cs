@@ -518,6 +518,40 @@ public class ToolChainTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_RetriesExhausted_PreservesRealFailureResult()
+    {
+        // Regression for #19: after retries were exhausted the chain returned a synthesized
+        // "Step failed after N attempts" result, discarding the real ErrorMessage/Data.
+        var step = new Mock<IToolChainStep>();
+        step.Setup(x => x.Id).Returns("always-fails");
+        step.Setup(x => x.Name).Returns("Always Fails");
+        step.Setup(x => x.Dependencies).Returns(new List<string>());
+        step.Setup(x => x.IsRetryable).Returns(true);
+        step.Setup(x => x.MaxRetries).Returns(1);
+        step.Setup(x => x.ExecuteAsync(It.IsAny<ToolChainContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => new ToolChainStepResult
+            {
+                StepId = "always-fails",
+                StepName = "Always Fails",
+                IsSuccessful = false,
+                ErrorMessage = "boom-specific",
+                Data = "partial-data",
+                StartTime = DateTimeOffset.UtcNow,
+                EndTime = DateTimeOffset.UtcNow
+            });
+
+        _toolChain.AddStep(step.Object);
+
+        var result = await _toolChain.ExecuteAsync(null, _defaultContext);
+
+        var stepResult = result.StepResults["always-fails"];
+        stepResult.IsSuccessful.Should().BeFalse();
+        stepResult.ErrorMessage.Should().Be("boom-specific");
+        stepResult.Data.Should().Be("partial-data");
+        stepResult.RetryAttempts.Should().Be(1);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_ShouldRespectStepDependencies()
     {
         // Arrange

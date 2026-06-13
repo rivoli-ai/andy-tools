@@ -187,31 +187,49 @@ public class ToolChain(string id, string name, string description, IToolExecutor
             
             // Process all steps, including deferred ones
             var remainingSteps = new Queue<IToolChainStep>(stepQueue);
-            
+            var executedCountAtLastRefill = -1;
+
             while (remainingSteps.Count > 0 || deferredSteps.Count > 0)
             {
-                // If no more steps in queue, process deferred steps
+                // If no more steps in queue, re-queue the deferred ones — but only if we made progress
+                // since the last time we did so. Otherwise their dependencies can never be satisfied and
+                // re-queuing would loop forever.
                 if (remainingSteps.Count == 0 && deferredSteps.Count > 0)
                 {
+                    if (executedSteps.Count == executedCountAtLastRefill)
+                    {
+                        // Stuck: record an explicit error for every step that can never run, rather than
+                        // dropping them silently, then stop.
+                        foreach (var dropped in deferredSteps)
+                        {
+                            _logger.LogWarning("Step {StepId} never ran: dependencies not satisfiable", dropped.Id);
+                            result.Errors.Add(new ToolChainError
+                            {
+                                Code = "DEPENDENCY_NOT_SATISFIED",
+                                Message = $"Step '{dropped.Name}' was never executed because its dependencies were not satisfied: {string.Join(", ", dropped.Dependencies)}",
+                                StepId = dropped.Id
+                            });
+                        }
+
+                        break;
+                    }
+
                     _logger.LogDebug("Moving {Count} deferred steps back to queue", deferredSteps.Count);
-                    
-                    // Check if we can make progress - if no steps were executed since last defer, we're stuck
-                    var previousExecutedCount = executedSteps.Count;
-                    
-                    // Move deferred steps back to queue
+                    executedCountAtLastRefill = executedSteps.Count;
+
                     foreach (var deferredStep in deferredSteps)
                     {
                         remainingSteps.Enqueue(deferredStep);
                     }
                     deferredSteps.Clear();
                 }
-                
+
                 if (remainingSteps.Count == 0)
                 {
                     // No progress can be made - break to avoid infinite loop
                     break;
                 }
-                
+
                 var step = remainingSteps.Dequeue();
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -231,6 +249,7 @@ public class ToolChain(string id, string name, string description, IToolExecutor
                 {
                     var stepResult = await ExecuteStepWithRetry(step, chainContext, cancellationToken);
                     chainContext.StepResults[step.Id] = stepResult;
+                    chainContext.LastStepId = step.Id;
                     result.StepResults[step.Id] = stepResult;
 
                     if (!stepResult.IsSuccessful && step.Type != ToolChainStepType.ErrorHandler)
@@ -271,6 +290,7 @@ public class ToolChain(string id, string name, string description, IToolExecutor
                     };
 
                     chainContext.StepResults[step.Id] = stepResult;
+                    chainContext.LastStepId = step.Id;
                     result.StepResults[step.Id] = stepResult;
                     result.Errors.Add(new ToolChainError
                     {
@@ -341,6 +361,7 @@ public class ToolChain(string id, string name, string description, IToolExecutor
     {
         var maxAttempts = step.IsRetryable ? step.MaxRetries + 1 : 1;
         Exception? lastException = null;
+        ToolChainStepResult? lastFailureResult = null;
 
         for (int attempt = 1; attempt <= maxAttempts; attempt++)
         {
@@ -365,6 +386,7 @@ public class ToolChain(string id, string name, string description, IToolExecutor
                 }
 
                 lastException = result.Exception;
+                lastFailureResult = result; // keep the real failure (ErrorMessage/Data/Metadata)
             }
             catch (Exception ex)
             {
@@ -376,7 +398,14 @@ public class ToolChain(string id, string name, string description, IToolExecutor
             }
         }
 
-        // All retries failed
+        // All retries failed. Return the real last failure (preserving its ErrorMessage/Data/Metadata)
+        // rather than a synthesized result that drops the actual error.
+        if (lastFailureResult != null)
+        {
+            lastFailureResult.RetryAttempts = maxAttempts - 1;
+            return lastFailureResult;
+        }
+
         return new ToolChainStepResult
         {
             StepId = step.Id,
