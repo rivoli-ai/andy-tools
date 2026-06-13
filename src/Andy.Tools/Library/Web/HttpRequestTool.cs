@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -12,10 +13,77 @@ namespace Andy.Tools.Library.Web;
 /// </summary>
 public class HttpRequestTool : ToolBase
 {
-    private static readonly HttpClient HttpClient = new()
+    // Reuse a small set of pooled clients keyed by the settings that affect the handler, instead of
+    // allocating and disposing an HttpClient/handler per request (which exhausts sockets under load).
+    // Per-request timeout is applied via a linked CancellationTokenSource, not HttpClient.Timeout.
+    private static readonly ConcurrentDictionary<(bool FollowRedirects, bool ValidateSsl, bool AllowInternal), HttpClient> Clients = new();
+
+    private static HttpClient GetClient(bool followRedirects, bool validateSsl, bool allowInternal)
     {
-        Timeout = TimeSpan.FromSeconds(30)
-    };
+        return Clients.GetOrAdd((followRedirects, validateSsl, allowInternal), static key =>
+        {
+            var handler = new SocketsHttpHandler
+            {
+                UseCookies = false,
+                AllowAutoRedirect = key.FollowRedirects,
+                PooledConnectionLifetime = TimeSpan.FromMinutes(2),
+                // Validate the actual address connected to on every connection (incl. redirect targets and
+                // late DNS resolution), closing redirect-based and DNS-rebinding SSRF bypasses.
+                ConnectCallback = async (ctx, ct) =>
+                {
+                    var targetHost = ctx.DnsEndPoint.Host;
+                    var addresses = IPAddress.TryParse(targetHost, out var literal)
+                        ? [literal]
+                        : await Dns.GetHostAddressesAsync(targetHost, ct);
+
+                    if (!key.AllowInternal && addresses.Any(ToolHelpers.IsPrivateOrLocalAddress))
+                    {
+                        throw new HttpRequestException(
+                            $"Blocked connection to internal address for host '{targetHost}' (SSRF protection).");
+                    }
+
+                    var socket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
+                    try
+                    {
+                        await socket.ConnectAsync(addresses, ctx.DnsEndPoint.Port, ct);
+                        return new NetworkStream(socket, ownsSocket: true);
+                    }
+                    catch
+                    {
+                        socket.Dispose();
+                        throw;
+                    }
+                }
+            };
+
+            if (!key.ValidateSsl)
+            {
+                handler.SslOptions.RemoteCertificateValidationCallback = (_, _, _, _) => true;
+            }
+
+            // Timeout is enforced per request via a linked token, so disable the client-level timeout
+            // (-1 ms == System.Threading.Timeout.InfiniteTimeSpan).
+            return new HttpClient(handler) { Timeout = TimeSpan.FromMilliseconds(-1) };
+        });
+    }
+
+    private static Encoding ResolveResponseEncoding(HttpResponseMessage response)
+    {
+        var charset = response.Content.Headers.ContentType?.CharSet;
+        if (string.IsNullOrWhiteSpace(charset))
+        {
+            return Encoding.UTF8;
+        }
+
+        try
+        {
+            return Encoding.GetEncoding(charset.Trim('"', '\''));
+        }
+        catch (ArgumentException)
+        {
+            return Encoding.UTF8; // unknown/invalid charset -> fall back to UTF-8
+        }
+    }
 
     /// <inheritdoc />
     public override ToolMetadata Metadata { get; } = new()
@@ -161,52 +229,13 @@ public class HttpRequestTool : ToolBase
             // Parse headers
             var headers = ParseHeaders(headersObj);
 
-            // Create HTTP client with custom settings. SocketsHttpHandler lets us validate the *actual*
-            // address being connected to on every connection — including redirect targets and late DNS
-            // resolution — which closes redirect-based and DNS-rebinding SSRF bypasses.
-            using var handler = new SocketsHttpHandler
-            {
-                UseCookies = false,
-                AllowAutoRedirect = followRedirects,
-                ConnectCallback = async (ctx, ct) =>
-                {
-                    var targetHost = ctx.DnsEndPoint.Host;
-                    var addresses = IPAddress.TryParse(targetHost, out var literal)
-                        ? [literal]
-                        : await Dns.GetHostAddressesAsync(targetHost, ct);
+            // Reuse a pooled client for this (followRedirects, validateSsl, allowInternal) combination.
+            var httpClient = GetClient(followRedirects, validateSsl, allowInternal);
 
-                    if (!allowInternal && addresses.Any(ToolHelpers.IsPrivateOrLocalAddress))
-                    {
-                        throw new HttpRequestException(
-                            $"Blocked connection to internal address for host '{targetHost}' (SSRF protection).");
-                    }
-
-                    var socket = new Socket(SocketType.Stream, ProtocolType.Tcp)
-                    {
-                        NoDelay = true
-                    };
-                    try
-                    {
-                        await socket.ConnectAsync(addresses, ctx.DnsEndPoint.Port, ct);
-                        return new NetworkStream(socket, ownsSocket: true);
-                    }
-                    catch
-                    {
-                        socket.Dispose();
-                        throw;
-                    }
-                }
-            };
-
-            if (!validateSsl)
-            {
-                handler.SslOptions.RemoteCertificateValidationCallback = (sender, cert, chain, sslPolicyErrors) => true;
-            }
-
-            using var httpClient = new HttpClient(handler)
-            {
-                Timeout = TimeSpan.FromSeconds(timeoutSeconds)
-            };
+            // Enforce the per-request timeout via a linked token (the shared client has no timeout).
+            using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(context.CancellationToken, timeoutCts.Token);
+            var requestToken = linkedCts.Token;
 
             // Create request
             var request = new HttpRequestMessage(new HttpMethod(method.ToUpperInvariant()), url);
@@ -245,9 +274,9 @@ public class HttpRequestTool : ToolBase
 
             try
             {
-                response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, context.CancellationToken);
+                response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, requestToken);
             }
-            catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
+            catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested && !context.CancellationToken.IsCancellationRequested)
             {
                 return ToolResults.Timeout($"HTTP request to {url}", TimeSpan.FromSeconds(timeoutSeconds));
             }
@@ -260,10 +289,10 @@ public class HttpRequestTool : ToolBase
 
             ReportProgress(context, "Reading response content...", 70);
 
-            // Check response size
-            var contentLength = response.Content.Headers.ContentLength;
             var maxResponseSizeBytes = (long)(maxResponseSizeMb * 1024 * 1024);
 
+            // Fast-fail when the server advertises an oversized body.
+            var contentLength = response.Content.Headers.ContentLength;
             if (contentLength.HasValue && contentLength.Value > maxResponseSizeBytes)
             {
                 return ToolResults.Failure(
@@ -272,21 +301,37 @@ public class HttpRequestTool : ToolBase
                 );
             }
 
-            // Read response content
+            // Stream the body and abort as soon as the cap is exceeded, rather than buffering an
+            // unbounded (e.g. chunked) response fully into memory before checking the size.
             string responseContent;
+            byte[] contentBytes;
             try
             {
-                var contentBytes = await response.Content.ReadAsByteArrayAsync(context.CancellationToken);
-
-                if (contentBytes.Length > maxResponseSizeBytes)
+                await using var responseStream = await response.Content.ReadAsStreamAsync(requestToken);
+                using var buffer = new MemoryStream();
+                var chunk = new byte[81920];
+                int read;
+                while ((read = await responseStream.ReadAsync(chunk, requestToken)) > 0)
                 {
-                    return ToolResults.Failure(
-                        $"Response too large ({ToolHelpers.FormatFileSize(contentBytes.Length)}). Maximum allowed: {maxResponseSizeMb}MB",
-                        "RESPONSE_TOO_LARGE"
-                    );
+                    if (buffer.Length + read > maxResponseSizeBytes)
+                    {
+                        return ToolResults.Failure(
+                            $"Response too large (exceeds {maxResponseSizeMb}MB). Download aborted.",
+                            "RESPONSE_TOO_LARGE"
+                        );
+                    }
+
+                    buffer.Write(chunk, 0, read);
                 }
 
-                responseContent = Encoding.UTF8.GetString(contentBytes);
+                contentBytes = buffer.ToArray();
+
+                // Honor the response charset instead of assuming UTF-8.
+                responseContent = ResolveResponseEncoding(response).GetString(contentBytes);
+            }
+            catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested && !context.CancellationToken.IsCancellationRequested)
+            {
+                return ToolResults.Timeout($"HTTP request to {url}", TimeSpan.FromSeconds(timeoutSeconds));
             }
             catch (Exception ex)
             {
@@ -302,7 +347,8 @@ public class HttpRequestTool : ToolBase
                 ["status_description"] = response.ReasonPhrase,
                 ["success"] = response.IsSuccessStatusCode,
                 ["content"] = responseContent,
-                ["content_length"] = responseContent.Length,
+                ["content_length"] = contentBytes.Length,
+                ["content_char_length"] = responseContent.Length,
                 ["content_type"] = response.Content.Headers.ContentType?.ToString(),
                 ["response_time_ms"] = responseTime.TotalMilliseconds,
                 ["url"] = url,
