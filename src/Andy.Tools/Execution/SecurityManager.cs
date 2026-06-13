@@ -231,8 +231,21 @@ public class SecurityManager : ISecurityManager
             return allowed;
         }
 
-        // Block private IP ranges unless explicitly allowed
-        return !IsPrivateIpAddress(host) || permissions.CustomPermissions.ContainsKey("allow_private_networks");
+        // Block private/internal IP ranges unless explicitly allowed.
+        if (!IsPrivateIpAddress(host))
+        {
+            return true;
+        }
+
+        if (permissions.CustomPermissions.ContainsKey("allow_private_networks"))
+        {
+            return true;
+        }
+
+        // The narrower allow_localhost permission unlocks loopback addresses only.
+        return permissions.CustomPermissions.ContainsKey("allow_localhost")
+            && System.Net.IPAddress.TryParse(host, out var ip)
+            && System.Net.IPAddress.IsLoopback(ip);
     }
 
     /// <inheritdoc />
@@ -321,30 +334,8 @@ public class SecurityManager : ISecurityManager
             return false;
         }
 
-        var bytes = ipAddress.GetAddressBytes();
-
-        // IPv4 private ranges
-        if (bytes.Length == 4)
-        {
-            // 10.0.0.0/8
-            if (bytes[0] == 10)
-            {
-                return true;
-            }
-
-            // 172.16.0.0/12
-            if (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31)
-            {
-                return true;
-            }
-
-            // 192.168.0.0/16
-            if (bytes[0] == 192 && bytes[1] == 168)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        // Delegate to the shared classifier, which covers loopback, link-local, ULA, CGNAT, private,
+        // multicast and unspecified ranges for both IPv4 and IPv6.
+        return ToolHelpers.IsPrivateOrLocalAddress(ipAddress);
     }
 }

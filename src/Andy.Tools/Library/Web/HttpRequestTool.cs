@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using Andy.Tools.Core;
@@ -140,23 +141,66 @@ public class HttpRequestTool : ToolBase
 
             ReportProgress(context, "Preparing HTTP request...", 10);
 
+            // SSRF protection: by default, block requests whose target resolves to an internal/non-public
+            // address (loopback, link-local, ULA, CGNAT, private, multicast). Callers may opt in to
+            // internal targets via the allow_private_networks / allow_localhost custom permissions.
+            var allowInternal = context.Permissions.CustomPermissions.ContainsKey("allow_private_networks")
+                || context.Permissions.CustomPermissions.ContainsKey("allow_localhost");
+
+            if (!allowInternal)
+            {
+                var requestHost = new Uri(url).Host;
+                if (await ToolHelpers.IsBlockedInternalHostAsync(requestHost, context.CancellationToken))
+                {
+                    return ToolResults.Failure(
+                        $"Request to '{requestHost}' is blocked: it resolves to an internal/non-public address (SSRF protection). Grant the 'allow_private_networks' permission to override.",
+                        "BLOCKED_INTERNAL_HOST");
+                }
+            }
+
             // Parse headers
             var headers = ParseHeaders(headersObj);
 
-            // Create HTTP client with custom settings
-            using var handler = new HttpClientHandler()
+            // Create HTTP client with custom settings. SocketsHttpHandler lets us validate the *actual*
+            // address being connected to on every connection — including redirect targets and late DNS
+            // resolution — which closes redirect-based and DNS-rebinding SSRF bypasses.
+            using var handler = new SocketsHttpHandler
             {
-                UseCookies = false
-            };
+                UseCookies = false,
+                AllowAutoRedirect = followRedirects,
+                ConnectCallback = async (ctx, ct) =>
+                {
+                    var targetHost = ctx.DnsEndPoint.Host;
+                    var addresses = IPAddress.TryParse(targetHost, out var literal)
+                        ? [literal]
+                        : await Dns.GetHostAddressesAsync(targetHost, ct);
 
-            if (!followRedirects)
-            {
-                handler.AllowAutoRedirect = false;
-            }
+                    if (!allowInternal && addresses.Any(ToolHelpers.IsPrivateOrLocalAddress))
+                    {
+                        throw new HttpRequestException(
+                            $"Blocked connection to internal address for host '{targetHost}' (SSRF protection).");
+                    }
+
+                    var socket = new Socket(SocketType.Stream, ProtocolType.Tcp)
+                    {
+                        NoDelay = true
+                    };
+                    try
+                    {
+                        await socket.ConnectAsync(addresses, ctx.DnsEndPoint.Port, ct);
+                        return new NetworkStream(socket, ownsSocket: true);
+                    }
+                    catch
+                    {
+                        socket.Dispose();
+                        throw;
+                    }
+                }
+            };
 
             if (!validateSsl)
             {
-                handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true;
+                handler.SslOptions.RemoteCertificateValidationCallback = (sender, cert, chain, sslPolicyErrors) => true;
             }
 
             using var httpClient = new HttpClient(handler)

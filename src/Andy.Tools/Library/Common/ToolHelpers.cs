@@ -476,6 +476,97 @@ public static class ToolHelpers
     }
 
     /// <summary>
+    /// Determines whether an IP address targets the loopback, link-local, unique-local, carrier-grade-NAT,
+    /// private, multicast, or unspecified ranges — i.e. an internal/non-public address that should be
+    /// blocked by default to prevent Server-Side Request Forgery (SSRF).
+    /// </summary>
+    /// <param name="address">The address to classify.</param>
+    /// <returns><c>true</c> if the address is internal/non-routable on the public internet.</returns>
+    public static bool IsPrivateOrLocalAddress(SystemNet.IPAddress address)
+    {
+        ArgumentNullException.ThrowIfNull(address);
+
+        if (address.IsIPv4MappedToIPv6)
+        {
+            address = address.MapToIPv4();
+        }
+
+        if (SystemNet.IPAddress.IsLoopback(address))
+        {
+            return true; // 127.0.0.0/8 and ::1
+        }
+
+        var b = address.GetAddressBytes();
+
+        if (address.AddressFamily == SystemNet.Sockets.AddressFamily.InterNetwork)
+        {
+            return b[0] switch
+            {
+                0 => true,                                   // 0.0.0.0/8 (this network / unspecified)
+                10 => true,                                  // 10.0.0.0/8
+                127 => true,                                 // loopback (also caught above)
+                169 when b[1] == 254 => true,                // link-local 169.254.0.0/16
+                172 when b[1] >= 16 && b[1] <= 31 => true,   // 172.16.0.0/12
+                192 when b[1] == 168 => true,                // 192.168.0.0/16
+                100 when b[1] >= 64 && b[1] <= 127 => true,  // CGNAT 100.64.0.0/10
+                >= 224 => true,                              // multicast 224/4 and reserved 240/4
+                _ => false
+            };
+        }
+
+        if (address.AddressFamily == SystemNet.Sockets.AddressFamily.InterNetworkV6)
+        {
+            if (address.IsIPv6LinkLocal || address.IsIPv6SiteLocal || address.IsIPv6Multicast
+                || address.Equals(SystemNet.IPAddress.IPv6Any))
+            {
+                return true;
+            }
+
+            // Unique Local Address fc00::/7.
+            return (b[0] & 0xFE) == 0xFC;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Determines whether a host (IP literal or DNS name) resolves to an internal/non-public address and
+    /// should therefore be blocked by default for outbound requests (SSRF protection). DNS names are
+    /// resolved; a host is treated as blocked if <b>any</b> resolved address is internal (defends against
+    /// DNS-rebinding split answers). On a resolution failure this returns <c>false</c> so the request
+    /// fails naturally at connect time, where the actual endpoint IP is the authoritative check.
+    /// </summary>
+    public static async Task<bool> IsBlockedInternalHostAsync(string host, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(host))
+        {
+            return true;
+        }
+
+        host = host.Trim('[', ']'); // strip IPv6 literal brackets
+
+        if (SystemNet.IPAddress.TryParse(host, out var literal))
+        {
+            return IsPrivateOrLocalAddress(literal);
+        }
+
+        if (string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        try
+        {
+            var addresses = await SystemNet.Dns.GetHostAddressesAsync(host, cancellationToken);
+            return addresses.Length > 0 && addresses.Any(IsPrivateOrLocalAddress);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Measures execution time of an operation.
     /// </summary>
     /// <typeparam name="T">The return type.</typeparam>
