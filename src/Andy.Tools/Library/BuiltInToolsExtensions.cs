@@ -50,6 +50,7 @@ public static class BuiltInToolsExtensions
         services.AddTool<CopyFileTool>();
         services.AddTool<MoveFileTool>();
         services.AddTool<DeleteFileTool>();
+        services.AddTool<ApplyPatchTool>();
 
         return services;
     }
@@ -233,6 +234,7 @@ public static class BuiltInToolsExtensions
             ["copy_file"] = typeof(CopyFileTool),
             ["move_file"] = typeof(MoveFileTool),
             ["delete_file"] = typeof(DeleteFileTool),
+            ["apply_patch"] = typeof(ApplyPatchTool),
 
             // Text Processing Tools
             ["search_text"] = typeof(SearchTextTool),
