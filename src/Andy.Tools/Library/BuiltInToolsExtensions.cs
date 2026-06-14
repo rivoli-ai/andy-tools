@@ -131,8 +131,12 @@ public static class BuiltInToolsExtensions
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddGitTools(this IServiceCollection services)
     {
-        // Register the Git diff tool
+        // Register the Git tools
         services.AddTool<GitDiffTool>();
+        services.AddTool<GitStatusTool>();
+        services.AddTool<GitLogTool>();
+        services.AddTool<GitShowTool>();
+        services.AddTool<GitBlameTool>();
 
         return services;
     }
@@ -264,6 +268,10 @@ public static class BuiltInToolsExtensions
 
             // Git Tools
             ["git_diff"] = typeof(GitDiffTool),
+            ["git_status"] = typeof(GitStatusTool),
+            ["git_log"] = typeof(GitLogTool),
+            ["git_show"] = typeof(GitShowTool),
+            ["git_blame"] = typeof(GitBlameTool),
 
             // Development Tools
             // PythonAnalyzerTool removed due to external dependency
