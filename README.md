@@ -141,12 +141,10 @@ The tools registered by default are defined in `BuiltInToolsExtensions`.
 ### File System Tools
 - **ReadFileTool** (`read_file`) - Read file contents
 - **WriteFileTool** (`write_file`) - Write content to files
+- **CopyFileTool** (`copy_file`) - Copy files (enforces `AllowedPaths` and the `Destructive` capability)
 - **MoveFileTool** (`move_file`) - Move/rename files
+- **DeleteFileTool** (`delete_file`) - Delete files (enforces `AllowedPaths` and the `Destructive` capability)
 - **ListDirectoryTool** (`list_directory`) - List directory contents with filtering
-
-> `CopyFileTool` and `DeleteFileTool` exist in the library but are **not registered by default**
-> (commented out in `BuiltInToolsExtensions`). Register them explicitly with
-> `services.AddTool<CopyFileTool>()` / `services.AddTool<DeleteFileTool>()` if you need them.
 
 ### Text Processing Tools
 - **FormatTextTool** (`format_text`) - Format text (JSON, XML, etc.)
@@ -165,6 +163,9 @@ The tools registered by default are defined in `BuiltInToolsExtensions`.
 ### Utility Tools
 - **DateTimeTool** (`datetime_tool`) - Date/time operations
 - **EncodingTool** (`encoding_tool`) - Encode/decode/hash text (Base64, URL, etc.)
+
+### Productivity Tools
+- **TodoManagementTool** (`todo_management`) - Create and manage todos via the built-in todo system
 - **TodoExecutor** (`todo_executor`) - Manage a todo list
 
 ### Git Tools
