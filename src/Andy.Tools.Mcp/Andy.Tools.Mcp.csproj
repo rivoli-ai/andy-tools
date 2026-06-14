@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <!-- NuGet Package Metadata -->
+    <PackageId>Andy.Tools.Mcp</PackageId>
+    <Title>Andy Tools MCP Client</Title>
+    <Authors>Rivoli AI</Authors>
+    <Company>Rivoli AI</Company>
+    <Description>Model Context Protocol (MCP) client integration for Andy.Tools. Discovers tools from external MCP servers and registers them in the Andy.Tools registry.</Description>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/rivoli-ai/andy-tools</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/rivoli-ai/andy-tools</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>mcp;model-context-protocol;tools;llm;dotnet</PackageTags>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Andy.Tools\Andy.Tools.csproj" />
+    <PackageReference Include="Andy.MCP" Version="2026.4.26-rc.29" />
+  </ItemGroup>
+
+</Project>

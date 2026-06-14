@@ -171,6 +171,50 @@ The tools registered by default are defined in `BuiltInToolsExtensions`.
 ### Git Tools
 - **GitDiffTool** (`git_diff`) - Get git diff information
 
+## MCP (Model Context Protocol) Client
+
+The optional `Andy.Tools.Mcp` package lets Andy.Tools consume tools exposed by external
+[MCP](https://modelcontextprotocol.io) servers. It connects to the configured servers on
+startup (via the [`Andy.MCP`](https://www.nuget.org/packages/Andy.MCP) library), discovers
+their tools, and registers each one in the `IToolRegistry` so it executes through the normal
+`IToolExecutor` pipeline like any built-in tool.
+
+The core `Andy.Tools` package stays dependency-free: MCP support lives entirely in the
+separate `Andy.Tools.Mcp` package.
+
+```csharp
+using Andy.MCP.Configuration;
+using Andy.Tools.Mcp;
+
+services.AddAndyTools();
+
+services.AddMcpTools(o =>
+{
+    // stdio transport (launches a server process)
+    o.Servers.Add(new McpServerConfig
+    {
+        Name = "fs",
+        Transport = "stdio",
+        Command = "npx",
+        Arguments = "-y @modelcontextprotocol/server-filesystem /tmp",
+    });
+
+    // or HTTP transport
+    o.Servers.Add(new McpServerConfig
+    {
+        Name = "remote",
+        Transport = "http",
+        Url = "https://example.com/mcp",
+    });
+});
+```
+
+Discovered tools are registered with the id `mcp__<server>__<tool>` (for example
+`mcp__fs__read_file`). They appear in the registry alongside built-in tools and can be
+executed through `IToolExecutor` using that id. A tool's MCP input schema is mapped to
+`ToolParameter`s, and each MCP tool requires the `Network` permission. If a configured
+server is unavailable at startup, it is logged and skipped without crashing the host.
+
 ## Architecture
 
 ```
