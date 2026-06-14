@@ -44,6 +44,7 @@ public static class BuiltInToolsExtensions
     public static IServiceCollection AddFileSystemTools(this IServiceCollection services)
     {
         services.AddTool<ReadFileTool>();
+        services.AddTool<ReadManyFilesTool>();
         services.AddTool<WriteFileTool>();
         services.AddTool<EditFileTool>();
         services.AddTool<ListDirectoryTool>();
@@ -228,6 +229,7 @@ public static class BuiltInToolsExtensions
         {
             // File System Tools
             ["read_file"] = typeof(ReadFileTool),
+            ["read_many_files"] = typeof(ReadManyFilesTool),
             ["write_file"] = typeof(WriteFileTool),
             ["edit_file"] = typeof(EditFileTool),
             ["list_directory"] = typeof(ListDirectoryTool),
