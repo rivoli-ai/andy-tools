@@ -45,6 +45,7 @@ public static class BuiltInToolsExtensions
     {
         services.AddTool<ReadFileTool>();
         services.AddTool<WriteFileTool>();
+        services.AddTool<EditFileTool>();
         services.AddTool<ListDirectoryTool>();
         // Temporarily disabled due to OpenAI schema validation issue with exclude_patterns array
         // services.AddTool<CopyFileTool>();
@@ -230,6 +231,7 @@ public static class BuiltInToolsExtensions
             // File System Tools
             ["read_file"] = typeof(ReadFileTool),
             ["write_file"] = typeof(WriteFileTool),
+            ["edit_file"] = typeof(EditFileTool),
             ["list_directory"] = typeof(ListDirectoryTool),
             // Temporarily disabled due to OpenAI schema validation issues
             // ["copy_file"] = typeof(CopyFileTool),
