@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <!-- NuGet Package Metadata -->
+    <PackageId>Andy.Tools.Semantic</PackageId>
+    <Title>Andy Tools Semantic Search</Title>
+    <Authors>Rivoli AI</Authors>
+    <Company>Rivoli AI</Company>
+    <Description>Semantic / embedding search for Andy.Tools. Ranks code and text chunks by embedding similarity using a pluggable IEmbeddingProvider (no built-in default).</Description>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/rivoli-ai/andy-tools</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/rivoli-ai/andy-tools</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>semantic-search;embeddings;rag;tools;llm;dotnet</PackageTags>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Andy.Tools\Andy.Tools.csproj" />
+  </ItemGroup>
+
+</Project>
