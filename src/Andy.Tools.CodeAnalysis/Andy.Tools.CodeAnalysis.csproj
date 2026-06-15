@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <!-- NuGet Package Metadata -->
+    <PackageId>Andy.Tools.CodeAnalysis</PackageId>
+    <Title>Andy Tools Code Analysis</Title>
+    <Authors>Rivoli AI</Authors>
+    <Company>Rivoli AI</Company>
+    <Description>Roslyn-powered code analysis tools for Andy.Tools, including a C# symbol outline (list_definitions) tool. Opt-in package so the core stays dependency-free.</Description>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/rivoli-ai/andy-tools</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/rivoli-ai/andy-tools</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>roslyn;code-analysis;symbols;tools;llm;dotnet</PackageTags>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Andy.Tools\Andy.Tools.csproj" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
+  </ItemGroup>
+
+</Project>
