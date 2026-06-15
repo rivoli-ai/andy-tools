@@ -30,6 +30,14 @@ public class DeleteFileToolTests : IDisposable
     {
         if (Directory.Exists(_testDirectory))
         {
+            // Some tests leave files marked read-only (e.g. the without-force delete is expected
+            // to refuse). Windows cannot recursively delete a directory containing a read-only
+            // file, so clear the attribute before deleting.
+            foreach (var file in Directory.EnumerateFiles(_testDirectory, "*", SearchOption.AllDirectories))
+            {
+                File.SetAttributes(file, FileAttributes.Normal);
+            }
+
             Directory.Delete(_testDirectory, true);
         }
     }
