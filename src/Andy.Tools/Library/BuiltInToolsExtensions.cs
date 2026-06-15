@@ -93,6 +93,7 @@ public static class BuiltInToolsExtensions
     {
         services.AddTool<HttpRequestTool>();
         services.AddTool<WebFetchTool>();
+        services.AddTool<WebSearchTool>();
         services.AddTool<JsonProcessorTool>();
 
         return services;
@@ -256,6 +257,7 @@ public static class BuiltInToolsExtensions
             // Web Tools
             ["http_request"] = typeof(HttpRequestTool),
             ["web_fetch"] = typeof(WebFetchTool),
+            ["web_search"] = typeof(WebSearchTool),
             ["json_processor"] = typeof(JsonProcessorTool),
 
             // Utility Tools
