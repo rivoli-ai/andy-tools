@@ -17,11 +17,10 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
-    <!-- The framework-independent dataframe engine, consumed as NuGet packages (previously vendored as a
-         git submodule). Until these are published to nuget.org they resolve from the local feed declared
-         in the repo-root nuget.config. -->
-    <PackageReference Include="Andy.Data" Version="1.0.0-alpha" />
-    <PackageReference Include="Andy.Data.Abstractions" Version="1.0.0-alpha" />
+    <!-- The framework-independent dataframe engine, consumed as published NuGet packages
+         (previously vendored as a git submodule). -->
+    <PackageReference Include="Andy.Data" Version="2026.6.15-rc.2" />
+    <PackageReference Include="Andy.Data.Abstractions" Version="2026.6.15-rc.2" />
   </ItemGroup>
 
   <ItemGroup>
