@@ -18,12 +18,6 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
-      with:
-        # Andy.Tools.Data references the private rivoli-ai/andy-data engine, vendored as a submodule.
-        # A token with read access to that repo is required while it is private (a PAT in the
-        # ANDY_DATA_PAT secret, or a deploy key). If andy-data is made public, the default token works.
-        submodules: recursive
-        token: ${{ secrets.ANDY_DATA_PAT || github.token }}
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
