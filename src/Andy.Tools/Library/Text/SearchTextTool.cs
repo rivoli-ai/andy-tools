@@ -86,6 +86,14 @@ public class SearchTextTool : ToolBase
             },
             new()
             {
+                Name = "use_default_excludes",
+                Description = "Whether to skip common noise directories (.git, bin, obj, node_modules, etc.) when no exclude_patterns match them (default: true)",
+                Type = "boolean",
+                Required = false,
+                DefaultValue = true
+            },
+            new()
+            {
                 Name = "recursive",
                 Description = "Whether to search recursively in subdirectories (default: true)",
                 Type = "boolean",
@@ -100,7 +108,7 @@ public class SearchTextTool : ToolBase
                 Required = false,
                 DefaultValue = 100,
                 MinValue = 1,
-                MaxValue = 1000
+                MaxValue = 10000
             },
             new()
             {
@@ -133,6 +141,7 @@ public class SearchTextTool : ToolBase
         var wholeWordsOnly = GetParameter(parameters, "whole_words_only", false);
         var filePatterns = GetParameterAsStringList(parameters, "file_patterns") ?? [];
         var excludePatterns = GetParameterAsStringList(parameters, "exclude_patterns") ?? [];
+        var useDefaultExcludes = GetParameter(parameters, "use_default_excludes", true);
         var recursive = GetParameter(parameters, "recursive", true);
         var maxResults = GetParameter(parameters, "max_results", 100);
         var contextLines = GetParameter(parameters, "context_lines", 2);
@@ -165,7 +174,7 @@ public class SearchTextTool : ToolBase
             else
             {
                 // Search in directory
-                await SearchDirectoryAsync(safeTargetPath, regex, filePatterns, excludePatterns, recursive, searchResults, searchStats, maxResults, contextLines, includeLineNumbers, context);
+                await SearchDirectoryAsync(safeTargetPath, regex, filePatterns, excludePatterns, useDefaultExcludes, recursive, searchResults, searchStats, maxResults, contextLines, includeLineNumbers, context);
             }
 
             ReportProgress(context, "Search completed", 100);
@@ -187,11 +196,18 @@ public class SearchTextTool : ToolBase
 
             var message = $"Found {searchStats.TotalMatches} matches in {searchStats.FilesWithMatches} files (searched {searchStats.FilesSearched} files)";
 
-            return ToolResults.ListSuccess(
+            var result = ToolResults.ListSuccess(
                 searchResults.Take(maxResults).ToList(),
                 message,
                 searchStats.TotalMatches
             );
+
+            foreach (var kvp in metadata)
+            {
+                result.Metadata[kvp.Key] = kvp.Value;
+            }
+
+            return result;
         }
         catch (ArgumentException ex) when (ex.Message.Contains("parsing"))
         {
@@ -218,7 +234,7 @@ public class SearchTextTool : ToolBase
         var regexPattern = searchType.ToLowerInvariant() switch
         {
             "regex" => pattern,
-            "exact" => Regex.Escape(pattern),
+            "exact" => "^" + Regex.Escape(pattern) + "$",
             "starts_with" => "^" + Regex.Escape(pattern),
             "ends_with" => Regex.Escape(pattern) + "$",
             _ => Regex.Escape(pattern) // contains
@@ -317,11 +333,21 @@ public class SearchTextTool : ToolBase
         }
     }
 
+    // Common noise directories skipped by default so the tool is useful on real code repos without
+    // requiring the caller to spell out exclude_patterns. NOT a substitute for full .gitignore parsing
+    // (out of scope) — it just covers the common case. Matched against relative path segments.
+    private static readonly HashSet<string> DefaultExcludedDirectories = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".git", ".hg", ".svn", "bin", "obj", "node_modules", ".idea", ".vs", ".vscode",
+        "dist", "build", "target", "packages", ".andy"
+    };
+
     private async Task SearchDirectoryAsync(
         string directoryPath,
         Regex regex,
         List<string> filePatterns,
         List<string> excludePatterns,
+        bool useDefaultExcludes,
         bool recursive,
         List<SearchMatch> results,
         SearchStatistics stats,
@@ -354,7 +380,8 @@ public class SearchTextTool : ToolBase
             // would otherwise double-count matches), then filter excludes.
             var filesToSearch = allFiles
                 .DistinctBy(f => f.FullName)
-                .Where(f => !ShouldExcludeFile(f.Name, f.FullName, excludePatterns))
+                .Where(f => !ShouldExcludeFile(f.Name, f.FullName, excludePatterns)
+                            && !(useDefaultExcludes && IsInDefaultExcludedDirectory(directoryPath, f.FullName)))
                 .ToList();
 
             var totalFiles = filesToSearch.Count;
@@ -399,11 +426,11 @@ public class SearchTextTool : ToolBase
     {
         return excludePatterns.Any(pattern =>
         {
-            // Check against file name
-            if (pattern.Contains('*'))
+            // Check against file name using a safe glob (escapes regex metacharacters; only * and ?
+            // are wildcards). Mirrors DeleteFileTool.ShouldExclude.
+            if (pattern.Contains('*') || pattern.Contains('?'))
             {
-                var regexPattern = "^" + pattern.Replace("*", ".*") + "$";
-                if (Regex.IsMatch(fileName, regexPattern, RegexOptions.IgnoreCase))
+                if (ToolHelpers.IsGlobMatch(fileName, pattern))
                 {
                     return true;
                 }
@@ -419,10 +446,21 @@ public class SearchTextTool : ToolBase
                 var normalizedPath = fullPath.Replace('\\', '/');
                 var normalizedPattern = pattern.Replace('\\', '/');
 
-                if (normalizedPattern.Contains('*'))
+                if (normalizedPattern.Contains('*') || normalizedPattern.Contains('?'))
                 {
-                    var regexPattern = normalizedPattern.Replace("*", ".*");
-                    return Regex.IsMatch(normalizedPath, regexPattern, RegexOptions.IgnoreCase);
+                    // Build the regex safely: escape literal characters, then re-enable * and ? as
+                    // wildcards. A naive Replace("*", ".*") leaves '.', '(', '[' etc. active.
+                    var regexPattern = Regex.Escape(normalizedPattern)
+                        .Replace("\\*", ".*")
+                        .Replace("\\?", ".");
+                    try
+                    {
+                        return Regex.IsMatch(normalizedPath, regexPattern, RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
+                    }
+                    catch (RegexMatchTimeoutException)
+                    {
+                        return false;
+                    }
                 }
                 else
                 {
@@ -434,6 +472,23 @@ public class SearchTextTool : ToolBase
         });
     }
 
+    private static bool IsInDefaultExcludedDirectory(string rootDirectory, string fullPath)
+    {
+        var relative = Path.GetRelativePath(rootDirectory, fullPath);
+        var segments = relative.Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries);
+
+        // Only the directory portion matters; the last segment is the file name itself.
+        for (int i = 0; i < segments.Length - 1; i++)
+        {
+            if (DefaultExcludedDirectories.Contains(segments[i]))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static bool IsTextFile(string filePath)
     {
         try
@@ -442,7 +497,14 @@ public class SearchTextTool : ToolBase
             using var file = new FileStream(filePath, FileMode.Open, FileAccess.Read);
             var bytesRead = file.Read(buffer, 0, buffer.Length);
 
-            // Check for null bytes (common in binary files)
+            // UTF-16 / UTF-32 text legitimately contains 0x00 bytes, so the null-byte heuristic would
+            // wrongly reject it. If the file starts with a UTF-16 or UTF-32 BOM, treat it as text.
+            if (HasUtf16OrUtf32Bom(buffer, bytesRead))
+            {
+                return true;
+            }
+
+            // Check for null bytes (common in binary files) for non-BOM files.
             for (int i = 0; i < bytesRead; i++)
             {
                 if (buffer[i] == 0)
@@ -457,6 +519,39 @@ public class SearchTextTool : ToolBase
         {
             return false;
         }
+    }
+
+    private static bool HasUtf16OrUtf32Bom(byte[] buffer, int bytesRead)
+    {
+        // UTF-32 LE: FF FE 00 00 / UTF-32 BE: 00 00 FE FF
+        if (bytesRead >= 4)
+        {
+            if (buffer[0] == 0xFF && buffer[1] == 0xFE && buffer[2] == 0x00 && buffer[3] == 0x00)
+            {
+                return true;
+            }
+
+            if (buffer[0] == 0x00 && buffer[1] == 0x00 && buffer[2] == 0xFE && buffer[3] == 0xFF)
+            {
+                return true;
+            }
+        }
+
+        // UTF-16 LE: FF FE / UTF-16 BE: FE FF
+        if (bytesRead >= 2)
+        {
+            if (buffer[0] == 0xFF && buffer[1] == 0xFE)
+            {
+                return true;
+            }
+
+            if (buffer[0] == 0xFE && buffer[1] == 0xFF)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private class SearchMatch

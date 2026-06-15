@@ -152,12 +152,10 @@ The tools registered by default are defined in `BuiltInToolsExtensions`.
 ### File System Tools
 - **ReadFileTool** (`read_file`) - Read file contents
 - **WriteFileTool** (`write_file`) - Write content to files
+- **CopyFileTool** (`copy_file`) - Copy files (enforces `AllowedPaths` and the `Destructive` capability)
 - **MoveFileTool** (`move_file`) - Move/rename files
+- **DeleteFileTool** (`delete_file`) - Delete files (enforces `AllowedPaths` and the `Destructive` capability)
 - **ListDirectoryTool** (`list_directory`) - List directory contents with filtering
-
-> `CopyFileTool` and `DeleteFileTool` exist in the library but are **not registered by default**
-> (commented out in `BuiltInToolsExtensions`). Register them explicitly with
-> `services.AddTool<CopyFileTool>()` / `services.AddTool<DeleteFileTool>()` if you need them.
 
 ### Text Processing Tools
 - **FormatTextTool** (`format_text`) - Format text (JSON, XML, etc.)
@@ -176,10 +174,57 @@ The tools registered by default are defined in `BuiltInToolsExtensions`.
 ### Utility Tools
 - **DateTimeTool** (`datetime_tool`) - Date/time operations
 - **EncodingTool** (`encoding_tool`) - Encode/decode/hash text (Base64, URL, etc.)
+
+### Productivity Tools
+- **TodoManagementTool** (`todo_management`) - Create and manage todos via the built-in todo system
 - **TodoExecutor** (`todo_executor`) - Manage a todo list
 
 ### Git Tools
 - **GitDiffTool** (`git_diff`) - Get git diff information
+
+## MCP (Model Context Protocol) Client
+
+The optional `Andy.Tools.Mcp` package lets Andy.Tools consume tools exposed by external
+[MCP](https://modelcontextprotocol.io) servers. It connects to the configured servers on
+startup (via the [`Andy.MCP`](https://www.nuget.org/packages/Andy.MCP) library), discovers
+their tools, and registers each one in the `IToolRegistry` so it executes through the normal
+`IToolExecutor` pipeline like any built-in tool.
+
+The core `Andy.Tools` package stays dependency-free: MCP support lives entirely in the
+separate `Andy.Tools.Mcp` package.
+
+```csharp
+using Andy.MCP.Configuration;
+using Andy.Tools.Mcp;
+
+services.AddAndyTools();
+
+services.AddMcpTools(o =>
+{
+    // stdio transport (launches a server process)
+    o.Servers.Add(new McpServerConfig
+    {
+        Name = "fs",
+        Transport = "stdio",
+        Command = "npx",
+        Arguments = "-y @modelcontextprotocol/server-filesystem /tmp",
+    });
+
+    // or HTTP transport
+    o.Servers.Add(new McpServerConfig
+    {
+        Name = "remote",
+        Transport = "http",
+        Url = "https://example.com/mcp",
+    });
+});
+```
+
+Discovered tools are registered with the id `mcp__<server>__<tool>` (for example
+`mcp__fs__read_file`). They appear in the registry alongside built-in tools and can be
+executed through `IToolExecutor` using that id. A tool's MCP input schema is mapped to
+`ToolParameter`s, and each MCP tool requires the `Network` permission. If a configured
+server is unavailable at startup, it is logged and skipped without crashing the host.
 
 ## Architecture
 

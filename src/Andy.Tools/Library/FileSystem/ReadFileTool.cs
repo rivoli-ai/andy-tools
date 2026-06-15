@@ -60,8 +60,27 @@ public class ReadFileTool : ToolBase
                 Type = "integer",
                 Required = false,
                 MinValue = 1
+            },
+            new()
+            {
+                Name = "as_base64",
+                Description = "Return the file as base64 with its media type instead of reading it as text. Automatically enabled for known image types.",
+                Type = "boolean",
+                Required = false,
+                DefaultValue = false
             }
         ]
+    };
+
+    private static readonly Dictionary<string, string> ImageMediaTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        [".png"] = "image/png",
+        [".jpg"] = "image/jpeg",
+        [".jpeg"] = "image/jpeg",
+        [".gif"] = "image/gif",
+        [".webp"] = "image/webp",
+        [".bmp"] = "image/bmp",
+        [".svg"] = "image/svg+xml"
     };
 
     /// <inheritdoc />
@@ -72,6 +91,7 @@ public class ReadFileTool : ToolBase
         var maxSizeMb = GetParameter<double>(parameters, "max_size_mb", 10);
         var startLine = GetParameter<int?>(parameters, "start_line");
         var endLine = GetParameter<int?>(parameters, "end_line");
+        var asBase64 = GetParameter<bool>(parameters, "as_base64", false);
 
         try
         {
@@ -99,6 +119,36 @@ public class ReadFileTool : ToolBase
                     $"File is too large ({ToolHelpers.FormatFileSize(fileInfo.Length)}). Maximum allowed size is {maxSizeMb}MB",
                     "FILE_TOO_LARGE",
                     new { file_size = fileInfo.Length, max_size = maxSizeBytes }
+                );
+            }
+
+            // Return image/binary content as base64 when requested or for known image types.
+            var extension = Path.GetExtension(safePath);
+            var isImage = ImageMediaTypes.TryGetValue(extension, out var imageMediaType);
+            if (asBase64 || isImage)
+            {
+                ReportProgress(context, "Reading file as base64...", 50);
+
+                var bytes = await File.ReadAllBytesAsync(safePath, context.CancellationToken);
+                var base64 = Convert.ToBase64String(bytes);
+                var mediaType = imageMediaType ?? "application/octet-stream";
+
+                ReportProgress(context, "File read successfully", 100);
+
+                var base64Metadata = new Dictionary<string, object?>
+                {
+                    ["file_size"] = fileInfo.Length,
+                    ["file_size_formatted"] = ToolHelpers.FormatFileSize(fileInfo.Length),
+                    ["media_type"] = mediaType,
+                    ["encoding_format"] = "base64",
+                    ["last_modified"] = fileInfo.LastWriteTimeUtc
+                };
+
+                return ToolResults.TextSuccess(
+                    base64,
+                    mediaType,
+                    $"Successfully read file as base64: {fileInfo.Name}",
+                    base64Metadata
                 );
             }
 

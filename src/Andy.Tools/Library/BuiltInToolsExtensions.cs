@@ -44,13 +44,14 @@ public static class BuiltInToolsExtensions
     public static IServiceCollection AddFileSystemTools(this IServiceCollection services)
     {
         services.AddTool<ReadFileTool>();
+        services.AddTool<ReadManyFilesTool>();
         services.AddTool<WriteFileTool>();
+        services.AddTool<EditFileTool>();
         services.AddTool<ListDirectoryTool>();
-        // Temporarily disabled due to OpenAI schema validation issue with exclude_patterns array
-        // services.AddTool<CopyFileTool>();
+        services.AddTool<CopyFileTool>();
         services.AddTool<MoveFileTool>();
-        // Temporarily disabled due to OpenAI schema validation issue
-        // services.AddTool<DeleteFileTool>();
+        services.AddTool<DeleteFileTool>();
+        services.AddTool<ApplyPatchTool>();
 
         return services;
     }
@@ -91,6 +92,8 @@ public static class BuiltInToolsExtensions
     public static IServiceCollection AddWebTools(this IServiceCollection services)
     {
         services.AddTool<HttpRequestTool>();
+        services.AddTool<WebFetchTool>();
+        services.AddTool<WebSearchTool>();
         services.AddTool<JsonProcessorTool>();
 
         return services;
@@ -116,8 +119,7 @@ public static class BuiltInToolsExtensions
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddProductivityTools(this IServiceCollection services)
     {
-        // Temporarily disabled due to OpenAI schema validation issue
-        // services.AddTool<TodoManagementTool>();
+        services.AddTool<TodoManagementTool>();
         services.AddTool<TodoExecutor>();
 
         return services;
@@ -130,8 +132,12 @@ public static class BuiltInToolsExtensions
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddGitTools(this IServiceCollection services)
     {
-        // Register the Git diff tool
+        // Register the Git tools
         services.AddTool<GitDiffTool>();
+        services.AddTool<GitStatusTool>();
+        services.AddTool<GitLogTool>();
+        services.AddTool<GitShowTool>();
+        services.AddTool<GitBlameTool>();
 
         return services;
     }
@@ -229,12 +235,14 @@ public static class BuiltInToolsExtensions
         {
             // File System Tools
             ["read_file"] = typeof(ReadFileTool),
+            ["read_many_files"] = typeof(ReadManyFilesTool),
             ["write_file"] = typeof(WriteFileTool),
+            ["edit_file"] = typeof(EditFileTool),
             ["list_directory"] = typeof(ListDirectoryTool),
-            // Temporarily disabled due to OpenAI schema validation issues
-            // ["copy_file"] = typeof(CopyFileTool),
+            ["copy_file"] = typeof(CopyFileTool),
             ["move_file"] = typeof(MoveFileTool),
-            // ["delete_file"] = typeof(DeleteFileTool),
+            ["delete_file"] = typeof(DeleteFileTool),
+            ["apply_patch"] = typeof(ApplyPatchTool),
 
             // Text Processing Tools
             ["search_text"] = typeof(SearchTextTool),
@@ -248,6 +256,8 @@ public static class BuiltInToolsExtensions
 
             // Web Tools
             ["http_request"] = typeof(HttpRequestTool),
+            ["web_fetch"] = typeof(WebFetchTool),
+            ["web_search"] = typeof(WebSearchTool),
             ["json_processor"] = typeof(JsonProcessorTool),
 
             // Utility Tools
@@ -255,11 +265,15 @@ public static class BuiltInToolsExtensions
             ["encoding_tool"] = typeof(EncodingTool),
 
             // Productivity Tools
-            // ["todo_management"] = typeof(TodoManagementTool), // Disabled for OpenAI
+            ["todo_management"] = typeof(TodoManagementTool),
             ["todo_executor"] = typeof(TodoExecutor),
 
             // Git Tools
             ["git_diff"] = typeof(GitDiffTool),
+            ["git_status"] = typeof(GitStatusTool),
+            ["git_log"] = typeof(GitLogTool),
+            ["git_show"] = typeof(GitShowTool),
+            ["git_blame"] = typeof(GitBlameTool),
 
             // Development Tools
             // PythonAnalyzerTool removed due to external dependency
