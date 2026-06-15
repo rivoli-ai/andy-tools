@@ -1,0 +1,3 @@
+[submodule "external/andy-data"]
+	path = external/andy-data
+	url = https://github.com/rivoli-ai/andy-data.git
