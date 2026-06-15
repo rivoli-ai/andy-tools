@@ -134,6 +134,17 @@ The `examples/Andy.Tools.Examples` project demonstrates all features of Andy Too
 - **CustomToolExamples**: Creating and using custom tools
 - **SecurityExamples**: Permission management, secure tool execution
 
+## Dataframe tools (`Andy.Tools.Data`)
+
+The `Andy.Tools.Data` package adds 28 `dataframe_*` tools — load (CSV/JSON/Parquet/Delta), inspect (schema/profile/preview/value_counts/assert), transform (select/filter/with_column/rename/group_by/window/pivot/unpivot/unnest/join/sample/sort/distinct/union/fillna/dropna), and export — letting a model manipulate tabular data with **no SQL or code execution**. They are thin Andy `ITool` adapters over the framework-independent [`Andy.Data`](https://github.com/rivoli-ai/andy-data) engine (vendored as a submodule under `external/andy-data`).
+
+```csharp
+services.AddAndyTools();
+services.AddAndyDataFrameTools();   // registers all dataframe_* tools
+// optional path scoping: services.AddSingleton<IPathPolicy, MyPolicy>();
+// optional Andy.Permissions glue: provider.UseAndyDataFramePermissions();  // Andy.Tools.Data.Permissions
+```
+
 ## Built-in Tools
 
 The tools registered by default are defined in `BuiltInToolsExtensions`.

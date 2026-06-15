@@ -72,4 +72,4 @@ container/rootfs-safe/
 # NUnit
 *.VisualState.xml
 TestResult.xml
-nunit-*.xml
+nunit-*.xml.idea/
