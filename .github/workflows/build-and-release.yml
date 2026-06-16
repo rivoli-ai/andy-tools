@@ -45,12 +45,20 @@ jobs:
         fi
         
         echo "VERSION=$VERSION" >> $GITHUB_ENV
-        
-        dotnet pack src/Andy.Tools/Andy.Tools.csproj \
-          --configuration Release \
-          --no-build \
-          --output ./artifacts \
-          -p:PackageVersion=$VERSION
+        echo "Packing version $VERSION"
+
+        # Andy.Tools.Data depends (via a project reference) on Andy.Tools at the same version, so
+        # both packages are packed and published together. PackageVersion is a global property, so
+        # the project-reference dependency in Andy.Tools.Data resolves to the same $VERSION.
+        for proj in \
+          src/Andy.Tools/Andy.Tools.csproj \
+          src/Andy.Tools.Data/Andy.Tools.Data.csproj; do
+          dotnet pack "$proj" \
+            --configuration Release \
+            --no-build \
+            --output ./artifacts \
+            -p:PackageVersion=$VERSION
+        done
     
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
