@@ -136,7 +136,7 @@ The `examples/Andy.Tools.Examples` project demonstrates all features of Andy Too
 
 ## Dataframe tools (`Andy.Tools.Data`)
 
-The `Andy.Tools.Data` package adds 28 `dataframe_*` tools — load (CSV/JSON/Parquet/Delta), inspect (schema/profile/preview/value_counts/assert), transform (select/filter/with_column/rename/group_by/window/pivot/unpivot/unnest/join/sample/sort/distinct/union/fillna/dropna), and export — letting a model manipulate tabular data with **no SQL or code execution**. They are thin Andy `ITool` adapters over the framework-independent [`Andy.Data`](https://github.com/rivoli-ai/andy-data) engine (vendored as a submodule under `external/andy-data`).
+The `Andy.Tools.Data` package adds 28 `dataframe_*` tools — load (CSV/JSON/Parquet/Delta), inspect (schema/profile/preview/value_counts/assert), transform (select/filter/with_column/rename/group_by/window/pivot/unpivot/unnest/join/sample/sort/distinct/union/fillna/dropna), and export — letting a model manipulate tabular data with **no SQL or code execution**. They are thin Andy `ITool` adapters over the framework-independent [`Andy.Data`](https://github.com/rivoli-ai/andy-data) engine (consumed as the published `Andy.Data` / `Andy.Data.Abstractions` NuGet packages). See [docs/tools-reference.md](docs/tools-reference.md#data--dataframe-tools) for the full per-tool reference.
 
 ```csharp
 services.AddAndyTools();
