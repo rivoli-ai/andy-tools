@@ -465,6 +465,415 @@ var parameters = new Dictionary<string, object?>
 var result = await executor.ExecuteAsync("git_diff", parameters);
 ```
 
+## Data / DataFrame Tools
+
+The `Andy.Tools.Data` package adds 28 `dataframe_*` tools — thin Andy `ITool` adapters over the
+framework-independent [`Andy.Data`](https://github.com/rivoli-ai/andy-data) DuckDB-backed dataframe
+engine. They load, inspect, transform, aggregate, join, reshape, and export tabular data
+(CSV/JSON/Parquet/partitioned Parquet/Delta Lake) through a **closed, injection-safe vocabulary** —
+no model-supplied SQL and no code execution. Register them after `AddAndyTools()`:
+
+```csharp
+services.AddAndyTools();
+services.AddAndyDataFrameTools();   // registers all dataframe_* tools
+// optional path scoping:  services.AddSingleton<IPathPolicy, MyPolicy>();
+```
+
+**Datasets.** Every tool works on named, session-scoped datasets. A load registers a dataset under a
+`dataset_id` (`^[A-Za-z_][A-Za-z0-9_]{0,127}$`); a transform reads one or more datasets and registers
+its result under `into` (or, when `into` is omitted, replaces `dataset_id` in place). `dataframe_join`,
+`dataframe_union`, and `dataframe_rename` require `into`.
+
+**Standard envelope.** Unless noted, every tool returns the same shape: `success`, `dataset_id`,
+`schema` (array of `{ name, type, nullable }`), `row_count`, `preview_rows` (a bounded preview, ≤ 50
+rows), `preview_truncated`, `warnings`, and `stats` (`{ elapsed_ms, bytes_scanned, rows_produced,
+plan? }`). On failure: `success=false`, `error_code` (e.g. `DATASET_NOT_FOUND`, `COLUMN_NOT_FOUND`,
+`INVALID_PREDICATE`, `FILE_NOT_FOUND`, `PERMISSION_DENIED`), `message`, and optional `details`. The
+report-style tools (`dataframe_profile`, `dataframe_assert`, `dataframe_value_counts`,
+`dataframe_list`) place one row of output per column/expectation/value/dataset in `preview_rows`.
+
+**`explain`.** Every transform accepts an optional `explain` (boolean, default `false`); when `true`
+the DuckDB query plan is returned in `stats.plan`.
+
+The structured **predicate trees** (`dataframe_filter`, `group_by` `having`) and **expression trees**
+(`dataframe_with_column`) are documented in the Andy.Data
+[operations reference](https://github.com/rivoli-ai/andy-data/blob/main/docs/operations.md#predicate-trees).
+
+### dataframe_load_csv
+
+Loads a CSV file (or glob such as `data/*.csv`) into a named dataset; column types are inferred by
+sampling unless overridden.
+
+**Parameters:**
+- `path` (string, required): CSV file or glob
+- `dataset_id` (string, required): Id to register the dataset under
+- `header` (boolean, optional): Whether row 1 holds column names (default: auto-detect)
+- `delimiter` (string, optional): Field delimiter (default: auto-detect)
+- `quote` (string, optional): Quote character (default: auto-detect)
+- `null_string` (string, optional): Token to read as NULL (e.g. `"NA"`)
+- `columns` (object, optional): Column→DuckDB-type overrides, e.g. `{ "amount": "DECIMAL(12,2)" }`
+- `sample_size` (integer, optional): Rows sampled for type inference (default: 20480; `-1` = whole file)
+
+**Example:**
+```csharp
+var parameters = new Dictionary<string, object?>
+{
+    ["path"] = "data/sales.csv",
+    ["dataset_id"] = "sales"
+};
+var result = await executor.ExecuteAsync("dataframe_load_csv", parameters);
+```
+
+### dataframe_load_json
+
+Loads a JSON file (or glob) — newline-delimited JSON (NDJSON) or a top-level array of objects; types
+are inferred from the values.
+
+**Parameters:**
+- `path` (string, required): JSON file or glob (e.g. `data/*.ndjson`)
+- `dataset_id` (string, required): Id to register the dataset under
+- `format` (string, optional): `auto` (default), `newline_delimited`, or `array`
+
+### dataframe_load_parquet
+
+Loads a Parquet file, glob, or Hive-partitioned directory glob; schema/types come from file metadata.
+
+**Parameters:**
+- `path` (string, required): File, glob, or partitioned-dir glob (e.g. `events/**/*.parquet`)
+- `dataset_id` (string, required): Id to register the dataset under
+- `hive_partitioning` (boolean, optional): Expose `key=value/` directories as partition columns (default: auto)
+- `union_by_name` (boolean, optional): Align columns by name across files with differing schemas (default: false)
+
+### dataframe_load_delta
+
+Loads a Delta Lake table; with no `version`/`timestamp` it reads the latest snapshot, otherwise it
+performs time travel.
+
+**Parameters:**
+- `path` (string, required): Delta table root directory
+- `dataset_id` (string, required): Id to register the dataset under
+- `version` (integer, optional): Load this snapshot version (mutually exclusive with `timestamp`)
+- `timestamp` (string, optional): Load the latest version at/before this ISO-8601 instant (mutually exclusive with `version`)
+
+### dataframe_schema
+
+Returns a dataset's column names, types, and nullability without scanning data.
+
+**Parameters:**
+- `dataset_id` (string, required): Dataset to describe
+
+### dataframe_preview
+
+Returns a bounded set of rows: first (`head`), last (`tail`), or a random `sample`.
+
+**Parameters:**
+- `dataset_id` (string, required): Dataset to preview
+- `mode` (string, optional): `head` (default), `tail`, or `sample`
+- `limit` (integer, optional): Rows to return, 1..1000 (default: 50)
+- `seed` (integer, optional): Required when `mode=sample`; makes sampling repeatable
+
+### dataframe_profile
+
+A `describe()`-style per-column summary. `preview_rows` holds one stats row per column.
+
+**Parameters:**
+- `dataset_id` (string, required): Dataset to profile
+- `columns` (array, optional): Subset of columns (default: all)
+- `quantiles` (array, optional): Quantiles in [0,1] for numeric columns (default: `[0.25, 0.5, 0.75]`)
+
+### dataframe_value_counts
+
+Counts occurrences of each distinct value of a column (`{ <column>, count, proportion }`), ordered by
+count descending. Registers the result.
+
+**Parameters:**
+- `dataset_id` (string, required): Input dataset
+- `column` (string, required): Column to count
+- `into` (string, optional): Output id (defaults to `dataset_id`)
+- `limit` (integer, optional): Keep the top-N most frequent values
+- `dropna` (boolean, optional): Exclude NULLs (default: true)
+
+### dataframe_assert
+
+Evaluates data-quality expectations and returns a per-expectation pass/fail report (does not modify or
+register a dataset). `preview_rows` holds one row per expectation.
+
+**Parameters:**
+- `dataset_id` (string, required): Dataset to check
+- `expectations` (array, required): `{ type, ... }` specs; `type` ∈ `not_null`, `unique`, `in_range`, `in_set`, `matches`, `row_count`
+
+**Example:**
+```csharp
+var parameters = new Dictionary<string, object?>
+{
+    ["dataset_id"] = "sales",
+    ["expectations"] = new object[]
+    {
+        new Dictionary<string, object?> { ["type"] = "not_null", ["column"] = "id" },
+        new Dictionary<string, object?> { ["type"] = "in_range", ["column"] = "amount", ["min"] = 0 }
+    }
+};
+var result = await executor.ExecuteAsync("dataframe_assert", parameters);
+```
+
+### dataframe_list
+
+Lists the datasets registered in the session; `preview_rows` holds one row per dataset
+(`dataset_id, row_count, column_count, source`). Takes no parameters.
+
+### dataframe_select
+
+Projects, renames, and reorders columns.
+
+**Parameters:**
+- `dataset_id` (string, required): Input dataset
+- `columns` (array, required): Column names, or `{ column, as }` objects to rename
+- `into` (string, optional): Output id (defaults to `dataset_id`)
+- `explain` (boolean, optional): Include the query plan in `stats.plan`
+
+### dataframe_filter
+
+Selects rows matching a structured predicate tree (no SQL).
+
+**Parameters:**
+- `dataset_id` (string, required): Input dataset
+- `predicate` (object, required): A predicate tree of condition/logical nodes
+- `into` (string, optional): Output id (defaults to `dataset_id`)
+- `explain` (boolean, optional): Include the query plan in `stats.plan`
+
+**Example:**
+```csharp
+var parameters = new Dictionary<string, object?>
+{
+    ["dataset_id"] = "sales",
+    ["into"] = "big_sales",
+    ["predicate"] = new Dictionary<string, object?>
+    {
+        ["column"] = "amount", ["op"] = "gte", ["value"] = 1000
+    }
+};
+var result = await executor.ExecuteAsync("dataframe_filter", parameters);
+```
+
+### dataframe_with_column
+
+Adds or replaces a column computed from a structured expression tree (no SQL).
+
+**Parameters:**
+- `dataset_id` (string, required): Input dataset
+- `name` (string, required): New or replaced column name
+- `expression` (object, required): An expression tree
+- `into` (string, optional): Output id (defaults to `dataset_id`)
+- `explain` (boolean, optional): Include the query plan in `stats.plan`
+
+### dataframe_rename
+
+Renames columns; unmentioned columns are kept and order is preserved.
+
+**Parameters:**
+- `dataset_id` (string, required): Input dataset
+- `into` (string, required): Output id
+- `columns` (object, required): Map of old name → new name
+- `explain` (boolean, optional): Include the query plan in `stats.plan`
+
+### dataframe_group_by
+
+Groups by zero or more columns and computes aggregates.
+
+**Parameters:**
+- `dataset_id` (string, required): Input dataset
+- `group_by` (array, required): Grouping column names (may be empty for a grand total)
+- `aggregations` (array, required): `{ column, function, alias, q?, column2? }` specs; `function` ∈ count, count_distinct, approx_count_distinct, sum, product, avg, min, max, median, mode, stddev(_pop/_samp), var(_pop/_samp), bool_and, bool_or, first, last, list, quantile, approx_quantile, corr, covar, arg_min, arg_max
+- `into` (string, optional): Output id (defaults to `dataset_id`)
+- `having` (object, optional): Predicate tree over the aggregated rows (columns must be group keys or aggregate aliases)
+- `explain` (boolean, optional): Include the query plan in `stats.plan`
+
+**Example:**
+```csharp
+var parameters = new Dictionary<string, object?>
+{
+    ["dataset_id"] = "sales",
+    ["group_by"] = new[] { "region" },
+    ["aggregations"] = new object[]
+    {
+        new Dictionary<string, object?> { ["column"] = "amount", ["function"] = "sum", ["alias"] = "total" },
+        new Dictionary<string, object?> { ["column"] = "*", ["function"] = "count", ["alias"] = "n" }
+    }
+};
+var result = await executor.ExecuteAsync("dataframe_group_by", parameters);
+```
+
+### dataframe_window
+
+Adds window-function columns without collapsing rows.
+
+**Parameters:**
+- `dataset_id` (string, required): Input dataset
+- `functions` (array, required): `{ function, column?, alias, args? }`; `function` ∈ row_number, rank, dense_rank, percent_rank, ntile, lag, lead, first_value, last_value, sum, avg, min, max, count
+- `into` (string, optional): Output id (defaults to `dataset_id`)
+- `partition_by` (array, optional): Partition column names
+- `order_by` (array, optional): `{ column, direction (asc|desc), nulls (first|last) }`
+- `frame` (object, optional): `{ start, end }` window-frame bounds
+- `explain` (boolean, optional): Include the query plan in `stats.plan`
+
+### dataframe_pivot
+
+Reshapes long data to wide.
+
+**Parameters:**
+- `dataset_id` (string, required): Input dataset
+- `index` (array, required): Columns that remain rows
+- `columns` (string, required): Column whose distinct values become new columns
+- `values` (string or array, required): A column name, or `{ column, aggregation, alias? }` objects
+- `into` (string, optional): Output id (defaults to `dataset_id`)
+- `aggregation` (string, optional): `sum` (default), `avg`, `min`, `max`, `count` (scalar-`values` form only)
+- `explain` (boolean, optional): Include the query plan in `stats.plan`
+
+### dataframe_unpivot
+
+Reshapes wide data to long.
+
+**Parameters:**
+- `dataset_id` (string, required): Input dataset
+- `id_columns` (array, required): Columns kept as row identifiers (may be empty)
+- `value_columns` (array, required): Columns to stack into rows
+- `into` (string, optional): Output id (defaults to `dataset_id`)
+- `name_to` (string, optional): Output name column (default: `name`)
+- `value_to` (string, optional): Output value column (default: `value`)
+- `explain` (boolean, optional): Include the query plan in `stats.plan`
+
+### dataframe_unnest
+
+Explodes a `LIST` column so each element becomes its own row; other columns are replicated.
+
+**Parameters:**
+- `dataset_id` (string, required): Input dataset
+- `column` (string, required): LIST column to explode
+- `into` (string, optional): Output id (defaults to `dataset_id`)
+- `explain` (boolean, optional): Include the query plan in `stats.plan`
+
+### dataframe_join
+
+Joins two datasets into `into`.
+
+**Parameters:**
+- `left` (string, required): Left dataset id
+- `right` (string, required): Right dataset id
+- `into` (string, required): Output id
+- `how` (string, optional): `inner` (default), `left`, `right`, `full`, `semi`, `anti`, `cross`, `asof`
+- `on` (array, optional): Key columns present in both sides
+- `left_on` / `right_on` (array, optional): Equal-length key lists (alternative to `on`)
+- `asof_op` (string, optional): `>=` (default) or `<=` for the as-of column when `how=asof`
+- `suffix` (string, optional): Suffix for overlapping non-key right columns (default: `_right`)
+- `explain` (boolean, optional): Include the query plan in `stats.plan`
+
+### dataframe_union
+
+Concatenates two or more datasets into `into`.
+
+**Parameters:**
+- `datasets` (array, required): Ordered ids to concatenate (≥ 2)
+- `into` (string, required): Output id
+- `by_name` (boolean, optional): Align columns by name rather than position (default: false)
+- `distinct` (boolean, optional): Drop duplicate rows across the union (default: false)
+- `explain` (boolean, optional): Include the query plan in `stats.plan`
+
+### dataframe_sort
+
+Orders rows by one or more keys; optional top-N.
+
+**Parameters:**
+- `dataset_id` (string, required): Input dataset
+- `by` (array, required): `{ column, direction (asc|desc), nulls (first|last) }`
+- `into` (string, optional): Output id (defaults to `dataset_id`)
+- `limit` (integer, optional): Keep only the first N rows after sorting
+- `explain` (boolean, optional): Include the query plan in `stats.plan`
+
+### dataframe_sample
+
+Materializes a deterministic reservoir sample.
+
+**Parameters:**
+- `dataset_id` (string, required): Input dataset
+- `n` (integer, required): Reservoir size (≥ 1)
+- `seed` (integer, required): Deterministic seed for repeatability
+- `into` (string, optional): Output id (defaults to `dataset_id`)
+- `explain` (boolean, optional): Include the query plan in `stats.plan`
+
+### dataframe_distinct
+
+Removes duplicate rows (whole-row, or per `columns` combination).
+
+**Parameters:**
+- `dataset_id` (string, required): Input dataset
+- `into` (string, optional): Output id (defaults to `dataset_id`)
+- `columns` (array, optional): Columns to dedupe on (default: all)
+- `keep` (string, optional): `first` (default) or `last` within each group, under `order_by`
+- `order_by` (array, optional): `{ column, direction (asc|desc) }` defining within-group order
+- `explain` (boolean, optional): Include the query plan in `stats.plan`
+
+### dataframe_fillna
+
+Replaces NULLs — scalar mode (`value`/`values`) or carry mode (`method` ffill/bfill).
+
+**Parameters:**
+- `dataset_id` (string, required): Input dataset
+- `into` (string, optional): Output id (defaults to `dataset_id`)
+- `value` (string, optional): Scalar mode: global replacement, coerced to each column's type
+- `values` (object, optional): Scalar mode: per-column overrides
+- `method` (string, optional): Carry mode: `ffill` or `bfill` (requires `order_by`; mutually exclusive with `value`/`values`)
+- `order_by` (array, optional): Ordering for `method`
+- `partition_by` (array, optional): Carry-mode groups; the fill restarts per group
+- `columns` (array, optional): Carry-mode subset to fill (default: all)
+- `explain` (boolean, optional): Include the query plan in `stats.plan`
+
+### dataframe_dropna
+
+Removes rows with NULLs.
+
+**Parameters:**
+- `dataset_id` (string, required): Input dataset
+- `into` (string, optional): Output id (defaults to `dataset_id`)
+- `columns` (array, optional): Columns to check (default: all)
+- `how` (string, optional): Drop when `any` (default) or `all` of the checked columns are NULL
+- `explain` (boolean, optional): Include the query plan in `stats.plan`
+
+### dataframe_export
+
+Writes a dataset to disk. Requires filesystem write permission.
+
+**Parameters:**
+- `dataset_id` (string, required): Dataset to export
+- `path` (string, required): Output file or directory
+- `format` (string, required): `csv`, `parquet`, `json`, or `delta`
+- `mode` (string, optional): `error` (default; fail if target exists), `append` (Delta only), or `overwrite`
+- `partition_by` (array, optional): Partition columns (Parquet and Delta)
+- `compression` (string, optional): Codec, e.g. `snappy`, `zstd`, `gzip` (Parquet/JSON)
+- `array` (boolean, optional): JSON: write a top-level array instead of NDJSON (default: false)
+- `header` (boolean, optional): CSV: write a header row (default: true)
+- `delimiter` (string, optional): CSV field delimiter (default: `,`)
+- `quote` (string, optional): CSV quote character (default: `"`)
+- `escape` (string, optional): CSV escape character (default: `"`)
+
+**Example:**
+```csharp
+var parameters = new Dictionary<string, object?>
+{
+    ["dataset_id"] = "summary",
+    ["path"] = "out/summary.parquet",
+    ["format"] = "parquet",
+    ["mode"] = "overwrite"
+};
+var result = await executor.ExecuteAsync("dataframe_export", parameters);
+```
+
+### dataframe_drop
+
+Releases a dataset; its backend resources are freed once no remaining dataset depends on them.
+
+**Parameters:**
+- `dataset_id` (string, required): Id of the dataset to release
+
 ## Tool Categories
 
 Tools are organized into categories for easier discovery:
