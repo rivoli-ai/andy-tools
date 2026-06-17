@@ -93,10 +93,13 @@ public sealed class DataFrameToolsIntegrationTests
         how.AllowedValues.Should().NotBeNull();
         how.AllowedValues!.Select(v => v?.ToString()).Should().Contain(new[] { "inner", "left", "asof" });
 
-        // Capability flags are mapped per tool.
+        // Capability flags are mapped per tool: in-memory operations need nothing, loaders read the
+        // input path, the exporter writes the output path.
         new SchemaTool().Metadata.RequiredPermissions.Should().Be(ToolPermissionFlags.None);
-        new ExportTool().Metadata.RequiredPermissions.Should()
-            .HaveFlag(ToolPermissionFlags.FileSystemWrite);
-        new FilterTool().Metadata.RequiredPermissions.Should().Be(ToolPermissionFlags.FileSystemRead);
+        new FilterTool().Metadata.RequiredPermissions.Should().Be(ToolPermissionFlags.None);
+        new GroupByTool().Metadata.RequiredPermissions.Should().Be(ToolPermissionFlags.None);
+        new JoinTool().Metadata.RequiredPermissions.Should().Be(ToolPermissionFlags.None);
+        new LoadCsvTool().Metadata.RequiredPermissions.Should().Be(ToolPermissionFlags.FileSystemRead);
+        new ExportTool().Metadata.RequiredPermissions.Should().Be(ToolPermissionFlags.FileSystemWrite);
     }
 }

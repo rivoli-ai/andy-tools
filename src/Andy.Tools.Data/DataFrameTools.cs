@@ -52,7 +52,9 @@ public sealed class ExportTool : DataFrameToolAdapter
 
     public ExportTool(IDuckDbBackend backend, IDatasetCatalog catalog, IPathPolicy? pathPolicy = null)
         : base(new ExportOperation(backend, catalog, pathPolicy)) { }
-    protected override ToolPermissionFlags RequiredPermissions => ToolPermissionFlags.FileSystemRead | ToolPermissionFlags.FileSystemWrite;
+    // Reads from an in-memory dataset and writes the result to disk, so it needs write (scoped to the
+    // output path) but not read.
+    protected override ToolPermissionFlags RequiredPermissions => ToolPermissionFlags.FileSystemWrite;
 }
 
 public sealed class SchemaTool : DataFrameToolAdapter
