@@ -13,9 +13,24 @@ env:
   NUGET_SOURCE: 'https://api.nuget.org/v3/index.json'
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      # 'true' when this push/PR touches library source — gates the RC publish below
+      # so docs-only / test-only changes don't cut a new NuGet prerelease.
+      src: ${{ steps.filter.outputs.src }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        filters: |
+          src:
+            - 'src/**'
+
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
       with:
@@ -68,9 +83,10 @@ jobs:
         retention-days: 7
 
   publish-prerelease:
-    needs: build
+    needs: [build, changes]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    # Only publish a dated RC when pushing to main AND library source changed.
+    if: github.ref == 'refs/heads/main' && needs.changes.outputs.src == 'true'
     
     steps:
     - name: Download artifacts
