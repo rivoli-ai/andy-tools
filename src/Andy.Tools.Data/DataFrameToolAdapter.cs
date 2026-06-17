@@ -28,8 +28,14 @@ public abstract class DataFrameToolAdapter : ToolBase
 
     protected DataFrameToolAdapter(DataFrameOperationBase operation) => Operation = operation;
 
-    /// <summary>Capabilities this tool requires; overridden per tool (loads read, export writes, etc.).</summary>
-    protected virtual ToolPermissionFlags RequiredPermissions => ToolPermissionFlags.FileSystemRead;
+    /// <summary>
+    /// Capabilities this tool requires. Defaults to <see cref="ToolPermissionFlags.None"/>: most
+    /// dataframe operations work purely on in-memory, already-loaded datasets and touch no files, so
+    /// they need no filesystem permission. Only the loaders (override with
+    /// <see cref="ToolPermissionFlags.FileSystemRead"/>, scoped to the input path) and the exporter
+    /// (<see cref="ToolPermissionFlags.FileSystemWrite"/>, scoped to the output path) touch disk.
+    /// </summary>
+    protected virtual ToolPermissionFlags RequiredPermissions => ToolPermissionFlags.None;
 
     /// <inheritdoc />
     public override ToolMetadata Metadata => _metadata ??= BuildMetadata();
