@@ -119,6 +119,10 @@ public static class BuiltInToolsExtensions
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddProductivityTools(this IServiceCollection services)
     {
+        // Default todo backing store. TryAdd so a host can register its own ITodoStore first and
+        // have the tool use it; otherwise todos live in this process-wide in-memory singleton.
+        services.TryAddSingleton<Todos.ITodoStore, Todos.InMemoryTodoStore>();
+
         services.AddTool<TodoManagementTool>();
         services.AddTool<TodoExecutor>();
 
