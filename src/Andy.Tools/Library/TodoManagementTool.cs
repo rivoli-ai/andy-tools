@@ -1,20 +1,28 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Andy.Tools.Core;
+using Andy.Tools.Library.Todos;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Andy.Tools.Library;
 
 /// <summary>
-/// Tool that provides AI integration with the /todo command system.
+/// Tool that manages a todo list. The backing store is an <see cref="ITodoStore"/> resolved from
+/// DI when available, falling back to a process-wide in-memory store so the tool works in any host
+/// with no wiring.
 /// </summary>
 public class TodoManagementTool : ToolBase
 {
+    // Process-wide fallback used when no ITodoStore is registered in DI, so the tool is always
+    // functional even in a host that did not wire one up.
+    private static readonly ITodoStore SharedFallbackStore = new InMemoryTodoStore();
+
     private IServiceProvider? _serviceProvider;
     private ILogger<TodoManagementTool>? _logger;
 
@@ -173,7 +181,14 @@ public class TodoManagementTool : ToolBase
     }
 
     /// <inheritdoc />
-    protected override async Task<ToolResult> ExecuteInternalAsync(Dictionary<string, object?> parameters, ToolExecutionContext context)
+    protected override Task<ToolResult> ExecuteInternalAsync(Dictionary<string, object?> parameters, ToolExecutionContext context)
+    {
+        // The store operations are synchronous; satisfy the async tool contract without a needless
+        // state machine.
+        return Task.FromResult(Execute(parameters, context));
+    }
+
+    private ToolResult Execute(Dictionary<string, object?> parameters, ToolExecutionContext context)
     {
         if (!parameters.TryGetValue("action", out var actionObj) || actionObj is not string action)
         {
@@ -184,52 +199,18 @@ public class TodoManagementTool : ToolBase
 
         try
         {
-            // Get service provider from context if not already available
-            if (_serviceProvider == null)
-            {
-                // Try to get from AdditionalData
-                if (context.AdditionalData.TryGetValue("ServiceProvider", out var spObj) && spObj is IServiceProvider sp)
-                {
-                    _serviceProvider = sp;
-                    _logger = sp.GetService<ILogger<TodoManagementTool>>();
-                }
-                else
-                {
-                    return ToolResult.Failure("Service provider is not available. The tool requires dependency injection context.");
-                }
-            }
-
-            // Get the ITodoService from DI container
-            using var scope = _serviceProvider.CreateScope();
-            var todoServiceType = Type.GetType("Andy.CLI.Services.ITodoService, Andy.CLI");
-
-            if (todoServiceType == null)
-            {
-                _logger?.LogError("Could not find ITodoService type");
-                return ToolResult.Failure("Todo service type is not available.");
-            }
-
-            var todoService = scope.ServiceProvider.GetService(todoServiceType);
-
-            if (todoService == null)
-            {
-                _logger?.LogError("Todo service is not registered in the DI container");
-                return ToolResult.Failure("Todo service is not available in the current context.");
-            }
-
-            // Use dynamic to work with the service without compile-time dependency
-            dynamic service = todoService;
+            var store = ResolveStore(context);
 
             return action switch
             {
-                "add" => await AddTodoAsync(service, parameters),
-                "add_batch" => await AddBatchTodosAsync(service, parameters),
-                "list" => await ListTodosAsync(service, parameters),
-                "complete" or "done" => await CompleteTodoAsync(service, parameters),
-                "remove" or "delete" => await RemoveTodoAsync(service, parameters),
-                "update_progress" => await UpdateProgressAsync(service, parameters),
-                "search" => await SearchTodosAsync(service, parameters),
-                "clear_completed" => await ClearCompletedAsync(service),
+                "add" => AddTodo(store, parameters),
+                "add_batch" => AddBatchTodos(store, parameters),
+                "list" => ListTodos(store, parameters),
+                "complete" or "done" => CompleteTodo(store, parameters),
+                "remove" or "delete" => RemoveTodo(store, parameters),
+                "update_progress" => UpdateProgress(store, parameters),
+                "search" => SearchTodos(store, parameters),
+                "clear_completed" => ClearCompleted(store),
                 _ => ToolResult.Failure($"Unknown action: {action}")
             };
         }
@@ -240,416 +221,171 @@ public class TodoManagementTool : ToolBase
         }
     }
 
-    private async Task<ToolResult> AddTodoAsync(dynamic todoService, Dictionary<string, object?> parameters)
+    /// <summary>
+    /// Resolves the todo store: a host-registered <see cref="ITodoStore"/> if one is available,
+    /// otherwise a process-wide in-memory fallback so the tool always functions.
+    /// </summary>
+    private ITodoStore ResolveStore(ToolExecutionContext context)
     {
-        if (!parameters.TryGetValue("text", out var textObj) || textObj is not string text)
+        if (_serviceProvider == null
+            && context.AdditionalData.TryGetValue("ServiceProvider", out var spObj)
+            && spObj is IServiceProvider sp)
+        {
+            _serviceProvider = sp;
+            _logger ??= sp.GetService<ILogger<TodoManagementTool>>();
+        }
+
+        var store = _serviceProvider?.GetService<ITodoStore>();
+        if (store == null)
+        {
+            _logger?.LogDebug("No ITodoStore registered; using the process-wide in-memory fallback store");
+            store = SharedFallbackStore;
+        }
+
+        return store;
+    }
+
+
+    private ToolResult AddTodo(ITodoStore store, Dictionary<string, object?> parameters)
+    {
+        if (!parameters.TryGetValue("text", out var textObj) || ToStringOrNull(textObj) is not string text || string.IsNullOrWhiteSpace(text))
         {
             return ToolResult.Failure("Text parameter is required for add action");
         }
 
-        var priorityStr = parameters.TryGetValue("priority", out var priorityObj) && priorityObj is string p ? p : "medium";
-        priorityStr = priorityStr.ToLowerInvariant();
+        var priority = ParsePriority(parameters.TryGetValue("priority", out var p) ? p : null);
+        var tags = ParseTags(parameters.TryGetValue("tags", out var t) ? t : null);
 
-        // Get TodoPriority enum type and create enum value
-        var todoPriorityType = Type.GetType("Andy.CLI.Models.TodoPriority, Andy.CLI");
-        if (todoPriorityType == null)
+        var todo = store.Add(text, priority, tags);
+        return ToolResult.Success(new
         {
-            return ToolResult.Failure("TodoPriority type not found");
-        }
-
-        // Map priority string to enum value
-        object priorityValue = priorityStr switch
-        {
-            "high" => Enum.ToObject(todoPriorityType, 2),    // TodoPriority.High = 2
-            "medium" => Enum.ToObject(todoPriorityType, 1),  // TodoPriority.Medium = 1
-            "low" => Enum.ToObject(todoPriorityType, 0),     // TodoPriority.Low = 0
-            _ => Enum.ToObject(todoPriorityType, 1)          // Default to Medium
-        };
-
-        IEnumerable<string>? tags = null;
-        if (parameters.TryGetValue("tags", out var tagsObj))
-        {
-            var tagList = new List<string>();
-            if (tagsObj is JsonElement tagsJson && tagsJson.ValueKind == JsonValueKind.Array)
-            {
-                foreach (var tag in tagsJson.EnumerateArray())
-                {
-                    if (tag.ValueKind == JsonValueKind.String)
-                    {
-                        tagList.Add(tag.GetString() ?? "");
-                    }
-                }
-            }
-            else if (tagsObj is string[] tagsArray)
-            {
-                tagList.AddRange(tagsArray);
-            }
-
-            tags = tagList;
-        }
-
-        try
-        {
-            // Use reflection to call the method properly
-            var addTodoMethod = todoService.GetType().GetMethod("AddTodoAsync");
-            if (addTodoMethod == null)
-            {
-                return ToolResult.Failure("AddTodoAsync method not found");
-            }
-
-            // Invoke the method
-            var task = (Task)addTodoMethod.Invoke(todoService, new object?[] { text, priorityValue, tags, null });
-            await task;
-
-            // Get the result
-            var resultProperty = task.GetType().GetProperty("Result");
-            if (resultProperty == null)
-            {
-                return ToolResult.Failure("Failed to get task result");
-            }
-
-            var result = resultProperty.GetValue(task);
-            if (result == null)
-            {
-                return ToolResult.Failure("AddTodoAsync returned null");
-            }
-
-            dynamic todoItem = result;
-            int todoId = todoItem.Id;
-
-            return ToolResult.Success(new
-            {
-                message = $"Added todo #{todoId}: {text}",
-                id = todoId,
-                text = text,
-                priority = priorityStr,
-                tags = tags?.ToArray() ?? Array.Empty<string>()
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger?.LogError(ex, "Failed to add todo");
-            return ToolResult.Failure($"Failed to add todo: {ex.Message}");
-        }
+            message = $"Added todo #{todo.Id}: {todo.Text}",
+            id = todo.Id,
+            text = todo.Text,
+            priority = todo.Priority.ToString().ToLowerInvariant(),
+            tags = todo.Tags.ToArray()
+        });
     }
 
-    private async Task<ToolResult> AddBatchTodosAsync(dynamic todoService, Dictionary<string, object?> parameters)
+    private ToolResult AddBatchTodos(ITodoStore store, Dictionary<string, object?> parameters)
     {
         if (!parameters.TryGetValue("todos", out var todosObj))
         {
             return ToolResult.Failure("Todos parameter is required for add_batch action");
         }
 
-        var addedTodos = new List<object>();
-        IEnumerable<object>? todoItems = null;
-
-        // Handle different input formats
-        if (todosObj is JsonElement todosJson && todosJson.ValueKind == JsonValueKind.Array)
-        {
-            var items = new List<object>();
-            foreach (var item in todosJson.EnumerateArray())
-            {
-                items.Add(item);
-            }
-
-            todoItems = items;
-        }
-        else if (todosObj is IEnumerable<object> enumerable)
-        {
-            todoItems = enumerable;
-        }
-        else
+        if (!TryEnumerateTodoItems(todosObj, out var items))
         {
             return ToolResult.Failure("The 'todos' parameter must be an array of todo items.");
         }
 
-        foreach (var todoItem in todoItems)
+        var addedTodos = new List<object>();
+        var skipped = 0;
+        foreach (var item in items)
         {
-            try
+            if (!TryParseTodoItem(item, out var text, out var priority, out var tags))
             {
-                string text;
-                string priorityStr = "medium";
-                IEnumerable<string>? tags = null;
-                var tagList = new List<string>();
-
-                if (todoItem is JsonElement todoElement)
-                {
-                    if (todoElement.ValueKind == JsonValueKind.String)
-                    {
-                        text = todoElement.GetString() ?? "";
-                    }
-                    else if (todoElement.ValueKind == JsonValueKind.Object)
-                    {
-                        text = todoElement.TryGetProperty("text", out var textProp) ? textProp.GetString() ?? "" : "";
-                        if (todoElement.TryGetProperty("priority", out var priorityProp))
-                        {
-                            priorityStr = priorityProp.GetString() ?? "medium";
-                        }
-
-                        if (todoElement.TryGetProperty("tags", out var tagsProp) && tagsProp.ValueKind == JsonValueKind.Array)
-                        {
-                            foreach (var tag in tagsProp.EnumerateArray())
-                            {
-                                if (tag.ValueKind == JsonValueKind.String)
-                                {
-                                    tagList.Add(tag.GetString() ?? "");
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
-                else if (todoItem is string str)
-                {
-                    text = str;
-                }
-                else if (todoItem is Dictionary<string, object> dict)
-                {
-                    text = dict.TryGetValue("text", out var textVal) && textVal is string t ? t : "";
-                    priorityStr = dict.TryGetValue("priority", out var priorityVal) && priorityVal is string p ? p : "medium";
-                    if (dict.TryGetValue("tags", out var tagsVal) && tagsVal is IEnumerable<string> tagEnumerable)
-                    {
-                        tagList.AddRange(tagEnumerable);
-                    }
-                }
-                else
-                {
-                    // Try to get text representation
-                    text = todoItem?.ToString() ?? "";
-                }
-
-                if (string.IsNullOrWhiteSpace(text))
-                {
-                    continue;
-                }
-
-                // Set tags from tagList
-                if (tagList.Count > 0)
-                {
-                    tags = tagList;
-                }
-
-                // Get TodoPriority enum type
-                var todoPriorityType = Type.GetType("Andy.CLI.Models.TodoPriority, Andy.CLI");
-                if (todoPriorityType == null)
-                {
-                    continue; // Skip this item if we can't get the enum type
-                }
-
-                // Map priority string to enum value
-                object priorityValue = priorityStr.ToLowerInvariant() switch
-                {
-                    "high" => Enum.ToObject(todoPriorityType, 2),    // TodoPriority.High = 2
-                    "medium" => Enum.ToObject(todoPriorityType, 1),  // TodoPriority.Medium = 1
-                    "low" => Enum.ToObject(todoPriorityType, 0),     // TodoPriority.Low = 0
-                    _ => Enum.ToObject(todoPriorityType, 1)          // Default to Medium
-                };
-
-                // Use reflection to call the method properly
-                var addTodoMethod = todoService.GetType().GetMethod("AddTodoAsync");
-                if (addTodoMethod == null)
-                {
-                    continue;
-                }
-
-                // Invoke the method
-                var task = (Task)addTodoMethod.Invoke(todoService, new object?[] { text, priorityValue, tags, null });
-                await task;
-
-                // Get the result
-                var resultProperty = task.GetType().GetProperty("Result");
-                if (resultProperty == null)
-                {
-                    continue;
-                }
-
-                var result = resultProperty.GetValue(task);
-                if (result == null)
-                {
-                    continue;
-                }
-
-                dynamic newTodoItem = result;
-                int todoId = newTodoItem.Id;
-
-                addedTodos.Add(new
-                {
-                    id = todoId,
-                    text = text,
-                    priority = priorityStr,
-                    tags = tags?.ToArray() ?? Array.Empty<string>()
-                });
+                skipped++;
+                continue;
             }
-            catch (Exception ex)
+
+            var todo = store.Add(text, priority, tags);
+            addedTodos.Add(new
             {
-                _logger?.LogWarning(ex, "Failed to add todo item");
-            }
+                id = todo.Id,
+                text = todo.Text,
+                priority = todo.Priority.ToString().ToLowerInvariant(),
+                tags = todo.Tags.ToArray()
+            });
         }
 
         if (addedTodos.Count == 0)
         {
-            return ToolResult.Failure("No valid todos were added.");
+            return ToolResult.Failure("No valid todos were added. Each item must be a non-empty string or an object with a 'text' property.");
+        }
+
+        var message = $"Added {addedTodos.Count} todo(s) to your list";
+        if (skipped > 0)
+        {
+            message += $" ({skipped} item(s) skipped - missing text)";
         }
 
         return ToolResult.Success(new
         {
-            message = $"Added {addedTodos.Count} todo(s) to your list",
+            message,
             count = addedTodos.Count,
+            skipped,
             todos = addedTodos
         });
     }
 
-    private async Task<ToolResult> ListTodosAsync(dynamic todoService, Dictionary<string, object?> parameters)
+    private ToolResult ListTodos(ITodoStore store, Dictionary<string, object?> parameters)
     {
-        try
+        IEnumerable<TodoItem> todos = store.GetAll();
+
+        if (parameters.TryGetValue("status", out var statusObj) && ToStringOrNull(statusObj) is string statusFilter
+            && TryParseStatus(statusFilter, out var status))
         {
-            dynamic todoList = await todoService.GetTodoListAsync();
-            IEnumerable<dynamic> todos = todoList.Items;
-
-            // Apply filters
-            if (parameters.TryGetValue("status", out var statusObj) && statusObj is string statusFilter)
-            {
-                var statusValue = statusFilter.ToLowerInvariant() switch
-                {
-                    "pending" => 0,
-                    "inprogress" => 1,
-                    "completed" => 2,
-                    "blocked" => 3,
-                    "cancelled" => 4,
-                    _ => 0
-                };
-
-                var filteredTodos = new List<dynamic>();
-                foreach (var todo in todos)
-                {
-                    if ((int)todo.Status == statusValue)
-                    {
-                        filteredTodos.Add(todo);
-                    }
-                }
-
-                todos = filteredTodos;
-            }
-
-            if (parameters.TryGetValue("tag", out var tagObj) && tagObj is string tagFilter)
-            {
-                var filteredTodos = new List<dynamic>();
-                foreach (var todo in todos)
-                {
-                    List<string> tags = todo.Tags;
-                    if (tags.Any(tag => tag.Equals(tagFilter, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        filteredTodos.Add(todo);
-                    }
-                }
-
-                todos = filteredTodos;
-            }
-
-            var formattedTodos = new List<object>();
-            foreach (var todo in todos)
-            {
-                formattedTodos.Add(new
-                {
-                    id = (int)todo.Id,
-                    text = (string)todo.Text,
-                    status = todo.Status.ToString(),
-                    priority = todo.Priority.ToString(),
-                    progress = (int)todo.Progress,
-                    currentAction = (string?)todo.CurrentAction ?? "",
-                    tags = ((List<string>)todo.Tags).ToArray(),
-                    createdAt = ((DateTime)todo.Created).ToString("yyyy-MM-dd HH:mm"),
-                    completedAt = todo.Completed != null ? ((DateTime)todo.Completed).ToString("yyyy-MM-dd HH:mm") : ""
-                });
-            }
-
-            var summary = $"Found {formattedTodos.Count} todo(s)";
-            if (parameters.ContainsKey("status"))
-            {
-                summary += $" with status '{statusObj}'";
-            }
-
-            if (parameters.ContainsKey("tag"))
-            {
-                summary += $" tagged with '{tagObj}'";
-            }
-
-            return ToolResult.Success(new
-            {
-                message = summary,
-                count = formattedTodos.Count,
-                todos = formattedTodos
-            });
+            todos = todos.Where(td => td.Status == status);
         }
-        catch (Exception ex)
+
+        if (parameters.TryGetValue("tag", out var tagObj) && ToStringOrNull(tagObj) is string tagFilter)
         {
-            _logger?.LogError(ex, "Failed to list todos");
-            return ToolResult.Failure($"Failed to list todos: {ex.Message}");
+            todos = todos.Where(td => td.Tags.Any(tag => tag.Equals(tagFilter, StringComparison.OrdinalIgnoreCase)));
         }
+
+        var formatted = todos.Select(FormatTodo).ToList();
+
+        var summary = $"Found {formatted.Count} todo(s)";
+        if (parameters.ContainsKey("status"))
+        {
+            summary += $" with status '{statusObj}'";
+        }
+
+        if (parameters.ContainsKey("tag"))
+        {
+            summary += $" tagged with '{tagObj}'";
+        }
+
+        return ToolResult.Success(new
+        {
+            message = summary,
+            count = formatted.Count,
+            todos = formatted
+        });
     }
 
-    private async Task<ToolResult> CompleteTodoAsync(dynamic todoService, Dictionary<string, object?> parameters)
+    private ToolResult CompleteTodo(ITodoStore store, Dictionary<string, object?> parameters)
     {
         if (!parameters.TryGetValue("id", out var idObj) || !TryGetInt(idObj, out var todoId))
         {
             return ToolResult.Failure("ID parameter is required and must be a number for complete action");
         }
 
-        try
+        if (store.Complete(todoId))
         {
-            bool success = await todoService.CompleteTodoAsync(todoId);
-
-            if (success)
-            {
-                return ToolResult.Success(new
-                {
-                    message = $"Marked todo #{todoId} as completed",
-                    id = todoId
-                });
-            }
-
-            return ToolResult.Failure($"Failed to complete todo #{todoId}. It may not exist or is already completed.");
+            return ToolResult.Success(new { message = $"Marked todo #{todoId} as completed", id = todoId });
         }
-        catch (Exception ex)
-        {
-            _logger?.LogError(ex, "Failed to complete todo");
-            return ToolResult.Failure($"Failed to complete todo: {ex.Message}");
-        }
+
+        return ToolResult.Failure($"Failed to complete todo #{todoId}. It may not exist or is already completed.");
     }
 
-    private async Task<ToolResult> RemoveTodoAsync(dynamic todoService, Dictionary<string, object?> parameters)
+    private ToolResult RemoveTodo(ITodoStore store, Dictionary<string, object?> parameters)
     {
         if (!parameters.TryGetValue("id", out var idObj) || !TryGetInt(idObj, out var todoId))
         {
             return ToolResult.Failure("ID parameter is required and must be a number for remove action");
         }
 
-        try
+        if (store.Remove(todoId))
         {
-            bool success = await todoService.RemoveTodoAsync(todoId);
-
-            if (success)
-            {
-                return ToolResult.Success(new
-                {
-                    message = $"Removed todo #{todoId}",
-                    id = todoId
-                });
-            }
-
-            return ToolResult.Failure($"Failed to remove todo #{todoId}. It may not exist.");
+            return ToolResult.Success(new { message = $"Removed todo #{todoId}", id = todoId });
         }
-        catch (Exception ex)
-        {
-            _logger?.LogError(ex, "Failed to remove todo");
-            return ToolResult.Failure($"Failed to remove todo: {ex.Message}");
-        }
+
+        return ToolResult.Failure($"Failed to remove todo #{todoId}. It may not exist.");
     }
 
-    private async Task<ToolResult> UpdateProgressAsync(dynamic todoService, Dictionary<string, object?> parameters)
+    private ToolResult UpdateProgress(ITodoStore store, Dictionary<string, object?> parameters)
     {
         if (!parameters.TryGetValue("id", out var idObj) || !TryGetInt(idObj, out var todoId))
         {
@@ -666,122 +402,282 @@ public class TodoManagementTool : ToolBase
             return ToolResult.Failure("Progress must be between 0 and 100.");
         }
 
-        var currentAction = parameters.TryGetValue("currentAction", out var actionObj) && actionObj is string action ? action : null;
+        var currentAction = parameters.TryGetValue("currentAction", out var actionObj) ? ToStringOrNull(actionObj) : null;
 
-        try
+        if (store.UpdateProgress(todoId, progress, currentAction))
         {
-            bool success = await todoService.UpdateProgressAsync(todoId, progress, currentAction);
-
-            if (success)
+            return ToolResult.Success(new
             {
-                return ToolResult.Success(new
-                {
-                    message = $"Updated todo #{todoId} progress to {progress}%",
-                    id = todoId,
-                    progress = progress,
-                    currentAction = currentAction
-                });
-            }
+                message = $"Updated todo #{todoId} progress to {progress}%",
+                id = todoId,
+                progress,
+                currentAction
+            });
+        }
 
-            return ToolResult.Failure($"Failed to update progress for todo #{todoId}. It may not exist.");
-        }
-        catch (Exception ex)
-        {
-            _logger?.LogError(ex, "Failed to update todo progress");
-            return ToolResult.Failure($"Failed to update progress: {ex.Message}");
-        }
+        return ToolResult.Failure($"Failed to update progress for todo #{todoId}. It may not exist.");
     }
 
-    private async Task<ToolResult> SearchTodosAsync(dynamic todoService, Dictionary<string, object?> parameters)
+    private ToolResult SearchTodos(ITodoStore store, Dictionary<string, object?> parameters)
     {
-        if (!parameters.TryGetValue("query", out var queryObj) || queryObj is not string query)
+        if (!parameters.TryGetValue("query", out var queryObj) || ToStringOrNull(queryObj) is not string query)
         {
             return ToolResult.Failure("Query parameter is required for search action");
         }
 
-        try
+        var formatted = store.Search(query).Select(FormatTodo).ToList();
+        return ToolResult.Success(new
         {
-            IList<dynamic> todos = await todoService.SearchTodosAsync(query);
-
-            var formattedTodos = new List<object>();
-            foreach (var todo in todos)
-            {
-                formattedTodos.Add(new
-                {
-                    id = (int)todo.Id,
-                    text = (string)todo.Text,
-                    status = todo.Status.ToString(),
-                    priority = todo.Priority.ToString(),
-                    progress = (int)todo.Progress,
-                    tags = ((List<string>)todo.Tags).ToArray()
-                });
-            }
-
-            return ToolResult.Success(new
-            {
-                message = $"Found {formattedTodos.Count} todo(s) matching '{query}'",
-                count = formattedTodos.Count,
-                todos = formattedTodos
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger?.LogError(ex, "Failed to search todos");
-            return ToolResult.Failure($"Failed to search todos: {ex.Message}");
-        }
+            message = $"Found {formatted.Count} todo(s) matching '{query}'",
+            count = formatted.Count,
+            todos = formatted
+        });
     }
 
-    private async Task<ToolResult> ClearCompletedAsync(dynamic todoService)
+    private ToolResult ClearCompleted(ITodoStore store)
     {
-        try
-        {
-            int removed = await todoService.ClearCompletedAsync();
+        var removed = store.ClearCompleted();
+        return ToolResult.Success(new { message = $"Removed {removed} completed todo(s)", count = removed });
+    }
 
-            return ToolResult.Success(new
-            {
-                message = $"Removed {removed} completed todo(s)",
-                count = removed
-            });
-        }
-        catch (Exception ex)
+    private static object FormatTodo(TodoItem todo) => new
+    {
+        id = todo.Id,
+        text = todo.Text,
+        status = todo.Status.ToString().ToLowerInvariant(),
+        priority = todo.Priority.ToString().ToLowerInvariant(),
+        progress = todo.Progress,
+        currentAction = todo.CurrentAction ?? "",
+        tags = todo.Tags.ToArray(),
+        createdAt = todo.Created.ToString("yyyy-MM-dd HH:mm"),
+        completedAt = todo.Completed?.ToString("yyyy-MM-dd HH:mm") ?? ""
+    };
+
+    /// <summary>
+    /// Parses one batch item into text/priority/tags. Accepts a bare string, a <see cref="JsonElement"/>
+    /// (string or object), or any dictionary shape (<see cref="Dictionary{TKey, TValue}"/> with object or
+    /// nullable-object values, or a non-generic <see cref="IDictionary"/>). Returns false when no usable
+    /// non-empty text can be extracted. Internal for unit testing.
+    /// </summary>
+    internal static bool TryParseTodoItem(object? item, out string text, out TodoPriority priority, out List<string> tags)
+    {
+        text = "";
+        priority = TodoPriority.Medium;
+        tags = new List<string>();
+
+        switch (item)
         {
-            _logger?.LogError(ex, "Failed to clear completed todos");
-            return ToolResult.Failure($"Failed to clear completed todos: {ex.Message}");
+            case null:
+                return false;
+
+            case string s:
+                text = s;
+                break;
+
+            case JsonElement json when json.ValueKind == JsonValueKind.String:
+                text = json.GetString() ?? "";
+                break;
+
+            case JsonElement json when json.ValueKind == JsonValueKind.Object:
+                text = json.TryGetProperty("text", out var textProp) ? ToStringOrNull(textProp) ?? "" : "";
+                if (json.TryGetProperty("priority", out var prioProp))
+                {
+                    priority = ParsePriority(prioProp);
+                }
+                if (json.TryGetProperty("tags", out var tagsProp))
+                {
+                    tags = ParseTags(tagsProp);
+                }
+                break;
+
+            case IDictionary<string, object?> dict:
+                text = ToStringOrNull(GetCaseInsensitive(dict, "text")) ?? "";
+                priority = ParsePriority(GetCaseInsensitive(dict, "priority"));
+                tags = ParseTags(GetCaseInsensitive(dict, "tags"));
+                break;
+
+            case IDictionary nonGenericDict:
+                text = ToStringOrNull(GetCaseInsensitive(nonGenericDict, "text")) ?? "";
+                priority = ParsePriority(GetCaseInsensitive(nonGenericDict, "priority"));
+                tags = ParseTags(GetCaseInsensitive(nonGenericDict, "tags"));
+                break;
+
+            default:
+                // Arbitrary object (e.g. an anonymous { text, priority, tags } as used in the tool's
+                // own examples). Read named properties by reflection rather than fabricating a todo
+                // from its ToString().
+                text = ToStringOrNull(GetPropertyValue(item, "text")) ?? "";
+                priority = ParsePriority(GetPropertyValue(item, "priority"));
+                tags = ParseTags(GetPropertyValue(item, "tags"));
+                break;
+        }
+
+        return !string.IsNullOrWhiteSpace(text);
+    }
+
+    private static bool TryEnumerateTodoItems(object? todosObj, out IEnumerable<object?> items)
+    {
+        switch (todosObj)
+        {
+            case JsonElement json when json.ValueKind == JsonValueKind.Array:
+                items = json.EnumerateArray().Cast<object?>().ToList();
+                return true;
+
+            // A bare string is not an array of items.
+            case string:
+                items = Array.Empty<object?>();
+                return false;
+
+            case IEnumerable enumerable:
+                items = enumerable.Cast<object?>().ToList();
+                return true;
+
+            default:
+                items = Array.Empty<object?>();
+                return false;
         }
     }
 
-    private bool TryGetInt(object? value, out int result)
+    private static TodoPriority ParsePriority(object? value)
+    {
+        var s = ToStringOrNull(value);
+        return s?.ToLowerInvariant() switch
+        {
+            "high" => TodoPriority.High,
+            "low" => TodoPriority.Low,
+            _ => TodoPriority.Medium
+        };
+    }
+
+    private static List<string> ParseTags(object? value)
+    {
+        var result = new List<string>();
+        switch (value)
+        {
+            case null:
+                break;
+
+            case string single when !string.IsNullOrWhiteSpace(single):
+                result.Add(single);
+                break;
+
+            case JsonElement json when json.ValueKind == JsonValueKind.Array:
+                foreach (var el in json.EnumerateArray())
+                {
+                    var s = ToStringOrNull(el);
+                    if (!string.IsNullOrWhiteSpace(s))
+                    {
+                        result.Add(s!);
+                    }
+                }
+                break;
+
+            case IEnumerable enumerable when value is not string:
+                foreach (var el in enumerable)
+                {
+                    var s = ToStringOrNull(el);
+                    if (!string.IsNullOrWhiteSpace(s))
+                    {
+                        result.Add(s!);
+                    }
+                }
+                break;
+        }
+
+        return result;
+    }
+
+    // Unwraps a value to a string, transparently handling JsonElement so callers don't get
+    // "System.Text.Json.JsonElement" from a naive ToString().
+    private static string? ToStringOrNull(object? value)
+    {
+        return value switch
+        {
+            null => null,
+            string s => s,
+            JsonElement json => json.ValueKind switch
+            {
+                JsonValueKind.String => json.GetString(),
+                JsonValueKind.Number => json.ToString(),
+                JsonValueKind.True => "true",
+                JsonValueKind.False => "false",
+                JsonValueKind.Null or JsonValueKind.Undefined => null,
+                _ => json.ToString()
+            },
+            _ => value.ToString()
+        };
+    }
+
+    private static object? GetCaseInsensitive(IDictionary<string, object?> dict, string key)
+    {
+        if (dict.TryGetValue(key, out var value))
+        {
+            return value;
+        }
+
+        var match = dict.Keys.FirstOrDefault(k => string.Equals(k, key, StringComparison.OrdinalIgnoreCase));
+        return match != null ? dict[match] : null;
+    }
+
+    private static object? GetCaseInsensitive(IDictionary dict, string key)
+    {
+        foreach (DictionaryEntry entry in dict)
+        {
+            if (entry.Key is string k && string.Equals(k, key, StringComparison.OrdinalIgnoreCase))
+            {
+                return entry.Value;
+            }
+        }
+
+        return null;
+    }
+
+    private static object? GetPropertyValue(object? obj, string name)
+    {
+        if (obj == null)
+        {
+            return null;
+        }
+
+        var prop = obj.GetType().GetProperty(name,
+            BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+        return prop?.GetValue(obj);
+    }
+
+    private static bool TryParseStatus(string value, out TodoStatus status)
+    {
+        switch (value.ToLowerInvariant())
+        {
+            case "pending": status = TodoStatus.Pending; return true;
+            case "inprogress": status = TodoStatus.InProgress; return true;
+            case "completed": status = TodoStatus.Completed; return true;
+            case "blocked": status = TodoStatus.Blocked; return true;
+            case "cancelled": status = TodoStatus.Cancelled; return true;
+            default: status = TodoStatus.Pending; return false;
+        }
+    }
+
+    private static bool TryGetInt(object? value, out int result)
     {
         result = 0;
 
-        if (value is int intValue)
+        switch (value)
         {
-            result = intValue;
-            return true;
+            case int i:
+                result = i;
+                return true;
+            case long l when l >= int.MinValue && l <= int.MaxValue:
+                result = (int)l;
+                return true;
+            case double d when d >= int.MinValue && d <= int.MaxValue:
+                result = (int)d;
+                return true;
+            case JsonElement json when json.ValueKind == JsonValueKind.Number && json.TryGetInt32(out result):
+                return true;
+            case string s when int.TryParse(s, out result):
+                return true;
+            default:
+                return false;
         }
-
-        if (value is long longValue && longValue >= int.MinValue && longValue <= int.MaxValue)
-        {
-            result = (int)longValue;
-            return true;
-        }
-
-        if (value is double doubleValue && doubleValue >= int.MinValue && doubleValue <= int.MaxValue)
-        {
-            result = (int)doubleValue;
-            return true;
-        }
-
-        if (value is JsonElement json && json.ValueKind == JsonValueKind.Number && json.TryGetInt32(out result))
-        {
-            return true;
-        }
-
-        if (value is string str && int.TryParse(str, out result))
-        {
-            return true;
-        }
-
-        return false;
     }
 }
