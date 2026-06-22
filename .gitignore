@@ -73,3 +73,6 @@ container/rootfs-safe/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml.idea/
+
+# Local bootstrap feed for Andy.Doc/Andy.Tools.Pdf packages (not for commit)
+/local-feed/

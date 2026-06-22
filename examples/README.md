@@ -18,7 +18,10 @@ This project contains comprehensive examples demonstrating how to use the Andy T
    dotnet run --project examples/Andy.Tools.Examples
    ```
 
-3. Select an example category from the menu
+3. Select an example category from the menu, or run one directly by name:
+   ```bash
+   dotnet run --project examples/Andy.Tools.Examples pdf
+   ```
 
 ## Example Categories
 
@@ -76,6 +79,26 @@ This project contains comprehensive examples demonstrating how to use the Andy T
 - Environment variables
 - Process information
 - System metrics
+
+### 10. Financial Documents (PDF) — `pdf`
+Understanding a company 10-K or earnings-call transcript with the `Andy.Tools.Pdf` tools
+(over the fully-managed `Andy.Doc` engine). Run with `dotnet run --project examples/Andy.Tools.Examples pdf`.
+
+- Downloads Chevron's real 2023 Form 10-K (~11 MB, 114 pages) to a temp cache — or pass your own
+  PDF path: `dotnet run --project examples/Andy.Tools.Examples pdf /path/to/filing.pdf`
+  (falls back to a small generated 10-K when offline)
+- `pdf_info` — metadata + page count
+- `pdf_outline` — the bookmark tree (jump to a section)
+- `pdf_search` — find where a topic ("revenue", "guidance") is discussed, with page + snippet
+- `pdf_reflow` — reading-order paragraphs of a page (handles multi-column filings)
+- `pdf_extract_tables` — financial statements as structured rows, ranked by numeric density;
+  bound the work and memory to a page range with `first_page` / `last_page`
+
+Demonstrates the typical agent flow: locate a topic → read the relevant page → pull the tables →
+hand the structured data to a model (or the dataframe tools) for YoY math.
+
+> Requires the `Andy.Tools.Pdf` package. Until it is published to the private feed, build it from
+> source in this repo (`src/Andy.Tools.Pdf`); the example project references it directly.
 
 ## Safety Guidelines
 
