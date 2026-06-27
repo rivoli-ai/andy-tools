@@ -2,6 +2,7 @@ using Andy.Tools;
 using Andy.Tools.Advanced.Configuration;
 using Andy.Tools.Examples;
 using Andy.Tools.Framework;
+using Andy.Tools.Pdf;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -42,6 +43,9 @@ services.AddTool<RandomNumberTool>();
 services.AddTool<WordCountTool>();
 services.AddTool<CsvProcessorTool>();
 services.AddTool<PasswordGeneratorTool>();
+
+// Add the PDF document tools (pdf_*) — same registration the engine/CLI use.
+services.AddAndyPdfTools();
 
 var serviceProvider = services.BuildServiceProvider();
 
@@ -100,6 +104,10 @@ try
         case "9":
         case "system":
             await SystemInfoExamples.RunAsync(serviceProvider);
+            break;
+        case "10":
+        case "pdf":
+            await FinancialDocExamples.RunAsync(serviceProvider);
             break;
         case "all":
             Console.WriteLine("Running all examples...\n");

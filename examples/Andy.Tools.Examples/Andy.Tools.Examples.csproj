@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Andy.Tools\Andy.Tools.csproj" />
+    <ProjectReference Include="..\..\src\Andy.Tools.Pdf\Andy.Tools.Pdf.csproj" />
   </ItemGroup>
 
   <ItemGroup>

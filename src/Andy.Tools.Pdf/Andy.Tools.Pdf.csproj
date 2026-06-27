@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackageId>Andy.Tools.Pdf</PackageId>
+    <Version>2026.6.22-rc.1</Version>
+    <Description>
+      PDF document tools for the Andy.Tools framework (pdf_*). Reads PDFs and exposes text
+      extraction, reading-order reflow, table extraction, outline (bookmark) navigation,
+      document info, and full-text search over the fully-managed Andy.Doc engine.
+      Designed for understanding financial documents such as 10-K filings and earnings-call transcripts.
+    </Description>
+    <PackageTags>llm;tools;pdf;document;extraction;dotnet</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Andy.Tools\Andy.Tools.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Fully-managed PDF engine. Pulls Andy.Doc.Core transitively. -->
+    <PackageReference Include="Andy.Doc.Pdf" Version="2026.6.22-rc.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
+  </ItemGroup>
+
+</Project>
