@@ -74,6 +74,15 @@ jobs:
             --output ./artifacts \
             -p:PackageVersion=$VERSION
         done
+
+        # Andy.Tools.Pdf ships at its own fixed RC (its csproj <Version>), independent of the
+        # date-based Andy.Tools/Data line above: it has a hard PackageReference on Andy.Doc.Pdf at a
+        # pinned version that must stay matched, and its Andy.Tools dependency floats (>= 1.0.0), so it
+        # does not force consumers to bump their Andy.Tools pin. No -p:PackageVersion override here.
+        dotnet pack src/Andy.Tools.Pdf/Andy.Tools.Pdf.csproj \
+          --configuration Release \
+          --no-build \
+          --output ./artifacts
     
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
