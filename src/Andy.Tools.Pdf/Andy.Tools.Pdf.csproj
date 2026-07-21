@@ -5,7 +5,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>Andy.Tools.Pdf</PackageId>
-    <Version>2026.6.22-rc.1</Version>
+    <!--
+      The package version is supplied by CI (-p:PackageVersion=$VERSION), matching the
+      Andy.Tools / Andy.Tools.Data line so every source-changing build publishes a unique
+      prerelease and tag builds follow the tag. Local `dotnet pack` without an override falls
+      back to this default. The Andy.Doc.Pdf dependency below stays independently pinned.
+    -->
+    <Version>1.0.0</Version>
     <Description>
       PDF document tools for the Andy.Tools framework (pdf_*). Reads PDFs and exposes text
       extraction, reading-order reflow, table extraction, outline (bookmark) navigation,

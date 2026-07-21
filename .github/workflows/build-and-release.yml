@@ -62,12 +62,17 @@ jobs:
         echo "VERSION=$VERSION" >> $GITHUB_ENV
         echo "Packing version $VERSION"
 
-        # Andy.Tools.Data depends (via a project reference) on Andy.Tools at the same version, so
-        # both packages are packed and published together. PackageVersion is a global property, so
-        # the project-reference dependency in Andy.Tools.Data resolves to the same $VERSION.
+        # All packages share the same $VERSION. Because PackageVersion is a global MSBuild property,
+        # each project's project-reference dependencies (Andy.Tools.Data -> Andy.Tools,
+        # Andy.Tools.Pdf -> Andy.Tools) resolve to the same $VERSION, so they publish together as a
+        # consistent set. Andy.Tools.Pdf keeps its own pinned PackageReference on Andy.Doc.Pdf — that
+        # is a hard dependency version and is unaffected by PackageVersion. Giving the PDF package the
+        # same unique-per-build version is what lets later PDF source changes actually get published
+        # (a fixed version would be skipped by --skip-duplicate and silently left unpublished).
         for proj in \
           src/Andy.Tools/Andy.Tools.csproj \
-          src/Andy.Tools.Data/Andy.Tools.Data.csproj; do
+          src/Andy.Tools.Data/Andy.Tools.Data.csproj \
+          src/Andy.Tools.Pdf/Andy.Tools.Pdf.csproj; do
           dotnet pack "$proj" \
             --configuration Release \
             --no-build \
@@ -75,14 +80,14 @@ jobs:
             -p:PackageVersion=$VERSION
         done
 
-        # Andy.Tools.Pdf ships at its own fixed RC (its csproj <Version>), independent of the
-        # date-based Andy.Tools/Data line above: it has a hard PackageReference on Andy.Doc.Pdf at a
-        # pinned version that must stay matched, and its Andy.Tools dependency floats (>= 1.0.0), so it
-        # does not force consumers to bump their Andy.Tools pin. No -p:PackageVersion override here.
-        dotnet pack src/Andy.Tools.Pdf/Andy.Tools.Pdf.csproj \
-          --configuration Release \
-          --no-build \
-          --output ./artifacts
+    - name: List packaged ids and versions
+      run: |
+        # Log every package id@version before publishing so a stale or duplicate version is
+        # visible in the build log rather than failing silently at push time.
+        echo "Packages staged for publish:"
+        for pkg in ./artifacts/*.nupkg; do
+          echo "  - $(basename "$pkg")"
+        done
     
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
@@ -135,10 +140,14 @@ jobs:
     
     - name: Publish to NuGet
       run: |
+        # --skip-duplicate so a re-run, or a package whose version already exists (e.g. the PDF
+        # package when only unrelated packages changed), does not fail the job before the GitHub
+        # release is created. Genuinely new versions still publish.
         dotnet nuget push ./artifacts/*.nupkg \
           --source ${{ env.NUGET_SOURCE }} \
-          --api-key ${{ secrets.NUGET_API_KEY }}
-    
+          --api-key ${{ secrets.NUGET_API_KEY }} \
+          --skip-duplicate
+
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:

@@ -97,8 +97,9 @@ Understanding a company 10-K or earnings-call transcript with the `Andy.Tools.Pd
 Demonstrates the typical agent flow: locate a topic → read the relevant page → pull the tables →
 hand the structured data to a model (or the dataframe tools) for YoY math.
 
-> Requires the `Andy.Tools.Pdf` package. Until it is published to the private feed, build it from
-> source in this repo (`src/Andy.Tools.Pdf`); the example project references it directly.
+> Requires the `Andy.Tools.Pdf` package (`dotnet add package Andy.Tools.Pdf`), published to
+> NuGet.org by the release workflow. In this repo the example project references the project
+> directly (`src/Andy.Tools.Pdf`), so no separate install is needed to run the example from source.
 
 ## Safety Guidelines
 

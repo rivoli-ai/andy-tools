@@ -152,6 +152,7 @@ try
             Console.WriteLine("  7 or cache    - Caching Examples");
             Console.WriteLine("  8 or web      - Web Operations");
             Console.WriteLine("  9 or system   - System Information");
+            Console.WriteLine("  10 or pdf     - Financial Documents (PDF) [optional: path to a PDF file]");
             Console.WriteLine("  all           - Run all examples (default)");
             Environment.Exit(1);
             break;
