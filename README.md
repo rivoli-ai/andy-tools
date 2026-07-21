@@ -145,6 +145,35 @@ services.AddAndyDataFrameTools();   // registers all dataframe_* tools
 // optional Andy.Permissions glue: provider.UseAndyDataFramePermissions();  // Andy.Tools.Data.Permissions
 ```
 
+## PDF tools (`Andy.Tools.Pdf`)
+
+The `Andy.Tools.Pdf` package adds six read-only `pdf_*` tools — `pdf_info`, `pdf_extract_text`,
+`pdf_reflow`, `pdf_outline`, `pdf_extract_tables`, and `pdf_search` — for understanding PDF
+documents such as 10-K filings and earnings-call transcripts. They read PDFs through the
+fully-managed [`Andy.Doc`](https://github.com/rivoli-ai/andy-doc) engine (no native dependencies)
+and **never execute code, write to disk, or fetch over the network** — each requires only
+filesystem-read permission and honours the caller's `AllowedPaths` / `BlockedPaths`.
+
+Install the package alongside `Andy.Tools`:
+
+```bash
+dotnet add package Andy.Tools
+dotnet add package Andy.Tools.Pdf
+```
+
+Register the tools after `AddAndyTools()`:
+
+```csharp
+services.AddAndyTools();
+services.AddAndyPdfTools();   // registers all pdf_* tools
+```
+
+Page indexes are **0-based**. On large documents, scope the work: pass a `first_page`/`last_page`
+range to `pdf_extract_tables`, use `max_results` on `pdf_search`, and prefer a single-page
+`pdf_extract_text` over a whole-document extraction. See
+[docs/tools-reference.md](docs/tools-reference.md#pdf-tools) for the full per-tool reference,
+result shapes, and performance guidance.
+
 ## Built-in Tools
 
 The tools registered by default are defined in `BuiltInToolsExtensions`.

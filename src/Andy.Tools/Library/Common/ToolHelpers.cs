@@ -227,6 +227,55 @@ public static class ToolHelpers
     }
 
     /// <summary>
+    /// Checks whether a path lies inside any of the caller's <see cref="ToolPermissions.BlockedPaths"/>.
+    /// Blocked paths take precedence over allowed paths: a path that is both allowed and blocked is
+    /// blocked. Comparison uses canonical, symlink-resolved paths and a directory-boundary-aware test,
+    /// and expands a leading <c>~</c> to the user profile, mirroring
+    /// <see cref="Andy.Tools.Execution.SecurityManager"/>.
+    /// </summary>
+    /// <param name="path">The path to test.</param>
+    /// <param name="permissions">The tool permissions containing blocked paths.</param>
+    /// <returns><c>true</c> if the path is within a blocked directory; otherwise <c>false</c>.</returns>
+    public static bool IsPathBlocked(string path, ToolPermissions permissions)
+    {
+        ArgumentNullException.ThrowIfNull(permissions);
+
+        if (permissions.BlockedPaths == null || permissions.BlockedPaths.Count == 0)
+        {
+            return false;
+        }
+
+        try
+        {
+            var normalizedPath = ResolveRealPath(path);
+
+            foreach (var blockedPath in permissions.BlockedPaths)
+            {
+                try
+                {
+                    var expanded = blockedPath.Replace(
+                        "~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+                    if (IsPathWithinBoundary(normalizedPath, ResolveRealPath(expanded)))
+                    {
+                        return true;
+                    }
+                }
+                catch
+                {
+                    // A single malformed blocked entry must not disable the rest of the checks.
+                }
+            }
+
+            return false;
+        }
+        catch
+        {
+            // If the candidate path cannot be resolved, fail closed by treating it as blocked.
+            return true;
+        }
+    }
+
+    /// <summary>
     /// Validates that a directory exists and is accessible.
     /// </summary>
     /// <param name="directoryPath">The directory path to validate.</param>

@@ -23,7 +23,13 @@ public sealed class PdfInfoTool : PdfToolBase
     protected override Task<ToolResult> ExecuteInternalAsync(
         Dictionary<string, object?> parameters, ToolExecutionContext context)
     {
-        using var pdf = OpenPdf(parameters, context);
+        var opened = OpenPdf(parameters, context);
+        if (opened.Failure is { } failure)
+        {
+            return Task.FromResult(failure);
+        }
+
+        using var pdf = opened.Importer!;
         var info = pdf.GetInfo();
         return Task.FromResult(ToolResult.Success(new
         {
@@ -73,7 +79,13 @@ public sealed class PdfExtractTextTool : PdfToolBase
     protected override Task<ToolResult> ExecuteInternalAsync(
         Dictionary<string, object?> parameters, ToolExecutionContext context)
     {
-        using var pdf = OpenPdf(parameters, context);
+        var opened = OpenPdf(parameters, context);
+        if (opened.Failure is { } failure)
+        {
+            return Task.FromResult(failure);
+        }
+
+        using var pdf = opened.Importer!;
         var page = GetOptionalPage(parameters);
 
         if (page is int p)
@@ -92,10 +104,12 @@ public sealed class PdfExtractTextTool : PdfToolBase
             }));
         }
 
+        // Whole-document extraction: cancellation-aware so a large/adversarial document honours the
+        // executor's timeout and resource limits rather than running to completion.
         return Task.FromResult(ToolResult.Success(new
         {
             pageCount = pdf.PageCount,
-            text = pdf.ExtractAllText(),
+            text = ExtractAllText(pdf, context.CancellationToken),
         }));
     }
 }
@@ -133,7 +147,13 @@ public sealed class PdfReflowTool : PdfToolBase
     protected override Task<ToolResult> ExecuteInternalAsync(
         Dictionary<string, object?> parameters, ToolExecutionContext context)
     {
-        using var pdf = OpenPdf(parameters, context);
+        var opened = OpenPdf(parameters, context);
+        if (opened.Failure is { } failure)
+        {
+            return Task.FromResult(failure);
+        }
+
+        using var pdf = opened.Importer!;
         var page = GetParameter<int>(parameters, "page", 0);
         if (page < 0 || page >= pdf.PageCount)
         {
@@ -175,7 +195,13 @@ public sealed class PdfOutlineTool : PdfToolBase
     protected override Task<ToolResult> ExecuteInternalAsync(
         Dictionary<string, object?> parameters, ToolExecutionContext context)
     {
-        using var pdf = OpenPdf(parameters, context);
+        var opened = OpenPdf(parameters, context);
+        if (opened.Failure is { } failure)
+        {
+            return Task.FromResult(failure);
+        }
+
+        using var pdf = opened.Importer!;
         var outline = pdf.GetOutline().Select(Map).ToList();
         return Task.FromResult(ToolResult.Success(new
         {
@@ -258,7 +284,13 @@ public sealed class PdfExtractTablesTool : PdfToolBase
     protected override Task<ToolResult> ExecuteInternalAsync(
         Dictionary<string, object?> parameters, ToolExecutionContext context)
     {
-        using var pdf = OpenPdf(parameters, context);
+        var opened = OpenPdf(parameters, context);
+        if (opened.Failure is { } failure)
+        {
+            return Task.FromResult(failure);
+        }
+
+        using var pdf = opened.Importer!;
         var maxTables = GetParameter<int>(parameters, "max_tables", 50);
         var includeArtifacts = GetParameter<bool>(parameters, "include_layout_artifacts", false);
 
@@ -285,6 +317,10 @@ public sealed class PdfExtractTablesTool : PdfToolBase
         // both wide multi-space gaps (real filings) and single-space gaps (library-generated PDFs).
         for (var page = firstPage; page <= lastPage; page++)
         {
+            // Yield to cancellation at each page so a wide range on a large filing honours the
+            // executor's timeout and resource limits.
+            context.CancellationToken.ThrowIfCancellationRequested();
+
             var content = pdf.ImportPage(page);
             var structure = StructureInference.Infer(content);
 
@@ -431,7 +467,13 @@ public sealed class PdfSearchTool : PdfToolBase
             ? StringComparison.Ordinal
             : StringComparison.OrdinalIgnoreCase;
 
-        using var pdf = OpenPdf(parameters, context);
+        var opened = OpenPdf(parameters, context);
+        if (opened.Failure is { } failure)
+        {
+            return Task.FromResult(failure);
+        }
+
+        using var pdf = opened.Importer!;
 
         // Search the importer's extracted text page by page. The lower-level PdfTextSearcher relies
         // on a text path that fails on many real-world font encodings (e.g. it returns zero matches
@@ -441,10 +483,17 @@ public sealed class PdfSearchTool : PdfToolBase
 
         for (var page = 0; page < pdf.PageCount; page++)
         {
+            // Yield to cancellation at each page boundary so document-wide search honours the
+            // executor's timeout and resource limits.
+            context.CancellationToken.ThrowIfCancellationRequested();
+
             var text = pdf.ExtractText(page);
             var from = 0;
             while (true)
             {
+                // A page dense with matches must also remain interruptible.
+                context.CancellationToken.ThrowIfCancellationRequested();
+
                 var idx = text.IndexOf(query, from, comparison);
                 if (idx < 0)
                 {

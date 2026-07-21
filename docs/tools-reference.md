@@ -874,6 +874,135 @@ Releases a dataset; its backend resources are freed once no remaining dataset de
 **Parameters:**
 - `dataset_id` (string, required): Id of the dataset to release
 
+## PDF Tools
+
+Provided by the separate **`Andy.Tools.Pdf`** package. Install it alongside `Andy.Tools` and register
+with `services.AddAndyPdfTools();` after `AddAndyTools()`. All six tools are **read-only**: each
+requires only `FileSystemRead` permission, opens a single PDF identified by a `path` parameter, and
+never executes code, writes to disk, or accesses the network. Denied, missing, or unreadable paths
+return a failure without opening the document.
+
+**Conventions shared by every PDF tool:**
+- `path` (string, required): Path to the PDF file (absolute, or relative to the working directory).
+  It must resolve inside the caller's `AllowedPaths` and outside its `BlockedPaths`; symlinks are
+  resolved before the check.
+- **Page indexes are 0-based.** A `page` (or `first_page`/`last_page`) beyond the last page fails
+  with an "out of range" message.
+- Document-wide operations (whole-document `pdf_extract_text`, `pdf_extract_tables`, `pdf_search`)
+  observe the execution context's cancellation token and stop promptly on cancellation or timeout.
+
+### pdf_info
+
+Returns document metadata and page count. Cheap — call it first to size a document before extracting
+large amounts of text.
+
+**Parameters:**
+- `path` (string, required)
+
+**Returns:**
+- `pageCount` (integer): Number of pages
+- `wasRecovered` (boolean): Whether the parser had to recover a damaged document
+- `title`, `author`, `subject`, `keywords`, `creator`, `producer` (string): Document info dictionary values
+- `creationDate`, `modDate` (string): Document dates when present
+
+### pdf_extract_text
+
+Extracts plain text in show order. Omit `page` for the whole document (pages separated by a form feed,
+`\f`), or pass a 0-based `page` for a single page.
+
+**Parameters:**
+- `path` (string, required)
+- `page` (integer, optional, min 0): 0-based page index. Omit to extract the entire document.
+
+**Returns:**
+- `pageCount` (integer)
+- `page` (integer): Present only for a single-page extraction
+- `text` (string): Extracted text
+
+**Performance:** prefer a single-page extraction where possible; whole-document extraction scales with
+document size and is the main reason to cancel/timeout adversarial inputs.
+
+### pdf_reflow
+
+Reconstructs a single page into reading-order paragraphs, handling multi-column layouts (preferable to
+raw extraction for filings such as 10-Ks).
+
+**Parameters:**
+- `path` (string, required)
+- `page` (integer, optional, default 0, min 0): 0-based page index to reflow
+
+**Returns:**
+- `pageCount` (integer)
+- `page` (integer)
+- `paragraphCount` (integer)
+- `paragraphs` (array of string): Reading-order paragraphs
+- `text` (string): The paragraphs joined into plain text
+
+### pdf_outline
+
+Returns the document outline (bookmark) tree as nested titles. Empty when the document has no bookmarks.
+
+**Parameters:**
+- `path` (string, required)
+
+**Returns:**
+- `itemCount` (integer): Number of top-level outline items
+- `outline` (array): Nested nodes, each `{ Title (string), Children (array of node) }`
+
+### pdf_extract_tables
+
+Detects tables page by page and returns them as rows of cell text (e.g. financial statements in a
+10-K). Tables are ranked by numeric density (the most figure-dense first), then capped.
+
+**Parameters:**
+- `path` (string, required)
+- `first_page` (integer, optional, default 0, min 0): 0-based first page to scan
+- `last_page` (integer, optional, min 0): 0-based last page to scan, inclusive. Omit to scan to the end.
+- `max_tables` (integer, optional, default 50, min 1): Maximum number of tables to return
+- `include_layout_artifacts` (boolean, optional, default false): Include low-quality tables that look
+  like layout artifacts (rows of single characters from infographics)
+
+**Returns:**
+- `pagesScanned` (object): `{ first (integer), last (integer) }`
+- `tableCount` (integer): Total tables detected
+- `returned` (integer): Number of tables returned after the `max_tables` cap
+- `truncated` (boolean): Whether more tables were detected than returned
+- `skippedArtifacts` (integer): Tables dropped as layout artifacts
+- `note` (string): Ranking explanation
+- `tables` (array): Each `{ page (integer), rowCount (integer), columnCount (integer), rows (array of array of string) }`
+
+**Performance:** table detection reads positioned content per page. On large filings, restrict the scan
+with `first_page`/`last_page` to bound both time and memory rather than scanning the whole document.
+
+### pdf_search
+
+Searches the document for a phrase and returns each match's page and a surrounding snippet. Use it to
+locate a topic before extracting that page.
+
+**Parameters:**
+- `path` (string, required)
+- `query` (string, required): The phrase to search for
+- `case_sensitive` (boolean, optional, default false)
+- `max_results` (integer, optional, default 50, min 1): Maximum number of matches to return
+
+**Returns:**
+- `query` (string)
+- `matchCount` (integer): Total matches found across the document
+- `returned` (integer): Number of matches returned after the `max_results` cap
+- `truncated` (boolean): Whether more matches were found than returned
+- `matches` (array): Each `{ page (integer), snippet (string) }`
+
+**Example:**
+```csharp
+var parameters = new Dictionary<string, object?>
+{
+    ["path"] = "annual-report.pdf",
+    ["query"] = "guidance",
+    ["max_results"] = 20
+};
+var result = await executor.ExecuteAsync("pdf_search", parameters);
+```
+
 ## Tool Categories
 
 Tools are organized into categories for easier discovery:
