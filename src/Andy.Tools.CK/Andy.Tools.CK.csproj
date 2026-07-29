@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <!-- NuGet Package Metadata -->
+    <PackageId>Andy.Tools.CK</PackageId>
+    <Title>Andy Tools Computable Knowledge</Title>
+    <Description>Andy.Tools integration for the Andy.CK computable-knowledge engine: the ck_* tools (ask, capabilities, convert, constant, statistics) as Andy ITool implementations over the framework-independent Andy.CK packages. Exact arithmetic and cited provenance; no arbitrary code execution.</Description>
+    <PackageTags>llm;tools;symbolic;computation;units;exact;provenance;dotnet</PackageTags>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
+    <!-- The computable-knowledge engine, consumed as packages. It has no runtime
+         dependencies of its own, and knows nothing about Andy.Tools: the
+         dependency runs one way, as it does for Andy.Data. -->
+    <PackageReference Include="Andy.CK.Engine" Version="1.0.0-local.2" />
+    <PackageReference Include="Andy.CK.Domains.Geography" Version="1.0.0-local.2" />
+    <PackageReference Include="Andy.CK.Domains.Demographics" Version="1.0.0-local.2" />
+    <PackageReference Include="Andy.CK.Domains.Economics" Version="1.0.0-local.2" />
+    <PackageReference Include="Andy.CK.Statistics" Version="1.0.0-local.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The Andy.Tools framework (same repo). -->
+    <ProjectReference Include="..\Andy.Tools\Andy.Tools.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>
