@@ -1,5 +1,6 @@
 using Andy.Tools.Core;
 using Andy.Tools.Library.System;
+using Microsoft.Extensions.Options;
 using Xunit;
 
 namespace Andy.Tools.Tests.Library.System;
@@ -22,6 +23,16 @@ public class ExecuteCommandToolTests
 
     private static Dictionary<string, object?> P(params (string, object?)[] kv) =>
         kv.ToDictionary(x => x.Item1, x => x.Item2);
+
+    private static ExecuteCommandTool ToolWithCeiling(int maximumTimeoutSeconds)
+    {
+        var tool = new ExecuteCommandTool(Options.Create(new ExecuteCommandToolOptions
+        {
+            MaximumTimeoutSeconds = maximumTimeoutSeconds,
+        }));
+        tool.InitializeAsync().GetAwaiter().GetResult();
+        return tool;
+    }
 
     [Fact]
     public void Metadata_declares_process_execution_and_confirmation()
@@ -117,6 +128,59 @@ public class ExecuteCommandToolTests
         Assert.False(result.IsSuccessful);
         var data = (Dictionary<string, object?>)result.Data!;
         Assert.True((bool)data["timed_out"]!);
+        Assert.False((bool)data["cancelled"]!);
+        Assert.Equal("timeout", data["termination_reason"]);
+        Assert.Equal(1, data["effective_timeout_seconds"]);
+        Assert.Equal("timeout", result.Metadata["termination_reason"]);
+    }
+
+    [Fact]
+    public async Task Host_ceiling_clamps_model_timeout_and_reports_precedence()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var tool = ToolWithCeiling(1);
+        var result = await tool.ExecuteAsync(
+            P(("command", "sleep 10"), ("timeout_seconds", 30)),
+            Context());
+
+        Assert.False(result.IsSuccessful);
+        Assert.Equal(30, result.Metadata["requested_timeout_seconds"]);
+        Assert.Equal(1, result.Metadata["effective_timeout_seconds"]);
+        Assert.Equal(1, result.Metadata["timeout_ceiling_seconds"]);
+        Assert.Equal(true, result.Metadata["timeout_clamped"]);
+        Assert.Equal("host_ceiling", result.Metadata["timeout_source"]);
+        Assert.Equal("timeout", result.Metadata["termination_reason"]);
+    }
+
+    [Fact]
+    public async Task No_host_ceiling_preserves_requested_timeout()
+    {
+        var result = await _tool.ExecuteAsync(
+            P(("command", "echo timeout_metadata"), ("timeout_seconds", 600)),
+            Context());
+
+        Assert.True(result.IsSuccessful, result.ErrorMessage);
+        Assert.Equal(600, result.Metadata["requested_timeout_seconds"]);
+        Assert.Equal(600, result.Metadata["effective_timeout_seconds"]);
+        Assert.Equal(false, result.Metadata["timeout_clamped"]);
+        Assert.Equal("model", result.Metadata["timeout_source"]);
+        Assert.False(result.Metadata.ContainsKey("timeout_ceiling_seconds"));
+    }
+
+    [Fact]
+    public async Task Host_ceiling_clamps_default_timeout_when_model_omits_it()
+    {
+        var tool = ToolWithCeiling(5);
+        var result = await tool.ExecuteAsync(P(("command", "echo default_timeout")), Context());
+
+        Assert.True(result.IsSuccessful, result.ErrorMessage);
+        Assert.Equal(120, result.Metadata["requested_timeout_seconds"]);
+        Assert.Equal(5, result.Metadata["effective_timeout_seconds"]);
+        Assert.Equal("host_ceiling", result.Metadata["timeout_source"]);
     }
 
     [Fact]
@@ -137,6 +201,59 @@ public class ExecuteCommandToolTests
 
         var result = await _tool.ExecuteAsync(P(("command", "sleep 10")), ctx);
         Assert.False(result.IsSuccessful);
+        Assert.Contains("cancelled by the host", result.ErrorMessage!, StringComparison.OrdinalIgnoreCase);
+        var data = Assert.IsType<Dictionary<string, object?>>(result.Data);
+        Assert.False((bool)data["timed_out"]!);
+        Assert.True((bool)data["cancelled"]!);
+        Assert.Equal("external_cancellation", data["termination_reason"]);
+        Assert.Equal("external_cancellation", result.Metadata["termination_reason"]);
+    }
+
+    [Fact]
+    public async Task Timeout_terminates_child_process_tree()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var marker = Path.Combine(
+            Path.GetTempPath(),
+            "andy-command-child-" + Guid.NewGuid().ToString("N"));
+        var command = $"(sleep 2; touch '{marker}') & wait";
+        var tool = ToolWithCeiling(1);
+
+        try
+        {
+            var result = await tool.ExecuteAsync(
+                P(("command", command), ("timeout_seconds", 30)),
+                Context());
+            Assert.False(result.IsSuccessful);
+            Assert.Equal("timeout", result.Metadata["termination_reason"]);
+
+            await Task.Delay(1500);
+            Assert.False(
+                File.Exists(marker),
+                "the timed-out command's child process must not survive to create the marker");
+        }
+        finally
+        {
+            if (File.Exists(marker))
+            {
+                File.Delete(marker);
+            }
+        }
+    }
+
+    [Fact]
+    public void Nonpositive_host_ceiling_is_rejected()
+    {
+        var options = Options.Create(new ExecuteCommandToolOptions
+        {
+            MaximumTimeoutSeconds = 0,
+        });
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => new ExecuteCommandTool(options));
     }
 
     [Fact]

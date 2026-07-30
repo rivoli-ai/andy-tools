@@ -198,7 +198,7 @@ The tools registered by default are defined in `BuiltInToolsExtensions`.
 ### System Tools
 - **SystemInfoTool** (`system_info`) - Get system information
 - **ProcessInfoTool** (`process_info`) - Get process information
-- **ExecuteCommandTool** (`execute_command`) - Run a shell command (requires process-execution permission)
+- **ExecuteCommandTool** (`execute_command`) - Run a shell command with bounded process-tree cleanup (requires process-execution permission)
 
 ### Utility Tools
 - **DateTimeTool** (`datetime_tool`) - Date/time operations
@@ -406,6 +406,48 @@ services.AddAdvancedToolFeatures(options =>
     options.MaxMetricsPerTool = 10000;
 });
 ```
+
+### Execute Command Timeout Ceiling
+
+Hosts can cap every `execute_command` invocation without trusting the
+model-provided `timeout_seconds` value:
+
+```csharp
+using Andy.Tools.Library.System;
+
+services.Configure<ExecuteCommandToolOptions>(options =>
+{
+    options.MaximumTimeoutSeconds = 300;
+});
+services.AddAndyTools();
+```
+
+The effective timeout is the smaller of the model/default timeout and the host
+ceiling. With no configured ceiling, the existing 120-second default and model
+override behavior are unchanged. External cancellation takes precedence over an
+expiring timeout, and both paths terminate the process tree. Results expose
+`requested_timeout_seconds`, `effective_timeout_seconds`, `timeout_clamped`,
+`timeout_source`, and `termination_reason` metadata.
+
+The same option can be bound from configuration:
+
+```json
+{
+  "ExecuteCommand": {
+    "MaximumTimeoutSeconds": 300
+  }
+}
+```
+
+An idle-output timeout remains intentionally disabled because valid compilers
+and test suites can be silent for extended periods.
+
+## Completion Summary (2026-07-29)
+
+- Added an opt-in host ceiling for command execution time.
+- Added explicit timeout-versus-cancellation metadata and precedence.
+- Added regression coverage for clamping, configuration binding, cancellation,
+  and descendant-process cleanup.
 
 ## Testing
 

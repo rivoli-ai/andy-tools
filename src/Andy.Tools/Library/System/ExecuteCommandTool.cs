@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Andy.Tools.Core;
 using Andy.Tools.Library.Common;
+using Microsoft.Extensions.Options;
 
 namespace Andy.Tools.Library.System;
 
@@ -17,6 +18,22 @@ public class ExecuteCommandTool : ToolBase
 {
     private const int DefaultTimeoutSeconds = 120;
     private const int MaxStreamChars = 1_000_000;
+    private readonly ExecuteCommandToolOptions _options;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ExecuteCommandTool"/> class.
+    /// </summary>
+    /// <param name="options">Optional host-controlled command limits.</param>
+    public ExecuteCommandTool(IOptions<ExecuteCommandToolOptions>? options = null)
+    {
+        _options = options?.Value ?? new ExecuteCommandToolOptions();
+        if (_options.MaximumTimeoutSeconds is <= 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(options),
+                "MaximumTimeoutSeconds must be greater than zero when configured.");
+        }
+    }
 
     /// <inheritdoc />
     public override ToolMetadata Metadata { get; } = new()
@@ -48,7 +65,8 @@ public class ExecuteCommandTool : ToolBase
             new()
             {
                 Name = "timeout_seconds",
-                Description = "Maximum seconds to allow the command to run before it is killed (default: 120).",
+                Description = "Requested seconds to allow the command to run before it is killed "
+                    + "(default: 120; a host ceiling may lower it).",
                 Type = "integer",
                 Required = false,
                 DefaultValue = DefaultTimeoutSeconds,
@@ -65,10 +83,36 @@ public class ExecuteCommandTool : ToolBase
             return ToolResult.Failure("Parameter 'command' is required and cannot be empty.");
         }
 
-        var timeoutSeconds = GetParameter(parameters, "timeout_seconds", DefaultTimeoutSeconds);
-        if (timeoutSeconds <= 0)
+        var suppliedTimeout = GetParameter(parameters, "timeout_seconds", DefaultTimeoutSeconds);
+        var usedDefaultTimeout =
+            !parameters.ContainsKey("timeout_seconds") ||
+            suppliedTimeout <= 0;
+        var requestedTimeoutSeconds = suppliedTimeout;
+        if (usedDefaultTimeout)
         {
-            timeoutSeconds = DefaultTimeoutSeconds;
+            requestedTimeoutSeconds = DefaultTimeoutSeconds;
+        }
+        var timeoutCeilingSeconds = _options.MaximumTimeoutSeconds;
+        var timeoutClamped =
+            timeoutCeilingSeconds.HasValue &&
+            requestedTimeoutSeconds > timeoutCeilingSeconds.Value;
+        var effectiveTimeoutSeconds = timeoutClamped
+            ? timeoutCeilingSeconds!.Value
+            : requestedTimeoutSeconds;
+        var timeoutMetadata = new Dictionary<string, object?>
+        {
+            ["requested_timeout_seconds"] = requestedTimeoutSeconds,
+            ["effective_timeout_seconds"] = effectiveTimeoutSeconds,
+            ["timeout_clamped"] = timeoutClamped,
+            ["timeout_source"] = timeoutClamped
+                ? "host_ceiling"
+                : usedDefaultTimeout
+                    ? "default"
+                    : "model",
+        };
+        if (timeoutCeilingSeconds.HasValue)
+        {
+            timeoutMetadata["timeout_ceiling_seconds"] = timeoutCeilingSeconds.Value;
         }
 
         var workingDirectory = GetParameter<string?>(parameters, "working_directory", null)
@@ -113,10 +157,11 @@ public class ExecuteCommandTool : ToolBase
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
 
-        using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
+        using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(effectiveTimeoutSeconds));
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(context.CancellationToken, timeoutCts.Token);
 
         var timedOut = false;
+        var cancelled = false;
         try
         {
             await process.WaitForExitAsync(linkedCts.Token).ConfigureAwait(false);
@@ -126,10 +171,12 @@ public class ExecuteCommandTool : ToolBase
             KillProcessTree(process);
             if (context.CancellationToken.IsCancellationRequested)
             {
-                throw; // genuine cancellation — let ToolBase report it
+                cancelled = true;
             }
-
-            timedOut = true;
+            else
+            {
+                timedOut = true;
+            }
         }
 
         stopwatch.Stop();
@@ -137,7 +184,13 @@ public class ExecuteCommandTool : ToolBase
         // Drain any final buffered output.
         try { process.WaitForExit(500); } catch { /* best effort */ }
 
-        var exitCode = timedOut ? -1 : SafeExitCode(process);
+        var exitCode = timedOut || cancelled ? -1 : SafeExitCode(process);
+        var terminationReason = timedOut
+            ? "timeout"
+            : cancelled
+                ? "external_cancellation"
+                : "completed";
+        timeoutMetadata["termination_reason"] = terminationReason;
         var data = new Dictionary<string, object?>
         {
             ["command"] = command,
@@ -146,8 +199,17 @@ public class ExecuteCommandTool : ToolBase
             ["stderr"] = stderr.ToString(),
             ["duration_ms"] = stopwatch.Elapsed.TotalMilliseconds,
             ["timed_out"] = timedOut,
+            ["cancelled"] = cancelled,
+            ["termination_reason"] = terminationReason,
+            ["requested_timeout_seconds"] = requestedTimeoutSeconds,
+            ["effective_timeout_seconds"] = effectiveTimeoutSeconds,
+            ["timeout_clamped"] = timeoutClamped,
             ["working_directory"] = workingDirectory,
         };
+        if (timeoutCeilingSeconds.HasValue)
+        {
+            data["timeout_ceiling_seconds"] = timeoutCeilingSeconds.Value;
+        }
 
         if (timedOut)
         {
@@ -155,7 +217,20 @@ public class ExecuteCommandTool : ToolBase
             {
                 IsSuccessful = false,
                 Data = data,
-                ErrorMessage = $"Command timed out after {timeoutSeconds}s and was terminated.",
+                ErrorMessage = $"Command timed out after {effectiveTimeoutSeconds}s and was terminated.",
+                Metadata = timeoutMetadata,
+                DurationMs = stopwatch.Elapsed.TotalMilliseconds,
+            };
+        }
+
+        if (cancelled)
+        {
+            return new ToolResult
+            {
+                IsSuccessful = false,
+                Data = data,
+                ErrorMessage = "Command execution was cancelled by the host and was terminated.",
+                Metadata = timeoutMetadata,
                 DurationMs = stopwatch.Elapsed.TotalMilliseconds,
             };
         }
@@ -165,6 +240,7 @@ public class ExecuteCommandTool : ToolBase
             IsSuccessful = exitCode == 0,
             Data = data,
             ErrorMessage = exitCode == 0 ? null : $"Command exited with code {exitCode}.",
+            Metadata = timeoutMetadata,
             DurationMs = stopwatch.Elapsed.TotalMilliseconds,
         };
     }
