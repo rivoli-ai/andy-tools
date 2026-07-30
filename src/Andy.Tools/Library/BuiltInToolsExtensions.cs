@@ -77,6 +77,7 @@ public static class BuiltInToolsExtensions
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddSystemTools(this IServiceCollection services)
     {
+        services.AddOptions<ExecuteCommandToolOptions>();
         services.AddTool<SystemInfoTool>();
         services.AddTool<ProcessInfoTool>();
         services.AddTool<ExecuteCommandTool>();

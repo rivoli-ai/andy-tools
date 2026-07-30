@@ -368,6 +368,43 @@ var parameters = new Dictionary<string, object?>
 var result = await executor.ExecuteAsync("process_info", parameters);
 ```
 
+### execute_command
+
+Runs one shell command with process-execution permission.
+
+**Parameters:**
+
+- `command` (string, required): Shell command to execute.
+- `working_directory` (string, optional): Directory in which to start it.
+- `timeout_seconds` (integer, optional): Requested timeout (default: 120).
+
+**Timeout precedence:**
+
+1. External cancellation from `ToolExecutionContext` wins and reports
+   `termination_reason=external_cancellation`.
+2. Otherwise, the effective timeout is the smaller of `timeout_seconds` (or
+   120 when omitted/nonpositive) and the host's optional
+   `ExecuteCommand:MaximumTimeoutSeconds` ceiling.
+3. Expiration reports `termination_reason=timeout` and terminates the process
+   tree.
+
+The result metadata records the requested and effective timeout, whether it was
+clamped, its source, and the termination reason. Omitting the host ceiling
+preserves existing behavior. Idle-output cancellation is disabled by default;
+silent commands continue until cancellation or the effective wall-clock
+timeout.
+
+**Example:**
+
+```csharp
+var parameters = new Dictionary<string, object?>
+{
+    ["command"] = "dotnet test",
+    ["timeout_seconds"] = 600
+};
+var result = await executor.ExecuteAsync("execute_command", parameters);
+```
+
 ### datetime_tool
 
 Performs date and time operations.

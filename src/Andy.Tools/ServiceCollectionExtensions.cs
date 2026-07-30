@@ -4,6 +4,7 @@ using Andy.Tools.Discovery;
 using Andy.Tools.Execution;
 using Andy.Tools.Framework;
 using Andy.Tools.Library;
+using Andy.Tools.Library.System;
 using Andy.Tools.Observability;
 using Andy.Tools.Registry;
 using Andy.Tools.Validation;
@@ -60,6 +61,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IConfigureOptions<ToolOutputLimiterOptions>>(sp =>
             new ConfigureOptions<ToolOutputLimiterOptions>(opt =>
                 sp.GetService<IConfiguration>()?.GetSection(ToolOutputLimiterOptions.SectionName).Bind(opt)));
+        services.AddSingleton<IConfigureOptions<ExecuteCommandToolOptions>>(sp =>
+            new ConfigureOptions<ExecuteCommandToolOptions>(opt =>
+                sp.GetService<IConfiguration>()?.GetSection(ExecuteCommandToolOptions.SectionName).Bind(opt)));
 
         // Integration services removed - they depend on Andy.GeminiClient
 

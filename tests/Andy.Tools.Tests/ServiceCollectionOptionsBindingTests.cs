@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Andy.Tools;
 using Andy.Tools.Core.OutputLimiting;
+using Andy.Tools.Library.System;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -49,5 +50,25 @@ public class ServiceCollectionOptionsBindingTests
         var options = provider.GetRequiredService<IOptions<ToolOutputLimiterOptions>>().Value;
 
         options.MaxOutputCharacters.Should().Be(50_000); // documented default
+    }
+
+    [Fact]
+    public void ExecuteCommandOptions_BindHostTimeoutCeiling()
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                [$"{ExecuteCommandToolOptions.SectionName}:MaximumTimeoutSeconds"] = "45",
+            })
+            .Build();
+
+        var services = new ServiceCollection();
+        services.AddSingleton<IConfiguration>(config);
+        services.AddAndyTools();
+
+        using var provider = services.BuildServiceProvider();
+        var options = provider.GetRequiredService<IOptions<ExecuteCommandToolOptions>>().Value;
+
+        options.MaximumTimeoutSeconds.Should().Be(45);
     }
 }
