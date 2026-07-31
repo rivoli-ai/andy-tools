@@ -232,9 +232,13 @@ public class ReadFileTool : ToolBase
 
         using var reader = new StreamReader(filePath, encoding);
 
-        while (!reader.EndOfStream && currentLine <= end)
+        while (currentLine <= end)
         {
             var line = await reader.ReadLineAsync(cancellationToken);
+            if (line is null)
+            {
+                break;
+            }
             if (line != null && currentLine >= start)
             {
                 lines.Add(line);

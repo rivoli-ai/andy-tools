@@ -123,7 +123,7 @@ All scripts require a pre-built binary. Build it outside this directory:
 ```bash
 cd ../examples/Andy.Tools.Examples
 dotnet publish -c Release -r osx-arm64 --self-contained
-export ANDY_TOOLS_BIN_PATH="$(pwd)/bin/Release/net8.0/osx-arm64/publish"
+export ANDY_TOOLS_BIN_PATH="$(pwd)/bin/Release/net10.0/osx-arm64/publish"
 cd ../../container
 ```
 

@@ -7,7 +7,7 @@ This guide covers deploying Andy Tools in container environments using Docker an
 ### Basic Dockerfile
 
 ```dockerfile
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy project files
@@ -25,7 +25,7 @@ FROM build AS publish
 RUN dotnet publish -c Release -o /app/publish
 
 # Runtime image
-FROM mcr.microsoft.com/dotnet/runtime:8.0 AS final
+FROM mcr.microsoft.com/dotnet/runtime:10.0 AS final
 WORKDIR /app
 
 # Create non-root user
@@ -123,7 +123,7 @@ volumes:
 
 ```dockerfile
 # Build stage
-FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
 WORKDIR /src
 
 # Copy only project files first (for better caching)
@@ -196,7 +196,7 @@ CMD ["all"]
 
 ```dockerfile
 # Security-focused Dockerfile snippet
-FROM mcr.microsoft.com/dotnet/runtime:8.0-alpine AS final
+FROM mcr.microsoft.com/dotnet/runtime:10.0-alpine AS final
 
 # Remove unnecessary packages
 RUN apk update && \
@@ -234,7 +234,7 @@ ENTRYPOINT ["./Andy.Tools.Examples"]
 
 ```dockerfile
 # Dockerfile.apple - Optimized for Apple Container
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build-env
 WORKDIR /app
 
 # Copy and restore
@@ -248,7 +248,7 @@ WORKDIR /app/examples/Andy.Tools.Examples
 RUN dotnet publish -c Release -o /app/publish
 
 # Runtime image
-FROM mcr.microsoft.com/dotnet/runtime:8.0
+FROM mcr.microsoft.com/dotnet/runtime:10.0
 WORKDIR /app
 
 # Apple Container specific optimizations

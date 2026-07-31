@@ -49,7 +49,7 @@ container run \
   --env HOME=/workspace \
   --env TMPDIR=/workspace/tmp \
   --env ANDY_TOOLS_WORKSPACE=/workspace \
-  mcr.microsoft.com/dotnet/runtime:8.0-alpine \
+  mcr.microsoft.com/dotnet/runtime:10.0-alpine \
   sh -c "mkdir -p /workspace/tmp && /app/Andy.Tools.Examples ${1:-all}"
 
 echo ""

@@ -43,7 +43,7 @@ container run \
   --env DOTNET_CLI_HOME=/tmp \
   --env DOTNET_DISABLE_GUI_ERRORS=true \
   --env DOTNET_RUNNING_IN_CONTAINER=true \
-  mcr.microsoft.com/dotnet/runtime:8.0-alpine \
+  mcr.microsoft.com/dotnet/runtime:10.0-alpine \
   /app/Andy.Tools.Examples ${1:-safe}
 
 echo ""

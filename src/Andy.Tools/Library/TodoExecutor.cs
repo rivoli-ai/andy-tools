@@ -479,7 +479,7 @@ public class TodoExecutor : ToolBase
                     Order = 2,
                     ToolId = "file_editor",
                     Description = "Update TargetFramework in project files",
-                    Parameters = new Dictionary<string, object?> { ["action"] = "replace", ["search"] = "<TargetFramework>net\\d\\.\\d</TargetFramework>", ["replace"] = "<TargetFramework>net8.0</TargetFramework>" }
+                    Parameters = new Dictionary<string, object?> { ["action"] = "replace", ["search"] = "<TargetFramework>net\\d+\\.\\d</TargetFramework>", ["replace"] = "<TargetFramework>net10.0</TargetFramework>" }
                 });
                 plan.RequiredPermissions.Add("FileSystem");
                 break;
