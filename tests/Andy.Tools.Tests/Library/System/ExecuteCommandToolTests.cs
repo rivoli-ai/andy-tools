@@ -44,6 +44,15 @@ public class ExecuteCommandToolTests
     }
 
     [Fact]
+    public void Parameterless_reflection_activation_preserves_tool_discovery_compatibility()
+    {
+        var tool = Activator.CreateInstance<ExecuteCommandTool>();
+
+        Assert.NotNull(tool);
+        Assert.Equal("execute_command", tool.Metadata.Id);
+    }
+
+    [Fact]
     public async Task Echo_returns_stdout_and_zero_exit()
     {
         var result = await _tool.ExecuteAsync(P(("command", "echo hello_world")), Context());

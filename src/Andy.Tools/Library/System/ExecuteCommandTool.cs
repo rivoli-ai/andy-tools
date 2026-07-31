@@ -23,8 +23,17 @@ public class ExecuteCommandTool : ToolBase
     /// <summary>
     /// Initializes a new instance of the <see cref="ExecuteCommandTool"/> class.
     /// </summary>
-    /// <param name="options">Optional host-controlled command limits.</param>
-    public ExecuteCommandTool(IOptions<ExecuteCommandToolOptions>? options = null)
+    public ExecuteCommandTool()
+        : this(options: null)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ExecuteCommandTool"/> class
+    /// with host-controlled command limits.
+    /// </summary>
+    /// <param name="options">Host-controlled command limits.</param>
+    public ExecuteCommandTool(IOptions<ExecuteCommandToolOptions>? options)
     {
         _options = options?.Value ?? new ExecuteCommandToolOptions();
         if (_options.MaximumTimeoutSeconds is <= 0)
