@@ -51,7 +51,7 @@ container run \
   --env DOTNET_EnableDiagnostics=0 \
   --env COMPlus_EnableDiagnostics=0 \
   --no-dns \
-  mcr.microsoft.com/dotnet/runtime:8.0-alpine \
+  mcr.microsoft.com/dotnet/runtime:10.0-alpine \
   /app/Andy.Tools.Examples ${1:-safe}
 
 echo ""

@@ -479,7 +479,7 @@ This project is licensed under the Apache License 2.0 - see the LICENSE file for
 
 ## Acknowledgments
 
-- Built with .NET 8
+- Built with .NET 10
 - Uses Microsoft.Extensions.DependencyInjection for IoC
 - Leverages System.Text.Json for JSON processing
 

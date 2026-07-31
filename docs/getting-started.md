@@ -4,7 +4,7 @@ This guide will help you get up and running with Andy Tools quickly.
 
 ## Prerequisites
 
-- .NET 8.0 SDK or later
+- .NET 10.0 SDK or later
 - A code editor (Visual Studio, VS Code, or Rider recommended)
 - Git for cloning the repository
 
@@ -233,7 +233,7 @@ Now that you have Andy Tools running:
 ### Common Issues
 
 **Build Errors**
-- Ensure you have .NET 8.0 SDK installed: `dotnet --version`
+- Ensure you have .NET 10.0 SDK installed: `dotnet --version`
 - Check all project references are correct
 
 **Tool Not Found**

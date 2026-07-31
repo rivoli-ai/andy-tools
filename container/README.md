@@ -62,7 +62,7 @@ If you prefer to mount your local binary instead of building an image:
 ```bash
 cd ../examples/Andy.Tools.Examples
 dotnet publish -c Release
-export ANDY_TOOLS_BIN_PATH="$(pwd)/bin/Release/net8.0"
+export ANDY_TOOLS_BIN_PATH="$(pwd)/bin/Release/net10.0"
 cd ../../container
 ```
 
