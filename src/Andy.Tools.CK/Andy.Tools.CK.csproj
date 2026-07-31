@@ -20,11 +20,11 @@
     <!-- The computable-knowledge engine, consumed as packages. It has no runtime
          dependencies of its own, and knows nothing about Andy.Tools: the
          dependency runs one way, as it does for Andy.Data. -->
-    <PackageReference Include="Andy.CK.Engine" Version="1.0.0-local.2" />
-    <PackageReference Include="Andy.CK.Domains.Geography" Version="1.0.0-local.2" />
-    <PackageReference Include="Andy.CK.Domains.Demographics" Version="1.0.0-local.2" />
-    <PackageReference Include="Andy.CK.Domains.Economics" Version="1.0.0-local.2" />
-    <PackageReference Include="Andy.CK.Statistics" Version="1.0.0-local.2" />
+    <PackageReference Include="Andy.CK.Engine" Version="1.0.0" />
+    <PackageReference Include="Andy.CK.Domains.Geography" Version="1.0.0" />
+    <PackageReference Include="Andy.CK.Domains.Demographics" Version="1.0.0" />
+    <PackageReference Include="Andy.CK.Domains.Economics" Version="1.0.0" />
+    <PackageReference Include="Andy.CK.Statistics" Version="1.0.0" />
   </ItemGroup>
 
   <ItemGroup>
