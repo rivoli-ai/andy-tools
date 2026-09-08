@@ -143,6 +143,10 @@ public static class BuiltInToolsExtensions
         services.AddTool<GitLogTool>();
         services.AddTool<GitShowTool>();
         services.AddTool<GitBlameTool>();
+        services.AddTool<GitWorktreeListTool>();
+        services.AddTool<GitWorktreeAddTool>();
+        services.AddTool<GitWorktreeRemoveTool>();
+        services.AddTool<GitWorktreePruneTool>();
 
         return services;
     }
@@ -279,6 +283,10 @@ public static class BuiltInToolsExtensions
             ["git_log"] = typeof(GitLogTool),
             ["git_show"] = typeof(GitShowTool),
             ["git_blame"] = typeof(GitBlameTool),
+            ["git_worktree_list"] = typeof(GitWorktreeListTool),
+            ["git_worktree_add"] = typeof(GitWorktreeAddTool),
+            ["git_worktree_remove"] = typeof(GitWorktreeRemoveTool),
+            ["git_worktree_prune"] = typeof(GitWorktreePruneTool),
 
             // Development Tools
             // PythonAnalyzerTool removed due to external dependency

@@ -502,6 +502,53 @@ var parameters = new Dictionary<string, object?>
 var result = await executor.ExecuteAsync("git_diff", parameters);
 ```
 
+### git_worktree_list
+
+Lists all worktrees of the current repository, including the main worktree.
+
+**Parameters:** none. Runs against the execution context working directory.
+
+**Result:** `items` is a list of entries with `path`, `head`, `branch` (null when detached), `is_main`, `is_bare`, `is_detached`, `is_locked`, `lock_reason`, `is_prunable`, and `prune_reason`.
+
+### git_worktree_add
+
+Creates a new worktree at the given path.
+
+**Parameters:**
+- `path` (string, required): Directory to create the worktree in; relative paths resolve against the working directory.
+- `branch` (string, optional): Name of a new branch to create for the worktree. Incompatible with `detach`.
+- `commit_ish` (string, optional): Commit, branch, or tag the worktree starts from (defaults to HEAD).
+- `detach` (boolean, optional): Check out a detached HEAD instead of a branch.
+- `force` (boolean, optional): Allow checking out a branch already checked out elsewhere.
+
+**Result:** `directory_path` of the new worktree plus `head`, `branch`, and `is_detached`.
+
+```csharp
+var parameters = new Dictionary<string, object?>
+{
+    ["path"] = "../lanes/feature-x",
+    ["branch"] = "feature/x"
+};
+var result = await executor.ExecuteAsync("git_worktree_add", parameters);
+```
+
+### git_worktree_remove
+
+Removes a worktree and deletes its directory. Declared destructive and requiring confirmation; git refuses dirty or locked worktrees unless `force` is set.
+
+**Parameters:**
+- `path` (string, required): Path of the worktree to remove.
+- `force` (boolean, optional): Remove even if the worktree is dirty or locked.
+
+### git_worktree_prune
+
+Prunes stale worktree registrations whose directories were deleted from disk.
+
+**Parameters:**
+- `dry_run` (boolean, optional): Report what would be pruned without removing anything.
+
+**Result:** `pruned` lists git's per-entry removal messages; `dry_run` echoes the flag.
+
 ## Data / DataFrame Tools
 
 The `Andy.Tools.Data` package adds 28 `dataframe_*` tools — thin Andy `ITool` adapters over the

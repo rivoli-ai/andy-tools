@@ -210,6 +210,14 @@ The tools registered by default are defined in `BuiltInToolsExtensions`.
 
 ### Git Tools
 - **GitDiffTool** (`git_diff`) - Get git diff information
+- **GitStatusTool** (`git_status`) - Get working tree status
+- **GitLogTool** (`git_log`) - List commit history
+- **GitShowTool** (`git_show`) - Show a commit's metadata and diff
+- **GitBlameTool** (`git_blame`) - Per-line commit attribution for a file
+- **GitWorktreeListTool** (`git_worktree_list`) - List worktrees with path, HEAD, branch, and state
+- **GitWorktreeAddTool** (`git_worktree_add`) - Create a worktree, optionally on a new branch or detached
+- **GitWorktreeRemoveTool** (`git_worktree_remove`) - Remove a worktree and its directory
+- **GitWorktreePruneTool** (`git_worktree_prune`) - Prune stale worktree registrations
 
 ## MCP (Model Context Protocol) Client
 
