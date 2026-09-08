@@ -79,6 +79,8 @@ public static class BuiltInToolsExtensions
     {
         services.AddOptions<ExecuteCommandToolOptions>();
         services.AddTool<SystemInfoTool>();
+        services.AddTool<SetAgentNameTool>();
+        services.AddTool<GetAgentIdentityTool>();
         services.AddTool<ProcessInfoTool>();
         services.AddTool<ExecuteCommandTool>();
 
@@ -260,6 +262,8 @@ public static class BuiltInToolsExtensions
 
             // System Tools
             ["system_info"] = typeof(SystemInfoTool),
+            ["set_agent_name"] = typeof(SetAgentNameTool),
+            ["get_agent_identity"] = typeof(GetAgentIdentityTool),
             ["process_info"] = typeof(ProcessInfoTool),
             ["execute_command"] = typeof(ExecuteCommandTool),
 
