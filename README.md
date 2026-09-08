@@ -498,3 +498,10 @@ For issues, questions, or contributions, please visit the [GitHub repository](ht
 ---
 
 Remember: This is ALPHA software. Always backup your data and test thoroughly in a safe environment before any real use.
+
+### 2026-09-08: Agent identity tools
+
+`set_agent_name` accepts a single `name` string; an empty string clears the display name.
+`get_agent_identity` returns the logical identity, current host activation, and retained history.
+Both use the calling host's `ToolExecutionContext.AgentIdentity` service, preserving session
+isolation and remote-host attribution. Hosts without that service get an explicit unsupported result.

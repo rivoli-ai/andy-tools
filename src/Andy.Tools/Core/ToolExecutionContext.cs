@@ -5,6 +5,9 @@ namespace Andy.Tools.Core;
 /// </summary>
 public class ToolExecutionContext
 {
+    /// <summary>The calling agent identity supplied by the host; absent for legacy hosts.</summary>
+    public IAgentIdentity? AgentIdentity { get; set; }
+
     /// <summary>
     /// Gets or sets the correlation ID for tracking this execution.
     /// </summary>

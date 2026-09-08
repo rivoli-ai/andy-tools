@@ -545,6 +545,7 @@ public class TodoExecutor : ToolBase
 
             var childContext = new ToolExecutionContext
             {
+                AgentIdentity = parentContext.AgentIdentity,
                 Permissions = parentContext.Permissions,
                 AdditionalData = parentContext.AdditionalData,
                 CancellationToken = parentContext.CancellationToken
