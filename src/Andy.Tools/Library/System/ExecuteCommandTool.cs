@@ -154,6 +154,9 @@ public class ExecuteCommandTool : ToolBase
 
         var stopwatch = Stopwatch.StartNew();
 
+        // Fail closed on a token cancelled before launch: the process must never start.
+        context.CancellationToken.ThrowIfCancellationRequested();
+
         try
         {
             process.Start();

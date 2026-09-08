@@ -91,6 +91,35 @@ public class ExecuteCommandToolTests
     }
 
     [Fact]
+    public async Task Already_cancelled_token_never_starts_the_process()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "andy-precancel-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            using var cts = new CancellationTokenSource();
+            cts.Cancel();
+            var ctx = new ToolExecutionContext
+            {
+                WorkingDirectory = dir,
+                Permissions = new ToolPermissions { ProcessExecution = true },
+                CancellationToken = cts.Token,
+            };
+
+            var marker = "marker.txt";
+            var result = await _tool.ExecuteAsync(P(("command", $"echo ran > {marker}")), ctx);
+
+            Assert.False(result.IsSuccessful);
+            Assert.False(File.Exists(Path.Combine(dir, marker)),
+                "the command ran despite a token that was cancelled before execution");
+        }
+        finally
+        {
+            try { Directory.Delete(dir, recursive: true); } catch { /* best effort */ }
+        }
+    }
+
+    [Fact]
     public async Task Nonexistent_working_directory_fails()
     {
         var missing = Path.Combine(Path.GetTempPath(), "andy-no-such-" + Guid.NewGuid().ToString("N"));
