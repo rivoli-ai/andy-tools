@@ -263,6 +263,28 @@ executed through `IToolExecutor` using that id. A tool's MCP input schema is map
 `ToolParameter`s, and each MCP tool requires the `Network` permission. If a configured
 server is unavailable at startup, it is logged and skipped without crashing the host.
 
+### Shared adapter update — 2026-09-09
+
+`Andy.Tools.Mcp` is included in the synchronized NuGet release set. Tool-list notifications
+refresh registrations immediately; fallback polling (30 seconds by default, configurable
+through `AddMcpTools`' second callback) discovers newly connected clients and retries discovery.
+Disconnects unregister tools; replacing a client through `IMcpConnectionManager` rediscoveries
+its tools. Call `McpToolRegistrar.RefreshToolsAsync()` for an explicit refresh. The registrar
+uses Andy.MCP's connection hosted service and removes its registrations on host shutdown.
+Connection retries/provisioning remain the connection manager caller's responsibility.
+
+Nested schemas, enum/default values, annotations and output schemas are retained. Full input
+validation runs before remote calls through the standard registry/executor, including local
+schema references. Remote schema references never trigger network fetching. Normal lowercase
+IDs retain their existing form; names that exceed registry limits, contain punctuation or
+could collide use a deterministic `mcp_encoded_` SHA-256 ID. Original names remain in metadata.
+
+Structured results remain the execution data; `Metadata["mcp_result"]` preserves the complete
+MCP result, including resources, annotations and error payloads. Network permission is always
+required. Destructive hints default conservatively to requiring confirmation and the existing
+`allow_destructive` permission; remote read-only hints do not grant permissions. Cancellation
+flows to MCP and remains visible in executor running-call and cancellation statistics.
+
 ## Architecture
 
 ```

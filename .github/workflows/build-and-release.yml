@@ -72,7 +72,8 @@ jobs:
         for proj in \
           src/Andy.Tools/Andy.Tools.csproj \
           src/Andy.Tools.Data/Andy.Tools.Data.csproj \
-          src/Andy.Tools.Pdf/Andy.Tools.Pdf.csproj; do
+          src/Andy.Tools.Pdf/Andy.Tools.Pdf.csproj \
+          src/Andy.Tools.Mcp/Andy.Tools.Mcp.csproj; do
           dotnet pack "$proj" \
             --configuration Release \
             --no-build \

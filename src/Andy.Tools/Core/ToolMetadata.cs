@@ -55,6 +55,11 @@ public class ToolMetadata
     /// </summary>
     public IList<ToolParameter> Parameters { get; set; } = [];
 
+    /// <summary>Gets or sets optional complete input validation for tools with richer schemas.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public Func<Dictionary<string, object?>, IList<string>>? ParameterValidator { get; set; }
+
+
     /// <summary>
     /// Gets or sets example usage of this tool.
     /// </summary>

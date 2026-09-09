@@ -228,9 +228,16 @@ public class ToolValidator : IToolValidator
         // Validate parameters if requested
         if (request.ValidateParameters)
         {
-            var paramValidation = ValidateParameters(request.Parameters, toolMetadata.Parameters);
-            errors.AddRange(paramValidation.Errors);
-            warnings.AddRange(paramValidation.Warnings);
+            if (toolMetadata.ParameterValidator is { } validate)
+            {
+                errors.AddRange(validate(request.Parameters).Select(error => new ValidationError("PARAMETER_SCHEMA", error)));
+            }
+            else
+            {
+                var paramValidation = ValidateParameters(request.Parameters, toolMetadata.Parameters);
+                errors.AddRange(paramValidation.Errors);
+                warnings.AddRange(paramValidation.Warnings);
+            }
         }
 
         // Validate permissions if requested

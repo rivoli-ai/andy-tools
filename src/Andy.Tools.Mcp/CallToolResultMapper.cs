@@ -18,14 +18,15 @@ public static class CallToolResultMapper
     {
         ArgumentNullException.ThrowIfNull(result);
 
+        var metadata = ExtractBinaryContent(result.Content);
+        metadata["mcp_result"] = result;
+
         if (result.IsError == true)
         {
             var errorText = JoinText(result.Content);
             return ToolResult.Failure(
-                string.IsNullOrEmpty(errorText) ? "MCP tool error" : errorText);
+                string.IsNullOrEmpty(errorText) ? "MCP tool error" : errorText, metadata);
         }
-
-        var metadata = ExtractBinaryContent(result.Content);
 
         // Prefer structured content as the data payload when present.
         if (result.StructuredContent is { } structured)

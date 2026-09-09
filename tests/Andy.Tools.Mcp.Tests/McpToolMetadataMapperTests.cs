@@ -66,7 +66,7 @@ public class McpToolMetadataMapperTests
 
         metadata.Id.Should().Be("mcp__s__tool_x");
         metadata.Name.Should().Be("tool_x");
-        metadata.Description.Should().Be("");
+        metadata.Description.Should().Be("MCP tool tool_x on s");
     }
 
     [Fact]
