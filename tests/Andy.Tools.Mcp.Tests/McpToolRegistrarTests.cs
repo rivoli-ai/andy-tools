@@ -103,6 +103,7 @@ public class McpToolRegistrarTests
                 try { await Task.Delay(Timeout.InfiniteTimeSpan, ct); }
                 catch (OperationCanceledException) { cancelled.TrySetResult(); throw; }
             }
+            await Task.Delay(20, ct);
             return CallToolResult.Text("done");
         });
         var running = server.RunAsync(timeout.Token);
@@ -131,6 +132,9 @@ public class McpToolRegistrarTests
         var success = await executor.ExecuteAsync(Request(false));
         Assert.True(success.IsSuccessful, success.ErrorMessage);
         Assert.Equal("done", success.Data);
+        Assert.True(success.DurationMs >= 10);
+        Assert.True(executor.GetStatistics().AverageExecutionTimeMs >= 10);
+        Assert.Equal(1, executor.GetStatistics().SuccessfulExecutions);
         Assert.IsType<CallToolResult>(success.Metadata["mcp_result"]);
         var request = Request(true);
         request.Context.CorrelationId = "cancel-mcp";
@@ -148,6 +152,61 @@ public class McpToolRegistrarTests
         await registrar.StopAsync(timeout.Token);
         await timeout.CancelAsync();
         try { await running; } catch (OperationCanceledException) { }
+    }
+
+    [Fact]
+    public async Task MultipleServersRouteCollisionsAndIsolateDiscoveryFailureWithRegistryEvents()
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var clients = new ConcurrentDictionary<string, McpClient>();
+        var servers = new List<McpServer>();
+        var runs = new List<Task>();
+        var failFirst = false;
+        foreach (var name in new[] { "first", "second" })
+        {
+            var (transport, serverTransport) = InMemoryTransport.CreatePair();
+            if (name == "first") serverTransport.Filter = message => message is JsonRpcResponse { Result: { } result } response
+                && result.TryGetProperty("tools", out _) && Volatile.Read(ref failFirst)
+                ? new JsonRpcResponse { Id = response.Id, Error = new JsonRpcError { Code = -32603, Message = "discovery failed" } } : message;
+            var server = new McpServer(serverTransport);
+            server.AddTool("echo", "Echo", (_, _) => Task.FromResult(CallToolResult.Text(name)));
+            servers.Add(server);
+            runs.Add(server.RunAsync(timeout.Token));
+            clients[name] = await McpClient.ConnectAsync(transport, cancellationToken: timeout.Token);
+        }
+        var manager = new Mock<IMcpConnectionManager>();
+        manager.SetupGet(m => m.ConnectedServers).Returns(() => clients.Keys.ToArray());
+        manager.Setup(m => m.GetClient(It.IsAny<string>())).Returns((string name) => clients.GetValueOrDefault(name));
+        var registry = new ToolRegistry(new ToolValidator(), NullLogger<ToolRegistry>.Instance);
+        var added = 0;
+        var removed = 0;
+        registry.ToolRegistered += (_, _) => Interlocked.Increment(ref added);
+        registry.ToolUnregistered += (_, _) => Interlocked.Increment(ref removed);
+        using var registrar = new McpToolRegistrar(manager.Object, registry, NullLogger<McpToolRegistrar>.Instance);
+        await registrar.StartAsync(timeout.Token);
+        Assert.Equal(2, added);
+        using var services = new ServiceCollection().AddSingleton<IMcpToolInvoker>(new McpToolInvoker(manager.Object)).BuildServiceProvider();
+        foreach (var name in clients.Keys)
+        {
+            var tool = registry.CreateTool($"mcp__{name}__echo", services)!;
+            await tool.InitializeAsync();
+            Assert.Equal(name, (await tool.ExecuteAsync([], new() { Permissions = new() { NetworkAccess = true } })).Data);
+        }
+        Volatile.Write(ref failFirst, true);
+        await registrar.RefreshToolsAsync(timeout.Token);
+        Assert.Equal(2, registry.Tools.Count);
+        Assert.Equal(2, added);
+        clients.TryRemove("first", out var removedClient);
+        await registrar.RefreshToolsAsync(timeout.Token);
+        Assert.Equal(1, removed);
+        Assert.NotNull(registry.GetTool("mcp__second__echo"));
+        await registrar.StopAsync(timeout.Token);
+        Assert.Equal(2, removed);
+        await removedClient!.DisposeAsync();
+        foreach (var client in clients.Values) await client.DisposeAsync();
+        await timeout.CancelAsync();
+        foreach (var server in servers) await server.DisposeAsync();
+        try { await Task.WhenAll(runs); } catch (OperationCanceledException) { }
     }
 
     private static async Task UntilAsync(Func<bool> condition, CancellationToken ct)

@@ -1,4 +1,5 @@
 using Andy.Tools.Core;
+using System.Diagnostics;
 using System.Text.Json;
 using Andy.MCP.Server;
 using Andy.Tools.Library;
@@ -38,7 +39,9 @@ public sealed class McpTool : ToolBase, ITool
     {
         ArgumentNullException.ThrowIfNull(context);
         context.CancellationToken.ThrowIfCancellationRequested();
+        var started = Stopwatch.GetTimestamp();
         var result = await base.ExecuteAsync(parameters, context).ConfigureAwait(false);
+        result.DurationMs = Stopwatch.GetElapsedTime(started).TotalMilliseconds;
         context.CancellationToken.ThrowIfCancellationRequested();
         return result;
     }
