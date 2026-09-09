@@ -1,4 +1,6 @@
 using Andy.Tools.Core;
+using System.Text.Json;
+using Andy.MCP.Server;
 using Andy.Tools.Library;
 
 namespace Andy.Tools.Mcp;
@@ -6,7 +8,7 @@ namespace Andy.Tools.Mcp;
 /// <summary>
 /// An Andy.Tools <see cref="ITool"/> that proxies execution to a tool on an external MCP server.
 /// </summary>
-public sealed class McpTool : ToolBase
+public sealed class McpTool : ToolBase, ITool
 {
     private readonly ToolMetadata _metadata;
     private readonly string _serverName;
@@ -30,6 +32,28 @@ public sealed class McpTool : ToolBase
 
     /// <inheritdoc />
     public override ToolMetadata Metadata => _metadata;
+
+    /// <summary>Executes remotely and preserves cancellation for the executor's cancellation statistics.</summary>
+    public new async Task<ToolResult> ExecuteAsync(Dictionary<string, object?> parameters, ToolExecutionContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        context.CancellationToken.ThrowIfCancellationRequested();
+        var result = await base.ExecuteAsync(parameters, context).ConfigureAwait(false);
+        context.CancellationToken.ThrowIfCancellationRequested();
+        return result;
+    }
+
+    /// <inheritdoc />
+    public override IList<string> ValidateParameters(Dictionary<string, object?> parameters)
+    {
+        ArgumentNullException.ThrowIfNull(parameters);
+        if (Metadata.AdditionalMetadata.TryGetValue("mcp_input_schema", out var schema)
+            && schema is JsonElement element)
+        {
+            return JsonSchemaValidator.Validate(JsonSerializer.SerializeToElement(parameters), element).ToList();
+        }
+        return base.ValidateParameters(parameters);
+    }
 
     /// <inheritdoc />
     protected override async Task<ToolResult> ExecuteInternalAsync(

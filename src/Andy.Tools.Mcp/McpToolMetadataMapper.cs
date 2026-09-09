@@ -1,4 +1,6 @@
 using System.Text.Json;
+using System.Security.Cryptography;
+using System.Text;
 using Andy.Tools.Core;
 using McpToolDef = Andy.MCP.Protocol.Tool;
 
@@ -18,7 +20,25 @@ public static class McpToolMetadataMapper
     /// <param name="toolName">The MCP tool name.</param>
     /// <returns>The Andy.Tools tool id.</returns>
     public static string BuildId(string serverName, string toolName)
-        => $"mcp__{serverName}__{toolName}";
+    {
+        ArgumentNullException.ThrowIfNull(serverName);
+        ArgumentNullException.ThrowIfNull(toolName);
+        var id = $"mcp__{serverName}__{toolName}";
+        // Reserve a separate prefix for hashed names; delimiters inside either component
+        // would otherwise alias a different server/tool pair.
+        if (id.Length <= 100 && serverName.Length > 0 && toolName.Length > 0
+            && !serverName.Contains("__", StringComparison.Ordinal)
+            && !toolName.Contains("__", StringComparison.Ordinal)
+            && !serverName.StartsWith('_') && !serverName.EndsWith('_')
+            && !toolName.StartsWith('_') && !toolName.EndsWith('_')
+            && id.All(c => char.IsAsciiDigit(c) || c is >= 'a' and <= 'z' or '_' or '-'))
+        {
+            return id;
+        }
+
+        return "mcp_encoded_" + Convert.ToHexStringLower(SHA256.HashData(
+            Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new[] { serverName, toolName }))));
+    }
 
     /// <summary>
     /// Maps an MCP tool to Andy.Tools metadata.
@@ -35,15 +55,22 @@ public static class McpToolMetadataMapper
         {
             Id = BuildId(serverName, tool.Name),
             Name = tool.Title ?? tool.Name,
-            Description = tool.Description ?? "",
+            Description = string.IsNullOrWhiteSpace(tool.Description) ? $"MCP tool {tool.Name} on {serverName}" : tool.Description,
             Category = ToolCategory.General,
             RequiredPermissions = ToolPermissionFlags.Network,
+            RequiredCapabilities = ToolCapability.Network
+                | (tool.Annotations?.DestructiveHint != false ? ToolCapability.Destructive : ToolCapability.None),
+            RequiresConfirmation = tool.Annotations?.DestructiveHint != false,
+            OutputSchema = tool.OutputSchema?.Clone(),
             Parameters = ParseParameters(tool.InputSchema),
+            ParameterValidator = args => Andy.MCP.Server.JsonSchemaValidator.Validate(JsonSerializer.SerializeToElement(args), tool.InputSchema).ToList(),
             Tags = ["mcp", serverName],
             AdditionalMetadata =
             {
                 ["mcp_server"] = serverName,
                 ["mcp_tool"] = tool.Name,
+                ["mcp_input_schema"] = tool.InputSchema.Clone(),
+                ["mcp_annotations"] = tool.Annotations,
             },
         };
     }
@@ -88,25 +115,33 @@ public static class McpToolMetadataMapper
 
         foreach (var property in properties.EnumerateObject())
         {
-            var schema = property.Value;
-            var parameter = new ToolParameter
-            {
-                Name = property.Name,
-                Type = MapType(schema),
-                Required = required.Contains(property.Name),
-            };
-
-            if (schema.ValueKind == JsonValueKind.Object
-                && schema.TryGetProperty("description", out var description)
-                && description.ValueKind == JsonValueKind.String)
-            {
-                parameter.Description = description.GetString() ?? "";
-            }
+            var parameter = ParseParameter(property.Name, property.Value, required.Contains(property.Name));
 
             parameters.Add(parameter);
         }
 
         return parameters;
+    }
+
+    private static ToolParameter ParseParameter(string name, JsonElement schema, bool required = false)
+    {
+        var parameter = new ToolParameter
+        {
+            Name = name,
+            Type = MapType(schema),
+            Required = required,
+            Schema = schema.Clone(),
+        };
+        if (schema.ValueKind != JsonValueKind.Object) return parameter;
+        if (schema.TryGetProperty("description", out var description) && description.ValueKind == JsonValueKind.String)
+            parameter.Description = description.GetString() ?? "";
+        if (schema.TryGetProperty("default", out var defaultValue)) parameter.DefaultValue = defaultValue.Clone();
+        if (schema.TryGetProperty("enum", out var values) && values.ValueKind == JsonValueKind.Array)
+            parameter.AllowedValues = values.EnumerateArray().Select(v => (object)v.Clone()).ToList();
+        if (schema.TryGetProperty("format", out var format) && format.ValueKind == JsonValueKind.String)
+            parameter.Format = format.GetString();
+        if (schema.TryGetProperty("items", out var items)) parameter.ItemType = ParseParameter("item", items);
+        return parameter;
     }
 
     private static string MapType(JsonElement schema)

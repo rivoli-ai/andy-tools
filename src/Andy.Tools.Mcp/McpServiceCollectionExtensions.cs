@@ -17,10 +17,12 @@ public static class McpServiceCollectionExtensions
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="configure">Configures the MCP client options (servers, timeouts, etc.).</param>
+    /// <param name="configureDiscovery">Optional discovery refresh settings.</param>
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddMcpTools(
         this IServiceCollection services,
-        Action<McpClientOptions> configure)
+        Action<McpClientOptions> configure,
+        Action<McpToolDiscoveryOptions>? configureDiscovery = null)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configure);
@@ -29,7 +31,11 @@ public static class McpServiceCollectionExtensions
         services.AddMcpClient(configure);
 
         services.TryAddSingleton<IMcpToolInvoker, McpToolInvoker>();
-        services.AddHostedService<McpToolRegistrar>();
+        var discovery = new McpToolDiscoveryOptions();
+        configureDiscovery?.Invoke(discovery);
+        services.TryAddSingleton(discovery);
+        services.TryAddSingleton<McpToolRegistrar>();
+        services.AddHostedService(sp => sp.GetRequiredService<McpToolRegistrar>());
 
         return services;
     }
