@@ -527,3 +527,7 @@ Remember: This is ALPHA software. Always backup your data and test thoroughly in
 `get_agent_identity` returns the logical identity, current host activation, and retained history.
 Both use the calling host's `ToolExecutionContext.AgentIdentity` service, preserving session
 isolation and remote-host attribution. Hosts without that service get an explicit unsupported result.
+
+2026-09-09: MCP execution results now include measured duration before the executor records
+statistics. Multi-server tests verify colliding remote tool names route independently,
+discovery failure preserves the other server, and registry add/remove events remain accurate.
