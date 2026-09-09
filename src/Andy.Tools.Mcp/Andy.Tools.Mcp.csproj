@@ -20,6 +20,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
     <ProjectReference Include="..\Andy.Tools\Andy.Tools.csproj" />
     <PackageReference Include="Andy.MCP" Version="2026.9.8-rc.167" />
   </ItemGroup>
